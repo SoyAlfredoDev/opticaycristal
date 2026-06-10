@@ -1,6 +1,6 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import HeroSection from "@/components/sections/HeroSection";
+import HeroSection, { HeroTrustStrip } from "@/components/sections/HeroSection";
 import ProblemSection from "@/components/sections/ProblemSection";
 import SolutionSection from "@/components/sections/SolutionSection";
 import BenefitsSection from "@/components/sections/BenefitsSection";
@@ -12,9 +12,10 @@ import CtaSection from "@/components/sections/CtaSection";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
+    <main id="contenido-principal" className="min-h-screen bg-background">
       <Navbar />
       <HeroSection />
+      <HeroTrustStrip />
       <ProblemSection />
       <SolutionSection />
       <BenefitsSection />

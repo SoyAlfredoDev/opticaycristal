@@ -1,63 +1,67 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Briefcase, Building2, Store, Package, Computer, Truck } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import Image from "next/image";
+import {
+  Briefcase,
+  Storefront,
+  Desktop,
+  Buildings,
+  Package,
+  Truck,
+} from "@phosphor-icons/react";
+import { Reveal } from "@/components/ui/Reveal";
+
+const categories = [
+  { icon: Briefcase, name: "Oficinas y corporativos" },
+  { icon: Storefront, name: "Retail y sucursales" },
+  { icon: Desktop, name: "Centros de atención" },
+  { icon: Buildings, name: "Empresas administrativas" },
+  { icon: Package, name: "Bodegas y logística" },
+  { icon: Truck, name: "Equipos operativos" },
+];
 
 export default function AudienceSection() {
-  const categories = [
-    { icon: <Briefcase size={28} />, name: "Oficinas y Corporativos" },
-    { icon: <Store size={28} />, name: "Retail y Sucursales" },
-    { icon: <Computer size={28} />, name: "Centros de Atención" },
-    { icon: <Building2 size={28} />, name: "Empresas Administrativas" },
-    { icon: <Package size={28} />, name: "Bodegas y Logística" },
-    { icon: <Truck size={28} />, name: "Equipos Operativos" },
-  ];
-
   return (
-    <section className="py-24 bg-background">
+    <section className="py-24 lg:py-32 bg-background overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center">
-          
-          <motion.div 
-            className="flex-1 text-center lg:text-left"
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-primary font-semibold tracking-wide uppercase text-sm mb-3">
-              Para Quién Es
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <Reveal direction="left">
+            <h2 className="text-3xl md:text-4xl font-bold text-text-primary tracking-tight mb-5 text-balance">
+              Nos adaptamos a cualquier tipo de empresa
             </h2>
-            <h3 className="text-3xl md:text-4xl font-bold text-text-primary mb-6 text-balance">
-              Nos adaptamos a la realidad de cualquier empresa
-            </h3>
-            <p className="text-lg text-text-secondary leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              No importa si tu equipo trabaja en un edificio corporativo, en un piso de ventas o en un centro de distribución. Nuestro formato es 100% móvil y se ajusta a tus instalaciones para brindar exactamente el mismo estándar de calidad clínica.
+            <p className="text-lg text-text-secondary leading-relaxed max-w-[65ch] mb-8">
+              Ya sea un edificio corporativo, un piso de ventas o un centro de distribución. Nuestro formato es 100% móvil y se ajusta a tus instalaciones.
             </p>
-          </motion.div>
 
-          <div className="flex-1 w-full">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-4">
-              {categories.map((cat, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                >
-                  <Card hoverEffect className="flex flex-col items-center justify-center text-center gap-3 p-6 group cursor-default">
-                    <div className="text-primary group-hover:scale-110 transition-transform duration-300">
-                      {cat.icon}
+            <div className="grid grid-cols-2 gap-3">
+              {categories.map((cat, index) => {
+                const Icon = cat.icon;
+                return (
+                  <Reveal key={cat.name} delay={index * 0.05}>
+                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-muted ring-1 ring-black/[0.03] transition-colors duration-300 hover:ring-primary/20">
+                      <Icon size={22} weight="regular" className="text-primary shrink-0" />
+                      <span className="font-medium text-text-primary text-sm">{cat.name}</span>
                     </div>
-                    <span className="font-semibold text-text-primary text-sm">{cat.name}</span>
-                  </Card>
-                </motion.div>
-              ))}
+                  </Reveal>
+                );
+              })}
             </div>
-          </div>
+          </Reveal>
 
+          <Reveal direction="right" delay={0.15}>
+            <div className="relative rounded-[var(--radius-shell)] p-1.5 ring-1 ring-black/[0.04] shadow-brand-lg">
+              <div className="relative aspect-[4/5] rounded-[var(--radius-inner)] overflow-hidden">
+                <Image
+                  src="https://picsum.photos/seed/optica-equipo-trabajo/800/1000"
+                  alt="Equipo de trabajo en entorno empresarial"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 45vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-text-primary/40 to-transparent" />
+              </div>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>

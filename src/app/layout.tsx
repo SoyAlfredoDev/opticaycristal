@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Jornadas Oftalmológicas para Empresas | Óptica y Cristal Chile",
@@ -40,7 +44,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="scroll-smooth">
-      <body className={`${inter.className} antialiased text-slate-800 bg-slate-50`}>
+      <body
+        className={`${outfit.className} antialiased bg-background text-text-primary`}
+      >
+        <a
+          href="#contenido-principal"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-surface focus:rounded-full focus:text-sm focus:font-semibold"
+        >
+          Saltar al contenido
+        </a>
+        <div className="grain-overlay" aria-hidden="true" />
         {children}
       </body>
     </html>

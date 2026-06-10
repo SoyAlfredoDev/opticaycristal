@@ -1,55 +1,50 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowRight, Mail } from "lucide-react";
+import { ArrowRight, Phone } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
+import { Reveal } from "@/components/ui/Reveal";
 
 export default function CtaSection() {
   return (
-    <section id="contacto" className="py-24 bg-background relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        <motion.div 
-          className="bg-primary rounded-3xl p-8 md:p-16 lg:p-20 text-center relative overflow-hidden shadow-2xl"
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.7 }}
-        >
-          {/* Decorative abstract shapes */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-primary-hover rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 opacity-50" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-soft rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2 opacity-20" />
+    <section id="contacto" className="py-24 lg:py-32 bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Reveal>
+          <div className="relative rounded-[var(--radius-shell)] p-1.5 ring-1 ring-primary/15 shadow-brand-lg overflow-hidden">
+            <div className="relative rounded-[var(--radius-inner)] bg-primary px-8 py-14 md:px-16 md:py-20 text-center overflow-hidden">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-primary-hover/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary-soft/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3 pointer-events-none" />
 
-          <div className="max-w-3xl mx-auto relative z-10">
-            <h2 className="text-3xl md:text-5xl font-black text-surface mb-6 text-balance leading-tight">
-              Lleva bienestar visual a tu equipo hoy mismo
-            </h2>
-            <p className="text-xl text-surface/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Solicita una cotización o agenda una reunión. Nosotros nos encargamos de organizar la mejor experiencia oftalmológica dentro de tus instalaciones.
-            </p>
+              <div className="max-w-2xl mx-auto relative z-10">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-surface tracking-tight mb-5 text-balance leading-[1.1]">
+                  Lleva bienestar visual a tu equipo
+                </h2>
+                <p className="text-lg text-surface/80 mb-10 max-w-[65ch] mx-auto leading-relaxed">
+                  Solicita una cotización. Nos encargamos de organizar la mejor experiencia oftalmológica dentro de tus instalaciones.
+                </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button 
-                href="mailto:contacto@opticaycristal.cl?subject=Cotización%20Jornada%20Empresa" 
-                size="lg"
-                className="w-full sm:w-auto bg-surface text-primary hover:bg-surface/90 shadow-xl gap-2 group border-none"
-              >
-                Solicitar cotización
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button 
-                href="tel:+56900000000" 
-                variant="outline"
-                size="lg"
-                className="w-full sm:w-auto bg-primary-hover/50 hover:bg-primary-hover backdrop-blur border-surface/20 text-surface gap-2 hover:text-surface"
-              >
-                <Mail size={20} />
-                Hablemos por correo
-              </Button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Button
+                    href="/jornadas"
+                    size="lg"
+                    className="w-full sm:w-auto bg-surface text-primary hover:bg-surface/90 border-none shadow-brand-lg"
+                    icon={<ArrowRight size={16} weight="bold" />}
+                  >
+                    Cotizar servicio
+                  </Button>
+                  <Button
+                    href="tel:+56900000000"
+                    variant="outline"
+                    size="lg"
+                    className="w-full sm:w-auto bg-transparent border-surface/25 text-surface hover:bg-surface/10 hover:text-surface hover:border-surface/40"
+                    icon={<Phone size={16} weight="bold" />}
+                  >
+                    Llamar ahora
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
-        </motion.div>
-
+        </Reveal>
       </div>
     </section>
   );

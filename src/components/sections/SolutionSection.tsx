@@ -1,106 +1,98 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Stethoscope, Glasses, CalendarCheck, ShieldCheck } from "lucide-react";
+import Image from "next/image";
+import {
+  Stethoscope,
+  Eyeglasses,
+  CalendarCheck,
+  ShieldCheck,
+} from "@phosphor-icons/react";
+import { Reveal } from "@/components/ui/Reveal";
+
+const features = [
+  {
+    icon: Stethoscope,
+    title: "Evaluación profesional en terreno",
+    description:
+      "Llevamos equipos oftalmológicos a tu empresa. Atendemos a tus colaboradores en sus propias instalaciones.",
+  },
+  {
+    icon: Eyeglasses,
+    title: "Venta de lentes ópticos",
+    description:
+      "Amplio catálogo de armazones y cristales. Los trabajadores pueden probarse y adquirir lentes al instante.",
+  },
+  {
+    icon: CalendarCheck,
+    title: "Coordinación rápida y simple",
+    description:
+      "Nos encargamos de la logística. Agendamos bloques de atención sin interrumpir la operación normal.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Garantía y respaldo",
+    description:
+      "Óptica establecida en Santiago Centro con garantía real en todos nuestros productos y servicios.",
+  },
+];
 
 export default function SolutionSection() {
-  const features = [
-    {
-      icon: <Stethoscope size={24} />,
-      title: "Evaluación profesional en terreno",
-      description: "Llevamos nuestros equipos oftalmológicos directamente a tu empresa. Atendemos a tus colaboradores en sus propias instalaciones."
-    },
-    {
-      icon: <Glasses size={24} />,
-      title: "Venta de lentes ópticos",
-      description: "Contamos con un amplio catálogo de armazones y cristales. Los trabajadores pueden probarse y adquirir sus lentes inmediatamente."
-    },
-    {
-      icon: <CalendarCheck size={24} />,
-      title: "Coordinación rápida y simple",
-      description: "Nos encargamos de toda la logística. Agendamos los bloques de atención para no interrumpir la operatividad normal de tu empresa."
-    },
-    {
-      icon: <ShieldCheck size={24} />,
-      title: "Garantía y respaldo",
-      description: "Somos una óptica establecida en Santiago Centro. Entregamos un servicio confiable con garantía real en todos nuestros productos."
-    }
-  ];
-
   return (
-    <section id="solucion" className="py-24 bg-text-primary text-surface relative overflow-hidden">
-      {/* Decorative background */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary-hover/10 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3" />
+    <section id="solucion" className="py-24 lg:py-32 bg-muted relative overflow-hidden">
+      <div className="absolute inset-0 bg-primary/[0.03] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
-          
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-primary-soft font-semibold tracking-wide uppercase text-sm mb-3">
-              Nuestra Solución
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          <Reveal direction="left" className="lg:col-span-5 lg:sticky lg:top-28">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-text-primary tracking-tight mb-5 text-balance leading-[1.1]">
+              La óptica va a tu oficina
             </h2>
-            <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-balance leading-tight text-surface">
-              La óptica va a tu oficina, para que tu equipo no deba salir de ella
-            </h3>
-            <p className="text-lg text-surface/80 mb-8 leading-relaxed max-w-xl">
-              Transformamos cualquier espacio de tu empresa en un completo box de atención visual. Minimizamos los tiempos de desplazamiento y entregamos un servicio de excelencia y comodidad absoluta para todos tus trabajadores.
+            <p className="text-lg text-text-secondary leading-relaxed max-w-[65ch] mb-8">
+              Transformamos un espacio de tu empresa en un box de atención visual. Minimizamos desplazamientos y entregamos comodidad para todos tus trabajadores.
             </p>
 
-            <ul className="space-y-6">
-              {features.map((feature, index) => (
-                <motion.li 
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1 * index, duration: 0.5 }}
-                  className="flex gap-4"
-                >
-                  <div className="shrink-0 w-12 h-12 rounded-xl bg-surface/5 border border-surface/10 flex items-center justify-center text-primary-soft">
-                    {feature.icon}
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-surface mb-1">{feature.title}</h4>
-                    <p className="text-surface/70 text-sm leading-relaxed">{feature.description}</p>
-                  </div>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.7 }}
-            className="relative"
-          >
-             {/* Modern image layout or video placeholder */}
-             <div className="aspect-[4/5] rounded-3xl overflow-hidden border border-surface/10 bg-surface/5 shadow-2xl relative">
-                <img 
-                  src="https://images.unsplash.com/photo-1589828135870-138318b76fc1?auto=format&fit=crop&q=80&w=1000" 
-                  alt="Chequeo oftalmológico corporativo" 
-                  className="w-full h-full object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700"
+            <div className="relative rounded-[var(--radius-shell)] p-1.5 ring-1 ring-black/[0.04] shadow-brand-lg">
+              <div className="relative aspect-[3/4] rounded-[var(--radius-inner)] overflow-hidden">
+                <Image
+                  src="https://picsum.photos/seed/optica-chequeo-corporativo/800/1067"
+                  alt="Chequeo oftalmológico corporativo en empresa"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 40vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-text-primary via-text-primary/20 to-transparent" />
-                
-                <div className="absolute bottom-8 left-8 right-8">
-                  <div className="bg-surface/10 backdrop-blur-md border border-surface/20 rounded-2xl p-6">
-                    <p className="text-2xl font-bold text-surface mb-2">100% Práctico</p>
-                    <p className="text-surface/80 text-sm">
-                      Tus colaboradores resuelven su necesidad visual en menos de 30 minutos, volviendo rápidamente a sus labores.
-                    </p>
-                  </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-text-primary/50 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                  <p className="text-xl font-bold text-surface mb-1">Atención en menos de 30 minutos</p>
+                  <p className="text-surface/80 text-sm">
+                    Tus colaboradores vuelven rápidamente a sus labores.
+                  </p>
                 </div>
-             </div>
-          </motion.div>
+              </div>
+            </div>
+          </Reveal>
 
+          <div className="lg:col-span-7 space-y-4">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <Reveal key={feature.title} delay={index * 0.08}>
+                  <div className="flex gap-5 p-6 rounded-[var(--radius-inner)] bg-surface shadow-brand ring-1 ring-black/[0.04] transition-transform duration-500 ease-premium hover:-translate-y-0.5">
+                    <div className="shrink-0 w-12 h-12 rounded-2xl bg-primary-soft text-primary flex items-center justify-center">
+                      <Icon size={22} weight="regular" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-text-primary mb-1 tracking-tight">
+                        {feature.title}
+                      </h3>
+                      <p className="text-text-secondary text-sm leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
