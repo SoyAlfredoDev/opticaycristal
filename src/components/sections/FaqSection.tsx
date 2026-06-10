@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Minus } from "@phosphor-icons/react";
 import { Reveal } from "@/components/ui/Reveal";
 
 const faqs = [
@@ -35,32 +38,65 @@ const faqs = [
   },
 ];
 
+function FaqItem({ faq, index }: { faq: typeof faqs[number]; index: number }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Reveal delay={index * 0.05}>
+      <div className="overflow-hidden rounded-[var(--radius-inner)] bg-white shadow-card ring-1 ring-black/[0.04]">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="group flex w-full cursor-pointer items-center justify-between gap-4 px-6 py-5 text-left"
+          aria-expanded={isOpen}
+        >
+          <h3 className="text-base font-semibold tracking-tight text-text-primary transition-colors duration-300 group-hover:text-primary lg:text-lg">
+            {faq.question}
+          </h3>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+            {isOpen ? <Minus size={16} weight="bold" /> : <Plus size={16} weight="bold" />}
+          </span>
+        </button>
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <p className="max-w-[65ch] px-6 pb-5 text-sm leading-relaxed text-text-secondary">
+                {faq.answer}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </Reveal>
+  );
+}
+
 export default function FaqSection() {
   return (
-    <section id="faq" className="py-24 lg:py-32 bg-surface">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal className="max-w-2xl mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-text-primary tracking-tight mb-4 text-balance">
-            Preguntas frecuentes
-          </h2>
-          <p className="text-lg text-text-secondary leading-relaxed max-w-[65ch]">
-            Respuestas claras sobre cómo organizamos las jornadas oftalmológicas en tu empresa.
-          </p>
-        </Reveal>
+    <section id="faq" className="section-y relative overflow-hidden bg-white">
+      <div className="circle-decoration circle-decoration--fill absolute -right-16 top-20 h-[280px] w-[280px]" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
-          {faqs.map((faq, index) => (
-            <Reveal key={faq.question} delay={index * 0.05}>
-              <div className="border-t border-border pt-6">
-                <h3 className="text-base font-semibold text-text-primary mb-2 tracking-tight">
-                  {faq.question}
-                </h3>
-                <p className="text-text-secondary text-sm leading-relaxed">
-                  {faq.answer}
-                </p>
-              </div>
-            </Reveal>
-          ))}
+      <div className="container-site relative z-10">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+          <Reveal className="lg:sticky lg:top-28 lg:self-start">
+            <h2 className="mb-5 text-balance text-3xl font-bold leading-[1.1] tracking-tight text-text-primary md:text-4xl lg:text-[2.75rem]">
+              Preguntas frecuentes
+            </h2>
+            <p className="max-w-[55ch] text-lg leading-relaxed text-text-secondary">
+              Respuestas claras sobre cómo organizamos las jornadas oftalmológicas en tu empresa.
+            </p>
+          </Reveal>
+
+          <div className="space-y-3">
+            {faqs.map((faq, index) => (
+              <FaqItem key={faq.question} faq={faq} index={index} />
+            ))}
+          </div>
         </div>
       </div>
     </section>

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const outfit = Outfit({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-outfit",
+  variable: "--font-sans",
   display: "swap",
 });
 
@@ -45,7 +45,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="scroll-smooth">
       <body
-        className={`${outfit.className} antialiased bg-background text-text-primary`}
+        className={`${plusJakarta.className} antialiased bg-background text-text-primary`}
       >
         <a
           href="#contenido-principal"
@@ -53,7 +53,6 @@ export default function RootLayout({
         >
           Saltar al contenido
         </a>
-        <div className="grain-overlay" aria-hidden="true" />
         {children}
       </body>
     </html>

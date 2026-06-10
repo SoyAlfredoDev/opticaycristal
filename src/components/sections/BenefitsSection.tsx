@@ -19,67 +19,67 @@ const employeeBenefits = [
 
 export default function BenefitsSection() {
   return (
-    <section id="beneficios" className="py-24 lg:py-32 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal className="max-w-2xl mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-text-primary tracking-tight mb-4 text-balance">
+    <section id="beneficios" className="section-y relative overflow-hidden bg-muted">
+      <div className="circle-decoration circle-decoration--ring absolute -right-12 top-1/2 h-[240px] w-[240px] -translate-y-1/2 opacity-30" />
+
+      <div className="container-site relative z-10">
+        <Reveal className="mb-14 max-w-2xl lg:mb-16">
+          <h2 className="mb-5 text-balance text-3xl font-bold leading-[1.1] tracking-tight text-text-primary md:text-4xl lg:text-[2.75rem]">
             Un beneficio que funciona para todos
           </h2>
-          <p className="text-lg text-text-secondary leading-relaxed max-w-[65ch]">
+          <p className="max-w-[60ch] text-lg leading-relaxed text-text-secondary">
             Diseñado para generar impacto positivo desde el primer día, optimizando el tiempo empresarial y la calidad de vida laboral.
           </p>
         </Reveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
           <Reveal direction="left">
-            <div className="h-full rounded-[var(--radius-shell)] p-1.5 ring-1 ring-black/[0.04] shadow-brand">
-              <div className="h-full rounded-[var(--radius-inner)] bg-surface p-8 lg:p-10">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 bg-primary-soft text-primary rounded-2xl flex items-center justify-center">
-                    <Buildings size={24} weight="regular" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-text-primary tracking-tight">
-                    Para la empresa
-                  </h3>
+            <div className="card-float h-full p-8 lg:p-10">
+              <div className="mb-8 flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+                  <Buildings size={26} weight="regular" />
                 </div>
-                <ul className="space-y-4">
-                  {companyBenefits.map((benefit) => (
-                    <li key={benefit} className="flex items-start gap-3">
-                      <CheckCircle
-                        size={20}
-                        weight="fill"
-                        className="text-primary shrink-0 mt-0.5"
-                      />
-                      <span className="text-text-secondary leading-relaxed">{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="text-2xl font-bold tracking-tight text-text-primary">
+                  Para la empresa
+                </h3>
               </div>
+              <ul className="space-y-4">
+                {companyBenefits.map((benefit) => (
+                  <li key={benefit} className="flex items-start gap-3">
+                    <CheckCircle
+                      size={20}
+                      weight="fill"
+                      className="mt-0.5 shrink-0 text-primary"
+                    />
+                    <span className="leading-relaxed text-text-secondary">{benefit}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </Reveal>
 
           <Reveal direction="right" delay={0.1}>
-            <div className="h-full rounded-[var(--radius-shell)] p-1.5 ring-1 ring-primary/10 shadow-brand-lg">
-              <div className="h-full rounded-[var(--radius-inner)] bg-primary p-8 lg:p-10 text-surface">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 bg-surface/15 rounded-2xl flex items-center justify-center">
-                    <Users size={24} weight="regular" className="text-surface" />
-                  </div>
-                  <h3 className="text-2xl font-bold tracking-tight">Para los trabajadores</h3>
+            <div className="card-float h-full border-primary/10 bg-primary-mist/40 p-8 lg:p-10">
+              <div className="mb-8 flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Users size={26} weight="regular" />
                 </div>
-                <ul className="space-y-4">
-                  {employeeBenefits.map((benefit) => (
-                    <li key={benefit} className="flex items-start gap-3">
-                      <CheckCircle
-                        size={20}
-                        weight="fill"
-                        className="text-surface/80 shrink-0 mt-0.5"
-                      />
-                      <span className="text-surface/85 leading-relaxed">{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="text-2xl font-bold tracking-tight text-text-primary">
+                  Para los trabajadores
+                </h3>
               </div>
+              <ul className="space-y-4">
+                {employeeBenefits.map((benefit) => (
+                  <li key={benefit} className="flex items-start gap-3">
+                    <CheckCircle
+                      size={20}
+                      weight="fill"
+                      className="mt-0.5 shrink-0 text-primary"
+                    />
+                    <span className="leading-relaxed text-text-secondary">{benefit}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </Reveal>
         </div>

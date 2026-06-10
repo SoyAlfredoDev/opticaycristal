@@ -102,127 +102,122 @@ export default function JornadasForm() {
   };
 
   return (
-    <section id="solicitar" className="py-24 lg:py-32 bg-surface">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+    <section id="solicitar" className="section-y bg-muted">
+      <div className="container-site">
+        <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2 lg:gap-20">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-text-primary tracking-tight mb-4 text-balance">
+            <h2 className="mb-5 text-balance text-3xl font-bold leading-[1.1] tracking-tight text-text-primary md:text-4xl lg:text-[2.75rem]">
               Solicita tu jornada oftalmológica
             </h2>
-            <p className="text-lg text-text-secondary leading-relaxed max-w-[65ch] mb-8">
+            <p className="mb-8 max-w-[55ch] text-lg leading-relaxed text-text-secondary">
               Completa el formulario y nos pondremos en contacto contigo para coordinar fecha, logística y detalles del operativo en tu empresa.
             </p>
-            <ul className="space-y-3 text-sm text-text-secondary">
-              <li className="flex items-center gap-2">
-                <CheckCircle size={18} weight="fill" className="text-primary shrink-0" />
+            <ul className="space-y-3.5 text-sm text-text-secondary">
+              <li className="flex items-center gap-2.5">
+                <CheckCircle size={18} weight="fill" className="shrink-0 text-primary" />
                 Sin costo para la empresa
               </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle size={18} weight="fill" className="text-primary shrink-0" />
+              <li className="flex items-center gap-2.5">
+                <CheckCircle size={18} weight="fill" className="shrink-0 text-primary" />
                 Atención con tecnólogos médicos
               </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle size={18} weight="fill" className="text-primary shrink-0" />
+              <li className="flex items-center gap-2.5">
+                <CheckCircle size={18} weight="fill" className="shrink-0 text-primary" />
                 Respuesta en un plazo de 48 horas hábiles
               </li>
             </ul>
           </div>
 
-          <div className="rounded-[var(--radius-shell)] p-1.5 ring-1 ring-black/[0.04] shadow-brand-lg">
-            <div className="rounded-[var(--radius-inner)] bg-background p-6 md:p-8">
-              <AnimatePresence mode="wait">
-                {isSuccess ? (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    role="alert"
-                    className="flex flex-col items-center text-center py-8 px-4"
+          <div className="card-float p-6 md:p-8">
+            <AnimatePresence mode="wait">
+              {isSuccess ? (
+                <motion.div
+                  key="success"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  role="alert"
+                  className="flex flex-col items-center px-4 py-8 text-center"
+                >
+                  <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary-soft text-primary">
+                    <CheckCircle size={36} weight="fill" />
+                  </div>
+                  <h3 className="mb-2 text-xl font-bold text-text-primary">
+                    Solicitud enviada con éxito
+                  </h3>
+                  <p className="mb-6 max-w-sm leading-relaxed text-text-secondary">
+                    Recibimos tu solicitud. Nos comunicaremos contigo pronto para coordinar los detalles de la jornada.
+                  </p>
+                  <Button variant="outline" onClick={() => setIsSuccess(false)}>
+                    Enviar otra solicitud
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.form
+                  key="form"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onSubmit={handleSubmit}
+                  className="space-y-5"
+                  noValidate
+                >
+                  <Input
+                    label="Persona responsable"
+                    name="responsable"
+                    value={formData.responsable}
+                    onChange={(e) => handleChange("responsable", e.target.value)}
+                    error={errors.responsable}
+                    placeholder="Ej. María González"
+                    autoComplete="name"
+                    required
+                  />
+
+                  <Input
+                    label="Cargo"
+                    name="cargo"
+                    value={formData.cargo}
+                    onChange={(e) => handleChange("cargo", e.target.value)}
+                    error={errors.cargo}
+                    placeholder="Ej. Jefe de RRHH"
+                    autoComplete="organization-title"
+                    required
+                  />
+
+                  <Input
+                    label="Nombre de la empresa"
+                    name="empresa"
+                    value={formData.empresa}
+                    onChange={(e) => handleChange("empresa", e.target.value)}
+                    error={errors.empresa}
+                    placeholder="Ej. Empresa SpA"
+                    autoComplete="organization"
+                    required
+                  />
+
+                  <Select
+                    label="Mes estimado del operativo"
+                    name="mesEstimado"
+                    value={formData.mesEstimado}
+                    onChange={(e) => handleChange("mesEstimado", e.target.value)}
+                    error={errors.mesEstimado}
+                    options={mesOptions}
+                    required
+                  />
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="mt-2 w-full"
+                    disabled={isSubmitting}
+                    icon={<PaperPlaneTilt size={16} weight="bold" />}
                   >
-                    <div className="w-16 h-16 rounded-full bg-primary-soft text-primary flex items-center justify-center mb-5">
-                      <CheckCircle size={36} weight="fill" />
-                    </div>
-                    <h3 className="text-xl font-bold text-text-primary mb-2">
-                      Solicitud enviada con éxito
-                    </h3>
-                    <p className="text-text-secondary leading-relaxed max-w-sm mb-6">
-                      Recibimos tu solicitud. Nos comunicaremos contigo pronto para coordinar los detalles de la jornada.
-                    </p>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsSuccess(false)}
-                    >
-                      Enviar otra solicitud
-                    </Button>
-                  </motion.div>
-                ) : (
-                  <motion.form
-                    key="form"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onSubmit={handleSubmit}
-                    className="space-y-5"
-                    noValidate
-                  >
-                    <Input
-                      label="Persona responsable"
-                      name="responsable"
-                      value={formData.responsable}
-                      onChange={(e) => handleChange("responsable", e.target.value)}
-                      error={errors.responsable}
-                      placeholder="Ej. María González"
-                      autoComplete="name"
-                      required
-                    />
-
-                    <Input
-                      label="Cargo"
-                      name="cargo"
-                      value={formData.cargo}
-                      onChange={(e) => handleChange("cargo", e.target.value)}
-                      error={errors.cargo}
-                      placeholder="Ej. Jefe de RRHH"
-                      autoComplete="organization-title"
-                      required
-                    />
-
-                    <Input
-                      label="Nombre de la empresa"
-                      name="empresa"
-                      value={formData.empresa}
-                      onChange={(e) => handleChange("empresa", e.target.value)}
-                      error={errors.empresa}
-                      placeholder="Ej. Empresa SpA"
-                      autoComplete="organization"
-                      required
-                    />
-
-                    <Select
-                      label="Mes estimado del operativo"
-                      name="mesEstimado"
-                      value={formData.mesEstimado}
-                      onChange={(e) => handleChange("mesEstimado", e.target.value)}
-                      error={errors.mesEstimado}
-                      options={mesOptions}
-                      required
-                    />
-
-                    <Button
-                      type="submit"
-                      size="lg"
-                      className="w-full mt-2"
-                      disabled={isSubmitting}
-                      icon={<PaperPlaneTilt size={16} weight="bold" />}
-                    >
-                      {isSubmitting ? "Enviando..." : "Enviar solicitud"}
-                    </Button>
-                  </motion.form>
-                )}
-              </AnimatePresence>
-            </div>
+                    {isSubmitting ? "Enviando..." : "Enviar solicitud"}
+                  </Button>
+                </motion.form>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

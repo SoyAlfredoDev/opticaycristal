@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { List, X, Eyeglasses } from "@phosphor-icons/react";
+import { List, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
 
 const navLinks = [
@@ -18,22 +19,24 @@ export default function Navbar() {
   return (
     <>
       <motion.header
-        className="fixed top-0 left-0 right-0 z-[var(--z-nav)] px-4 pt-5 md:px-6"
-        initial={reduce ? false : { y: -80, opacity: 0 }}
+        className="fixed top-0 left-0 right-0 z-[var(--z-nav)] px-4 pt-4 md:px-6"
+        initial={reduce ? false : { y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-full border border-border/60 bg-surface/80 px-4 py-2.5 shadow-brand backdrop-blur-xl md:px-6">
-          <a href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-surface">
-              <Eyeglasses size={20} weight="fill" />
-            </div>
-            <span className="text-base font-bold tracking-tight text-text-primary hidden sm:block">
-              Óptica y Cristal
-            </span>
+        <div className="container-site flex h-[4.25rem] max-w-[1320px] items-center justify-between gap-4 rounded-2xl border border-border/80 bg-white/90 px-4 shadow-brand backdrop-blur-xl md:px-6">
+          <a href="/" className="flex shrink-0 items-center">
+            <Image
+              src="/logo-optica-y-cristal.png"
+              alt="Óptica y Cristal"
+              width={160}
+              height={48}
+              className="h-10 w-auto object-contain"
+              priority
+            />
           </a>
 
-          <nav className="hidden md:flex items-center gap-7">
+          <nav className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => (
               <a
                 key={link.name}
@@ -46,12 +49,17 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button href="/jornadas" variant="primary" size="sm" className="hidden md:inline-flex">
-              Cotizar servicio
+            <Button
+              href="/jornadas"
+              variant="primary"
+              size="sm"
+              className="hidden md:inline-flex"
+            >
+              Solicitar jornada
             </Button>
 
             <button
-              className="md:hidden flex h-10 w-10 items-center justify-center rounded-full text-text-secondary hover:bg-muted transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-muted md:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
               aria-expanded={isMobileMenuOpen}
@@ -81,11 +89,11 @@ export default function Navbar() {
             transition={{ duration: 0.3 }}
           >
             <div
-              className="absolute inset-0 bg-text-primary/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-text-primary/20 backdrop-blur-sm"
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.nav
-              className="absolute top-20 left-4 right-4 rounded-[var(--radius-shell)] border border-border bg-surface/95 p-6 shadow-brand-lg backdrop-blur-xl"
+              className="absolute top-[5.5rem] left-4 right-4 rounded-2xl border border-border bg-white p-6 shadow-brand-lg"
               initial={{ opacity: 0, y: -12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -12, scale: 0.98 }}
@@ -100,7 +108,7 @@ export default function Navbar() {
                     initial={reduce ? false : { opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 + i * 0.05, duration: 0.3 }}
-                    className="rounded-xl px-4 py-3 text-base font-medium text-text-secondary hover:bg-muted hover:text-primary transition-colors"
+                    className="rounded-xl px-4 py-3 text-base font-medium text-text-secondary transition-colors hover:bg-muted hover:text-primary"
                   >
                     {link.name}
                   </motion.a>
@@ -108,10 +116,10 @@ export default function Navbar() {
                 <Button
                   href="/jornadas"
                   variant="primary"
-                  className="w-full mt-3"
+                  className="mt-3 w-full"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Cotizar servicio
+                  Solicitar jornada
                 </Button>
               </div>
             </motion.nav>

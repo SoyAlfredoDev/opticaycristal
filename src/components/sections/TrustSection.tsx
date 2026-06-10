@@ -8,6 +8,12 @@ import {
 } from "@phosphor-icons/react";
 import { Reveal } from "@/components/ui/Reveal";
 
+const stats = [
+  { value: "+200", label: "Empresas atendidas" },
+  { value: "+10.000", label: "Trabajadores evaluados" },
+  { value: "$0", label: "Costo para la empresa" },
+];
+
 const trustPillars = [
   {
     icon: MapPin,
@@ -37,34 +43,47 @@ const trustPillars = [
 
 export default function TrustSection() {
   return (
-    <section className="py-24 lg:py-32 bg-muted border-y border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal className="max-w-2xl mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-text-primary tracking-tight mb-4 text-balance">
+    <section className="section-y relative overflow-hidden bg-muted">
+      <div className="circle-decoration circle-decoration--ring absolute bottom-0 left-1/4 h-[220px] w-[220px] opacity-25" />
+
+      <div className="container-site relative z-10">
+        <Reveal className="mb-12 max-w-2xl lg:mb-14">
+          <h2 className="mb-5 text-balance text-3xl font-bold leading-[1.1] tracking-tight text-text-primary md:text-4xl lg:text-[2.75rem]">
             Más que un operativo, somos tu óptica de confianza
           </h2>
-          <p className="text-lg text-text-secondary leading-relaxed max-w-[65ch]">
-            Llevar salud a tu empresa requiere seriedad. Contamos con estructura real, profesionales certificados y procesos claros.
+          <p className="max-w-[60ch] text-lg leading-relaxed text-text-secondary">
+            Llevar salud visual a tu empresa requiere seriedad. Contamos con estructura real, profesionales certificados y procesos claros.
           </p>
         </Reveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <Reveal className="mb-12">
+          <div className="grid grid-cols-1 gap-4 rounded-[var(--radius-shell)] bg-white p-6 shadow-brand ring-1 ring-black/[0.04] sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border md:p-8">
+            {stats.map((stat) => (
+              <div key={stat.label} className="px-2 py-2 text-center sm:py-0">
+                <p className="stat-value text-3xl font-bold text-primary md:text-4xl">
+                  {stat.value}
+                </p>
+                <p className="mt-1 text-sm font-medium text-text-secondary">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {trustPillars.map((pillar, index) => {
             const Icon = pillar.icon;
             return (
               <Reveal key={pillar.title} delay={index * 0.08}>
-                <div className="h-full rounded-[var(--radius-shell)] p-1.5 ring-1 ring-black/[0.04] shadow-brand transition-transform duration-500 ease-premium hover:-translate-y-1">
-                  <div className="h-full rounded-[var(--radius-inner)] bg-surface p-7 text-left">
-                    <div className="w-12 h-12 bg-primary-soft text-primary rounded-2xl flex items-center justify-center mb-5">
-                      <Icon size={24} weight="regular" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-text-primary mb-2 tracking-tight">
-                      {pillar.title}
-                    </h3>
-                    <p className="text-text-secondary text-sm leading-relaxed">
-                      {pillar.description}
-                    </p>
+                <div className="card-float h-full p-6 lg:p-7">
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+                    <Icon size={24} weight="regular" />
                   </div>
+                  <h3 className="mb-2 text-lg font-semibold tracking-tight text-text-primary">
+                    {pillar.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-text-secondary">
+                    {pillar.description}
+                  </p>
                 </div>
               </Reveal>
             );
