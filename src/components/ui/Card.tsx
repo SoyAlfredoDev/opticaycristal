@@ -16,21 +16,23 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     },
     ref
   ) => {
+    const shellStyles =
+      "rounded-[var(--radius-shell)] p-1.5 ring-1 ring-black/[0.04]";
+
     const innerVariants = {
       default: "bg-white",
-      accent: "bg-primary-mist",
-      muted: "bg-muted/50",
+      accent: "bg-primary text-white",
+      muted: "bg-muted",
     };
 
-    const hoverStyles = hoverEffect ? "card-float" : "shadow-card border border-black/[0.04]";
+    const hoverStyles = hoverEffect
+      ? "transition-all duration-500 ease-premium hover:-translate-y-1 hover:shadow-brand-hover"
+      : "";
 
     return (
-      <div
-        className={`rounded-[var(--radius-card)] ${hoverStyles} ${className}`}
-        ref={ref}
-      >
+      <div className={`${shellStyles} shadow-brand ${hoverStyles} ${className}`} ref={ref}>
         <div
-          className={`rounded-[var(--radius-card)] p-6 lg:p-8 ${innerVariants[variant]}`}
+          className={`rounded-[var(--radius-inner)] p-6 lg:p-8 ${innerVariants[variant]}`}
           {...props}
         >
           {children}

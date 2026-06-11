@@ -33,11 +33,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary:
-        "bg-primary hover:bg-primary-hover text-white shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5",
+        "bg-primary hover:bg-primary-hover text-white shadow-brand hover:shadow-brand-hover hover:-translate-y-[1px]",
       secondary:
-        "bg-primary-soft text-primary hover:bg-primary-soft/70 hover:-translate-y-0.5",
+        "bg-primary-soft text-primary hover:bg-primary-soft/80 hover:-translate-y-[1px]",
       outline:
-        "border-2 border-primary bg-white text-primary hover:bg-primary-soft/40 hover:border-primary-hover hover:-translate-y-0.5",
+        "border-2 border-primary bg-white text-primary hover:bg-primary-soft/40 hover:border-primary-hover hover:-translate-y-[1px]",
       ghost: "text-text-secondary hover:text-primary hover:bg-primary-soft/30",
     };
 
@@ -54,7 +54,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         <span className="whitespace-nowrap">{children}</span>
         {icon && (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 transition-transform duration-300 group-hover:translate-x-0.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-px">
             {icon}
           </span>
         )}

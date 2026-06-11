@@ -1,124 +1,137 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { List, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
 
 const navLinks = [
+  { name: "El problema", href: "/#problema" },
   { name: "Beneficios", href: "/#beneficios" },
-  { name: "Cómo funciona", href: "/#como-funciona" },
-  { name: "FAQ", href: "/#faq" },
+  { name: "Nuestra óptica", href: "/#optica" },
 ];
 
 export default function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const reduce = useReducedMotion();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
 
   return (
     <>
       <motion.header
-        className="fixed top-0 left-0 right-0 z-[var(--z-nav)] px-4 pt-4 md:px-6"
-        initial={reduce ? false : { y: -60, opacity: 0 }}
+        className={`site-header fixed inset-x-0 top-0 z-[var(--z-nav)] transition-[background,box-shadow,border-color] duration-400 ease-premium ${
+          scrolled ? "site-header--scrolled" : "site-header--top"
+        }`}
+        initial={reduce ? false : { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="container-site flex h-[4.25rem] max-w-[1320px] items-center justify-between gap-4 rounded-2xl border border-border/80 bg-white/90 px-4 shadow-brand backdrop-blur-xl md:px-6">
-          <a href="/" className="flex shrink-0 items-center">
-            <Image
-              src="/logo-optica-y-cristal.png"
-              alt="Óptica y Cristal"
-              width={160}
-              height={48}
-              className="h-10 w-auto object-contain"
-              priority
-            />
+        <div className="container-site flex h-[3.75rem] items-center gap-4 sm:h-16">
+          <a href="/" className="group flex min-w-0 shrink-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/[0.05] transition-shadow group-hover:shadow-brand sm:h-11 sm:w-11">
+              <Image
+                src="/logo-optica-y-cristal.png"
+                alt=""
+                width={40}
+                height={40}
+                className="h-7 w-7 object-contain sm:h-8 sm:w-8"
+                priority
+              />
+            </span>
+            <span className="hidden flex-col sm:flex">
+              <span className="text-sm font-bold leading-tight tracking-tight text-text-primary">
+                Óptica y Cristal
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                Salud visual corporativa
+              </span>
+            </span>
           </a>
 
-          <nav className="hidden items-center gap-8 md:flex">
+          <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex" aria-label="Principal">
             {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-sm font-medium text-text-secondary transition-colors duration-300 hover:text-primary"
-              >
+              <a key={link.name} href={link.href} className="site-header__link">
                 {link.name}
               </a>
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             <Button
-              href="/jornadas"
-              variant="primary"
+              href="/#contratar"
               size="sm"
-              className="hidden md:inline-flex"
+              className="hidden min-h-[42px] rounded-full px-5 sm:inline-flex"
             >
               Solicitar jornada
             </Button>
-
+            <Button href="/#contratar" size="sm" className="min-h-[40px] rounded-full px-4 text-xs sm:hidden">
+              Solicitar
+            </Button>
             <button
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-muted md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
-              aria-expanded={isMobileMenuOpen}
+              type="button"
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-muted hover:text-primary lg:hidden"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={menuOpen}
             >
-              <div className="relative h-5 w-5">
-                <List
-                  size={20}
-                  className={`absolute inset-0 transition-all duration-300 ${isMobileMenuOpen ? "rotate-90 opacity-0" : "rotate-0 opacity-100"}`}
-                />
-                <X
-                  size={20}
-                  className={`absolute inset-0 transition-all duration-300 ${isMobileMenuOpen ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"}`}
-                />
-              </div>
+              {menuOpen ? <X size={20} weight="bold" /> : <List size={20} weight="bold" />}
             </button>
           </div>
         </div>
       </motion.header>
 
       <AnimatePresence>
-        {isMobileMenuOpen && (
+        {menuOpen && (
           <motion.div
-            className="fixed inset-0 z-[var(--z-overlay)] md:hidden"
+            className="fixed inset-0 z-[var(--z-overlay)] lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
           >
-            <div
-              className="absolute inset-0 bg-text-primary/20 backdrop-blur-sm"
-              onClick={() => setIsMobileMenuOpen(false)}
+            <button
+              type="button"
+              className="absolute inset-0 bg-text-primary/20 backdrop-blur-[2px]"
+              aria-label="Cerrar menú"
+              onClick={() => setMenuOpen(false)}
             />
             <motion.nav
-              className="absolute top-[5.5rem] left-4 right-4 rounded-2xl border border-border bg-white p-6 shadow-brand-lg"
-              initial={{ opacity: 0, y: -12, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -12, scale: 0.98 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-x-4 top-[4.25rem] overflow-hidden rounded-2xl border border-border bg-white shadow-brand-lg"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              aria-label="Menú móvil"
             >
-              <div className="flex flex-col gap-1">
-                {navLinks.map((link, i) => (
-                  <motion.a
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    initial={reduce ? false : { opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 + i * 0.05, duration: 0.3 }}
-                    className="rounded-xl px-4 py-3 text-base font-medium text-text-secondary transition-colors hover:bg-muted hover:text-primary"
-                  >
-                    {link.name}
-                  </motion.a>
+              <div className="border-b border-border/60 bg-muted/40 px-5 py-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-primary">Navegación</p>
+              </div>
+              <ul className="p-2">
+                {navLinks.map((link) => (
+                  <li key={link.name}>
+                    <a
+                      href={link.href}
+                      onClick={() => setMenuOpen(false)}
+                      className="block rounded-xl px-4 py-3.5 text-base font-medium text-text-primary transition-colors hover:bg-muted"
+                    >
+                      {link.name}
+                    </a>
+                  </li>
                 ))}
-                <Button
-                  href="/jornadas"
-                  variant="primary"
-                  className="mt-3 w-full"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
+              </ul>
+              <div className="border-t border-border/60 p-3">
+                <Button href="/#contratar" className="w-full min-h-[48px]" onClick={() => setMenuOpen(false)}>
                   Solicitar jornada
                 </Button>
               </div>

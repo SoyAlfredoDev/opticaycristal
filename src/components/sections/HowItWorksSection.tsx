@@ -13,33 +13,33 @@ import { Reveal } from "@/components/ui/Reveal";
 const steps = [
   {
     icon: ChatCircle,
+    step: "01",
     title: "Solicitas información",
-    description:
-      "Nos contactas para evaluar el tamaño de tu equipo y recibir una propuesta.",
+    description: "Nos contactas para evaluar el tamaño de tu equipo y recibir una propuesta.",
   },
   {
     icon: CalendarBlank,
+    step: "02",
     title: "Coordinamos fecha",
-    description:
-      "Agendamos el día y los bloques de atención para tus colaboradores.",
+    description: "Agendamos el día y los bloques de atención para tus colaboradores.",
   },
   {
     icon: Truck,
+    step: "03",
     title: "Acudimos a la empresa",
-    description:
-      "Instalamos nuestro equipo en un espacio habilitado dentro de tus oficinas.",
+    description: "Instalamos nuestro equipo en un espacio habilitado dentro de tus oficinas.",
   },
   {
     icon: Eye,
+    step: "04",
     title: "Realizamos chequeos",
-    description:
-      "Tecnólogos médicos evalúan a cada trabajador y detectan problemas visuales.",
+    description: "Tecnólogos médicos evalúan a cada trabajador y detectan problemas visuales.",
   },
   {
     icon: Eyeglasses,
+    step: "05",
     title: "Asesoría y lentes",
-    description:
-      "Orientamos sobre salud visual y ofrecemos lentes a quienes los necesiten.",
+    description: "Orientamos sobre salud visual y ofrecemos lentes a quienes los necesiten.",
   },
 ];
 
@@ -51,55 +51,54 @@ export default function HowItWorksSection({
   ctaLabel?: string;
 }) {
   return (
-    <section id="como-funciona" className="section-y relative overflow-hidden bg-white">
-      <div className="circle-decoration circle-decoration--warm absolute -bottom-24 -left-24 h-[320px] w-[320px]" />
+    <section id="como-funciona" className="relative py-28 lg:py-36 bg-white overflow-hidden">
+      {/* ── Decorative elements ── */}
+      <div className="circle-decoration circle-decoration--warm absolute -bottom-20 -left-20 w-[300px] h-[300px]" />
 
-      <div className="container-site relative z-10">
-        <Reveal className="mb-14 max-w-2xl lg:mb-16">
-          <h2 className="mb-5 text-balance text-3xl font-bold leading-[1.1] tracking-tight text-text-primary md:text-4xl lg:text-[2.75rem]">
+      <div className="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <Reveal className="max-w-2xl mb-16">
+          <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">El proceso</p>
+          <h2 className="text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-text-primary tracking-tight mb-5 text-balance leading-[1.12]">
             ¿Cómo funciona una jornada oftalmológica?
           </h2>
-          <p className="max-w-[60ch] text-lg leading-relaxed text-text-secondary">
+          <p className="text-lg text-text-secondary leading-relaxed max-w-[60ch]">
             Nos encargamos de todo el proceso para que la experiencia sea fluida y sin complicaciones para la administración.
           </p>
         </Reveal>
 
-        <div className="relative">
-          <div
-            className="absolute left-6 top-0 hidden h-full w-px bg-gradient-to-b from-primary/20 via-primary/10 to-transparent lg:block"
-            aria-hidden
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            return (
+              <Reveal key={step.title} delay={index * 0.08}>
+                <div className="group relative bg-white rounded-[var(--radius-shell)] p-6 ring-1 ring-black/[0.04] shadow-brand transition-all duration-500 ease-premium hover:-translate-y-1 hover:shadow-brand-hover h-full">
+                  {/* Step number */}
+                  <span className="text-5xl font-bold text-primary/[0.07] absolute top-4 right-5 select-none leading-none">
+                    {step.step}
+                  </span>
 
-          <div className="space-y-5">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <Reveal key={step.title} delay={index * 0.07}>
-                  <div className="group relative flex flex-col gap-5 rounded-[var(--radius-card)] bg-white p-6 shadow-card ring-1 ring-black/[0.04] transition-all duration-300 ease-premium hover:-translate-y-0.5 hover:shadow-brand-hover lg:flex-row lg:items-center lg:gap-8 lg:p-7">
-                    <div className="flex items-center gap-4 lg:w-[280px] lg:shrink-0">
-                      <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-white">
-                        <Icon size={22} weight="regular" />
-                      </div>
-                    </div>
-
-                    <div className="hidden h-3 w-3 shrink-0 rounded-full bg-primary/20 ring-4 ring-primary/10 lg:absolute lg:left-[1.375rem] lg:top-1/2 lg:block lg:-translate-y-1/2" />
-
-                    <div className="flex-1">
-                      <h3 className="mb-1.5 text-lg font-semibold tracking-tight text-text-primary">
-                        {step.title}
-                      </h3>
-                      <p className="max-w-[65ch] text-sm leading-relaxed text-text-secondary">
-                        {step.description}
-                      </p>
-                    </div>
+                  <div className="w-11 h-11 rounded-xl bg-primary-soft text-primary flex items-center justify-center mb-5 transition-colors duration-300 group-hover:bg-primary group-hover:text-white">
+                    <Icon size={22} weight="regular" />
                   </div>
-                </Reveal>
-              );
-            })}
-          </div>
+
+                  <h3 className="text-base font-semibold text-text-primary mb-2 tracking-tight">
+                    {step.title}
+                  </h3>
+                  <p className="text-text-secondary text-sm leading-relaxed">
+                    {step.description}
+                  </p>
+
+                  {/* Connector line (desktop only) */}
+                  {index < steps.length - 1 && (
+                    <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-px bg-border" />
+                  )}
+                </div>
+              </Reveal>
+            );
+          })}
         </div>
 
-        <Reveal className="mt-14 text-center" delay={0.3}>
+        <Reveal className="mt-16 text-center" delay={0.3}>
           <Button href={ctaHref} size="lg">
             {ctaLabel}
           </Button>

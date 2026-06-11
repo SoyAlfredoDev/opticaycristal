@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const plusJakarta = Plus_Jakarta_Sans({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-outfit",
   display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+  style: ["italic", "normal"],
 });
 
 export const metadata: Metadata = {
@@ -45,7 +52,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="scroll-smooth">
       <body
-        className={`${plusJakarta.className} antialiased bg-background text-text-primary`}
+        className={`${outfit.className} ${playfair.variable} antialiased bg-background text-text-primary`}
       >
         <a
           href="#contenido-principal"

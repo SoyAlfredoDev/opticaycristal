@@ -22,36 +22,38 @@ export default function JornadasHero() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="relative flex min-h-[100dvh] items-center overflow-hidden bg-white pt-24 pb-16 lg:pt-24 lg:pb-20">
-      <div className="organic-blob organic-blob--soft absolute -top-24 -left-24 h-[420px] w-[420px] opacity-70" />
-      <div className="circle-decoration circle-decoration--ring absolute -top-16 -left-16 h-[360px] w-[360px] opacity-30" />
-      <div className="circle-decoration circle-decoration--fill absolute bottom-0 right-1/4 h-[280px] w-[280px]" />
+    <section className="relative min-h-[100dvh] flex items-center pt-24 pb-16 lg:pt-28 lg:pb-24 overflow-hidden bg-white">
+      {/* ── Decorative circles ── */}
+      <div className="circle-decoration circle-decoration--primary absolute -top-16 -left-16 w-[400px] h-[400px] opacity-30" />
+      <div className="circle-decoration circle-decoration--muted absolute bottom-0 right-1/4 w-[300px] h-[300px]" />
 
-      <div className="container-site relative z-10 w-full">
-        <div className="grid grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-20">
+      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-primary-soft/40 rounded-full blur-[160px] -translate-y-1/3 -translate-x-1/4 pointer-events-none" />
+
+      <div className="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 28 }}
+            initial={reduce ? false : { opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1 className="mb-6 text-balance text-4xl font-bold leading-[1.06] tracking-[-0.03em] text-text-primary md:text-5xl lg:text-[3.25rem]">
+            <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] xl:text-6xl font-bold text-text-primary tracking-[-0.03em] leading-[1.08] mb-6 text-balance">
               Jornadas oftalmológicas{" "}
               <span className="text-primary">en tu empresa</span>
             </h1>
 
-            <p className="mb-10 max-w-[55ch] text-lg leading-relaxed text-text-secondary lg:text-xl">
+            <p className="text-lg lg:text-xl text-text-secondary mb-10 max-w-[55ch] leading-relaxed">
               Llevamos chequeos visuales y venta de lentes directamente a tus instalaciones. Tus colaboradores reciben atención profesional sin perder tiempo en traslados.
             </p>
 
-            <div className="mb-10 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
               {highlights.map((item) => {
                 const Icon = item.icon;
                 return (
                   <div
                     key={item.text}
-                    className="card-float flex items-center gap-3 p-4"
+                    className="flex items-center gap-3 p-3.5 rounded-2xl bg-muted ring-1 ring-black/[0.03]"
                   >
-                    <Icon size={20} weight="regular" className="shrink-0 text-primary" />
+                    <Icon size={20} weight="regular" className="text-primary shrink-0" />
                     <span className="text-sm font-medium text-text-primary">{item.text}</span>
                   </div>
                 );
@@ -68,12 +70,12 @@ export default function JornadasHero() {
           </motion.div>
 
           <motion.div
-            initial={reduce ? false : { opacity: 0, scale: 0.97 }}
+            initial={reduce ? false : { opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="relative overflow-hidden rounded-[var(--radius-shell)] shadow-brand-lg ring-1 ring-black/[0.04]">
-              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+            <div className="rounded-[var(--radius-shell)] p-1.5 ring-1 ring-black/[0.04] shadow-brand-lg bg-white">
+              <div className="relative aspect-[4/3] rounded-[var(--radius-inner)] overflow-hidden bg-muted">
                 <Image
                   src="/images/hero-corporate.png"
                   alt="Jornada oftalmológica corporativa en empresa"
@@ -82,7 +84,7 @@ export default function JornadasHero() {
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary/8 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent" />
               </div>
             </div>
           </motion.div>

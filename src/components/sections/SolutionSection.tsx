@@ -38,23 +38,24 @@ const features = [
 
 export default function SolutionSection() {
   return (
-    <section id="solucion" className="section-y relative overflow-hidden bg-white">
-      <div className="circle-decoration circle-decoration--fill absolute -left-24 bottom-0 h-[360px] w-[360px]" />
+    <section id="solucion" className="relative py-28 lg:py-36 bg-white overflow-hidden">
+      {/* ── Decorative elements ── */}
+      <div className="circle-decoration circle-decoration--muted absolute bottom-0 -left-20 w-[350px] h-[350px]" />
+      <div className="circle-decoration circle-decoration--primary absolute top-20 right-1/3 w-[200px] h-[200px] opacity-20" />
 
-      <div className="container-site relative z-10">
-        <Reveal className="mb-14 max-w-2xl lg:mb-16">
-          <h2 className="mb-5 text-balance text-3xl font-bold leading-[1.1] tracking-tight text-text-primary md:text-4xl lg:text-[2.75rem]">
-            La óptica va a tu oficina
-          </h2>
-          <p className="max-w-[60ch] text-lg leading-relaxed text-text-secondary">
-            Transformamos un espacio de tu empresa en un box de atención visual. Minimizamos desplazamientos y entregamos comodidad para todos tus trabajadores.
-          </p>
-        </Reveal>
+      <div className="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+          <Reveal direction="left" className="lg:col-span-5 lg:sticky lg:top-28">
+            <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">Nuestra solución</p>
+            <h2 className="text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-text-primary tracking-tight mb-5 text-balance leading-[1.12]">
+              La óptica va a tu oficina
+            </h2>
+            <p className="text-lg text-text-secondary leading-relaxed max-w-[60ch] mb-8">
+              Transformamos un espacio de tu empresa en un box de atención visual. Minimizamos desplazamientos y entregamos comodidad para todos tus trabajadores.
+            </p>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
-          <Reveal direction="left" className="lg:col-span-5">
-            <div className="relative h-full overflow-hidden rounded-[var(--radius-shell)] shadow-brand-lg ring-1 ring-black/[0.04]">
-              <div className="relative aspect-[4/5] min-h-[420px] lg:min-h-full lg:aspect-auto lg:h-full">
+            <div className="relative rounded-[var(--radius-shell)] p-1.5 ring-1 ring-black/[0.04] shadow-brand-lg bg-white">
+              <div className="relative aspect-[3/4] rounded-[var(--radius-inner)] overflow-hidden">
                 <Image
                   src="/images/solution-corporate.png"
                   alt="Chequeo oftalmológico corporativo en empresa"
@@ -62,12 +63,10 @@ export default function SolutionSection() {
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 40vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-text-primary/55 via-text-primary/10 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-8">
-                  <p className="mb-1 text-xl font-bold text-white">
-                    Atención en menos de 30 minutos
-                  </p>
-                  <p className="text-sm text-white/85">
+                <div className="absolute inset-0 bg-gradient-to-t from-text-primary/50 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                  <p className="text-xl font-bold text-white mb-1">Atención en menos de 30 minutos</p>
+                  <p className="text-white/80 text-sm">
                     Tus colaboradores vuelven rápidamente a sus labores.
                   </p>
                 </div>
@@ -75,21 +74,23 @@ export default function SolutionSection() {
             </div>
           </Reveal>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-7 lg:gap-5">
+          <div className="lg:col-span-7 space-y-4">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
                 <Reveal key={feature.title} delay={index * 0.08}>
-                  <div className="card-float group h-full p-6 lg:p-7">
-                    <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-white">
+                  <div className="flex gap-5 p-6 rounded-[var(--radius-inner)] bg-white shadow-brand ring-1 ring-black/[0.04] transition-all duration-500 ease-premium hover:-translate-y-0.5 hover:shadow-brand-hover">
+                    <div className="shrink-0 w-12 h-12 rounded-2xl bg-primary-soft text-primary flex items-center justify-center">
                       <Icon size={22} weight="regular" />
                     </div>
-                    <h3 className="mb-2 text-lg font-semibold tracking-tight text-text-primary">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-text-secondary">
-                      {feature.description}
-                    </p>
+                    <div>
+                      <h3 className="text-lg font-semibold text-text-primary mb-1 tracking-tight">
+                        {feature.title}
+                      </h3>
+                      <p className="text-text-secondary text-sm leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
                   </div>
                 </Reveal>
               );

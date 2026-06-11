@@ -43,16 +43,16 @@ function FaqItem({ faq, index }: { faq: typeof faqs[number]; index: number }) {
 
   return (
     <Reveal delay={index * 0.05}>
-      <div className="overflow-hidden rounded-[var(--radius-inner)] bg-white shadow-card ring-1 ring-black/[0.04]">
+      <div className="border-t border-border">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="group flex w-full cursor-pointer items-center justify-between gap-4 px-6 py-5 text-left"
+          className="w-full flex items-center justify-between gap-4 py-6 text-left group cursor-pointer"
           aria-expanded={isOpen}
         >
-          <h3 className="text-base font-semibold tracking-tight text-text-primary transition-colors duration-300 group-hover:text-primary lg:text-lg">
+          <h3 className="text-base lg:text-lg font-semibold text-text-primary tracking-tight group-hover:text-primary transition-colors duration-300">
             {faq.question}
           </h3>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+          <span className="shrink-0 w-8 h-8 rounded-full bg-primary-soft text-primary flex items-center justify-center transition-all duration-300 group-hover:bg-primary group-hover:text-white">
             {isOpen ? <Minus size={16} weight="bold" /> : <Plus size={16} weight="bold" />}
           </span>
         </button>
@@ -65,7 +65,7 @@ function FaqItem({ faq, index }: { faq: typeof faqs[number]; index: number }) {
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <p className="max-w-[65ch] px-6 pb-5 text-sm leading-relaxed text-text-secondary">
+              <p className="text-text-secondary text-sm leading-relaxed pb-6 max-w-[65ch]">
                 {faq.answer}
               </p>
             </motion.div>
@@ -78,25 +78,25 @@ function FaqItem({ faq, index }: { faq: typeof faqs[number]; index: number }) {
 
 export default function FaqSection() {
   return (
-    <section id="faq" className="section-y relative overflow-hidden bg-white">
-      <div className="circle-decoration circle-decoration--fill absolute -right-16 top-20 h-[280px] w-[280px]" />
+    <section id="faq" className="relative py-28 lg:py-36 bg-white overflow-hidden">
+      {/* ── Decorative circle ── */}
+      <div className="circle-decoration circle-decoration--muted absolute top-20 -right-16 w-[280px] h-[280px]" />
 
-      <div className="container-site relative z-10">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-          <Reveal className="lg:sticky lg:top-28 lg:self-start">
-            <h2 className="mb-5 text-balance text-3xl font-bold leading-[1.1] tracking-tight text-text-primary md:text-4xl lg:text-[2.75rem]">
-              Preguntas frecuentes
-            </h2>
-            <p className="max-w-[55ch] text-lg leading-relaxed text-text-secondary">
-              Respuestas claras sobre cómo organizamos las jornadas oftalmológicas en tu empresa.
-            </p>
-          </Reveal>
+      <div className="max-w-[900px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <Reveal className="text-center mb-16">
+          <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">FAQ</p>
+          <h2 className="text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-text-primary tracking-tight mb-5 text-balance leading-[1.12]">
+            Preguntas frecuentes
+          </h2>
+          <p className="text-lg text-text-secondary leading-relaxed max-w-[55ch] mx-auto">
+            Respuestas claras sobre cómo organizamos las jornadas oftalmológicas en tu empresa.
+          </p>
+        </Reveal>
 
-          <div className="space-y-3">
-            {faqs.map((faq, index) => (
-              <FaqItem key={faq.question} faq={faq} index={index} />
-            ))}
-          </div>
+        <div>
+          {faqs.map((faq, index) => (
+            <FaqItem key={faq.question} faq={faq} index={index} />
+          ))}
         </div>
       </div>
     </section>
