@@ -35,10 +35,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       primary:
         "bg-primary hover:bg-primary-hover text-white shadow-brand hover:shadow-brand-hover hover:-translate-y-[1px]",
       secondary:
-        "bg-primary-soft text-primary hover:bg-primary-soft/80 hover:-translate-y-[1px]",
+        "bg-brand-dark text-white hover:bg-brand-dark-elevated hover:-translate-y-[1px]",
       outline:
-        "border-2 border-primary bg-white text-primary hover:bg-primary-soft/40 hover:border-primary-hover hover:-translate-y-[1px]",
-      ghost: "text-text-secondary hover:text-primary hover:bg-primary-soft/30",
+        "border-2 border-primary bg-white text-primary hover:bg-primary-mist hover:border-primary-hover hover:-translate-y-[1px]",
+      ghost: "text-text-secondary hover:text-primary hover:bg-primary-mist/60",
     };
 
     const combinedClassName = `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`;

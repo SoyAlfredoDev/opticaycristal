@@ -64,7 +64,7 @@ export default function BenefitsSection() {
 
   return (
     <section id="beneficios" className="section-y relative overflow-hidden bg-white">
-      <div className="organic-blob organic-blob--soft absolute -right-32 top-20 h-[400px] w-[400px] opacity-50" />
+      <div className="dot-grid-pattern pointer-events-none absolute right-0 top-0 h-48 w-48 opacity-40" aria-hidden />
 
       <div className="container-site relative z-10">
         <motion.div
@@ -74,10 +74,9 @@ export default function BenefitsSection() {
           transition={{ duration: 0.55, ease: EASE }}
           className="mb-10 max-w-2xl sm:mb-14"
         >
-          <span className="section-eyebrow mb-4">Beneficios</span>
-          <h2 className="section-title mb-4">
+          <h2 className="section-title section-title--caps mb-4">
             Beneficios de las{" "}
-            <span className="hero-headline-serif text-primary">jornadas oftalmológicas</span>
+            <span className="hero-headline-serif normal-case text-primary">jornadas oftalmológicas</span>
           </h2>
           <p className="text-base leading-relaxed text-text-secondary sm:text-lg">
             Un servicio pensado para generar impacto en la empresa, simplificar la gestión de RRHH y mejorar la vida de cada colaborador.
@@ -94,16 +93,16 @@ export default function BenefitsSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.6, delay: blockIndex * 0.05, ease: EASE }}
-                className={`grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16 ${
+                className={`grid grid-cols-1 items-center gap-6 sm:gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16 ${
                   block.reverse ? "lg:[direction:rtl]" : ""
                 }`}
               >
-                <div className={`${block.reverse ? "lg:[direction:ltr]" : ""}`}>
-                  <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary">
-                    <Icon size={16} weight="regular" />
+                <div className={`order-2 lg:order-none ${block.reverse ? "lg:[direction:ltr]" : ""}`}>
+                  <div className="mb-4 inline-flex items-center gap-2 rounded-full border-2 border-primary/20 bg-primary-mist px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+                    <Icon size={16} weight="bold" />
                     {block.tag}
                   </div>
-                  <h3 className="mb-5 text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
+                  <h3 className="mb-4 text-xl font-extrabold uppercase tracking-tight text-brand-dark sm:mb-5 sm:text-2xl lg:text-3xl">
                     {block.title}
                   </h3>
                   <ul className="space-y-3.5">
@@ -116,7 +115,7 @@ export default function BenefitsSection() {
                         transition={{ delay: 0.1 + i * 0.06, duration: 0.4, ease: EASE }}
                         className="flex items-start gap-3"
                       >
-                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                        <span className="flyer-icon-circle mt-0.5 h-6 w-6">
                           <Check size={12} weight="bold" />
                         </span>
                         <span className="text-sm leading-relaxed text-text-primary sm:text-base">{item}</span>
@@ -125,8 +124,8 @@ export default function BenefitsSection() {
                   </ul>
                 </div>
 
-                <div className={`relative ${block.reverse ? "lg:[direction:ltr]" : ""}`}>
-                  <div className="image-frame relative">
+                <div className={`relative order-1 lg:order-none ${block.reverse ? "lg:[direction:ltr]" : ""}`}>
+                  <div className="image-frame relative ring-2 ring-brand-dark/5">
                     <div className="relative aspect-[16/11] sm:aspect-[16/10]">
                       <Image
                         src={block.image}
@@ -135,16 +134,15 @@ export default function BenefitsSection() {
                         className="object-cover transition-transform duration-700 hover:scale-[1.03]"
                         sizes="(max-width: 1024px) 100vw, 50vw"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-tr from-primary/15 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-tr from-brand-dark/20 via-transparent to-transparent" />
                     </div>
                   </div>
                   <div
                     className={`absolute -bottom-4 hidden h-16 w-16 rounded-full sm:block ${
-                      block.reverse ? "-left-4 bg-primary/10" : "-right-4 bg-muted"
+                      block.reverse ? "-left-4 bg-primary/15" : "-right-4 bg-brand-dark/8"
                     }`}
                     aria-hidden
                   />
-                  <div className="circle-decoration circle-decoration--ring absolute -bottom-5 hidden h-24 w-24 sm:block opacity-80" style={block.reverse ? { left: "-1rem" } : { right: "-1rem" }} />
                 </div>
               </motion.div>
             );

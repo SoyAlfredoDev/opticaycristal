@@ -83,10 +83,10 @@ export default function JornadaLeadForm() {
   };
 
   return (
-    <div className="card-premium relative overflow-hidden bg-white p-5 ring-1 ring-primary/8 sm:p-7 lg:p-8">
-      <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary-mist/80" aria-hidden />
-      <div className="relative mb-6 border-b border-border/60 pb-5">
-        <h3 className="mb-1 text-lg font-bold text-text-primary sm:text-xl">Solicita tu jornada</h3>
+    <div className="flyer-value-card relative overflow-hidden p-5 sm:p-7 lg:p-8">
+      <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary-mist/60" aria-hidden />
+      <div className="relative mb-6 border-b-2 border-primary/15 pb-5">
+        <h3 className="mb-1 text-lg font-extrabold uppercase tracking-tight text-brand-dark sm:text-xl">Solicita tu jornada</h3>
         <p className="text-sm text-text-secondary">Completa el formulario y te contactamos en 48 horas hábiles.</p>
       </div>
       <AnimatePresence mode="wait">

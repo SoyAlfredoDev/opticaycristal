@@ -15,6 +15,12 @@ const playfair = Playfair_Display({
   style: ["italic", "normal"],
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: "Jornadas Oftalmológicas para Empresas | Óptica y Cristal Chile",
   description:

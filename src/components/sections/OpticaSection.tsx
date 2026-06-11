@@ -45,8 +45,8 @@ export default function OpticaSection() {
   const reduce = useReducedMotion();
 
   return (
-    <section id="optica" className="section-y relative overflow-hidden bg-muted">
-      <div className="circle-decoration circle-decoration--warm absolute right-0 top-1/3 h-[280px] w-[280px] -translate-y-1/2" />
+    <section id="optica" className="section-dark section-y relative overflow-hidden">
+      <div className="pointer-events-none absolute -right-20 top-1/4 h-64 w-64 rounded-full border border-primary/20" aria-hidden />
 
       <div className="container-site relative z-10">
         <div className="mb-10 grid grid-cols-1 gap-10 lg:mb-14 lg:grid-cols-2 lg:items-center lg:gap-16">
@@ -56,15 +56,14 @@ export default function OpticaSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.55, ease: EASE }}
           >
-            <span className="section-eyebrow mb-4">Confianza</span>
-            <h2 className="section-title mb-4">
+            <h2 className="section-title section-title--caps mb-4 text-white">
               Nuestra{" "}
-              <span className="hero-headline-serif text-primary">óptica</span>
+              <span className="hero-headline-serif normal-case text-primary">óptica</span>
             </h2>
-            <p className="mb-6 max-w-[55ch] text-base leading-relaxed text-text-secondary sm:text-lg">
+            <p className="mb-6 max-w-[55ch] text-base leading-relaxed text-text-on-dark-muted sm:text-lg">
               Más de una década llevando salud visual a empresas en la Región Metropolitana. Somos una óptica establecida con local propio, equipo profesional y experiencia comprobada en jornadas corporativas.
             </p>
-            <p className="max-w-[55ch] text-sm leading-relaxed text-text-secondary sm:text-base">
+            <p className="max-w-[55ch] text-sm leading-relaxed text-text-on-dark-muted sm:text-base">
               Cada jornada oftalmológica está respaldada por nuestra estructura real: profesionales certificados, equipos calibrados y un servicio cercano adaptado a las necesidades de cada organización.
             </p>
           </motion.div>
@@ -74,7 +73,7 @@ export default function OpticaSection() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: EASE }}
-            className="grid grid-cols-3 gap-3 sm:gap-4"
+            className="mobile-scroll-row sm:!mx-0 sm:!px-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible"
           >
             {stats.map((stat, i) => (
               <motion.div
@@ -83,10 +82,10 @@ export default function OpticaSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.45, ease: EASE }}
-                className="card-premium px-3 py-4 text-center sm:px-4 sm:py-5"
+                className="mobile-scroll-card card-dark px-4 py-4 text-center sm:px-4 sm:py-5"
               >
                 <p className="stat-value text-xl font-bold text-primary sm:text-2xl lg:text-3xl">{stat.value}</p>
-                <p className="mt-1 text-[10px] font-medium leading-snug text-text-secondary sm:text-xs">{stat.label}</p>
+                <p className="mt-1 text-[10px] font-medium leading-snug text-text-on-dark-muted sm:text-xs">{stat.label}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -108,7 +107,7 @@ export default function OpticaSection() {
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 55vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-text-primary/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/60 to-transparent" />
             </div>
           </motion.div>
 
@@ -117,13 +116,15 @@ export default function OpticaSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.55, delay: 0.1, ease: EASE }}
-            className="card-premium relative flex flex-col justify-between overflow-hidden bg-primary p-6 text-white sm:p-7 lg:col-span-5"
+            className="relative flex flex-col justify-between overflow-hidden rounded-xl bg-primary p-6 text-white sm:p-7 lg:col-span-5"
           >
             <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full border border-white/15" aria-hidden />
             <div className="pointer-events-none absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/10" aria-hidden />
-            <Buildings size={32} weight="regular" className="relative z-10 mb-4 text-white/90" />
+            <div className="flyer-icon-circle flyer-icon-circle--outline relative z-10 mb-4 h-14 w-14">
+              <Buildings size={28} weight="regular" />
+            </div>
             <div className="relative z-10">
-              <p className="mb-2 text-2xl font-bold leading-tight sm:text-3xl">
+              <p className="mb-2 text-2xl font-extrabold uppercase leading-tight sm:text-3xl">
                 Confianza de cientos de empresas
               </p>
               <p className="text-sm leading-relaxed text-white/85 sm:text-base">
@@ -133,7 +134,7 @@ export default function OpticaSection() {
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+        <div className="flyer-feature-grid rounded-xl border border-border-dark bg-brand-dark-elevated overflow-hidden">
           {pillars.map((pillar, i) => {
             const Icon = pillar.icon;
             return (
@@ -143,14 +144,13 @@ export default function OpticaSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.07, duration: 0.45, ease: EASE }}
-                whileHover={reduce ? undefined : { y: -3 }}
-                className="card-premium p-5 sm:p-6"
+                className="flyer-feature-cell"
               >
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                <div className="flyer-icon-circle flyer-icon-circle--outline mb-4 h-12 w-12">
                   <Icon size={22} weight="regular" />
                 </div>
-                <h3 className="mb-2 text-base font-semibold text-text-primary sm:text-lg">{pillar.title}</h3>
-                <p className="text-sm leading-relaxed text-text-secondary">{pillar.description}</p>
+                <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-white sm:text-base">{pillar.title}</h3>
+                <p className="text-sm leading-relaxed text-text-on-dark-muted">{pillar.description}</p>
               </motion.div>
             );
           })}
