@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CompanyRequestForm } from "./CompanyRequestForm";
+import { getMesOptions } from "@/lib/jornada-form";
 import { submitCompanyRequest } from "@/lib/company-request";
 
 vi.mock("@/lib/company-request", async importOriginal => ({
@@ -52,6 +53,38 @@ describe("solicitud de incorporación de empresa", () => {
   it("no muestra opciones de convenio en el formulario de jornadas", () => {
     render(<CompanyRequestForm kind="jornada" />);
     expect(screen.queryByLabelText("¿Qué le interesa a tu empresa? (opcional)")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Enviar solicitud de jornada" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continuar" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Enviar solicitud de jornada" })).not.toBeInTheDocument();
   });
+  it.each(["jornada", "convenio"] as const)("%s recorre tres pasos y exige confirmar el envío", async (kind) => {
+    render(<CompanyRequestForm kind={kind} />);
+    expect(screen.getByRole("heading", { name: "Datos de la persona" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("heading", { name: "Datos de la persona" })).toBeInTheDocument();
+    for (const [label, value] of [["Nombre de contacto", "Persona de prueba"], ["Cargo", "RRHH"], ["Correo electrónico", "persona@example.invalid"], ["Teléfono", "+56 9 1234 5678"]]) fill(label, value);
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("heading", { name: "Datos de la empresa" })).toBeInTheDocument();
+    fill("Nombre de la empresa", "Empresa de prueba aislada"); fill("Comuna", "Santiago"); fill("Región", "Metropolitana de Santiago");
+    if (kind === "convenio") fill("Número de trabajadores", "5");
+    else { fill("Mes estimado", getMesOptions()[0].value); fill("Dirección de la jornada (opcional)", "[Dirección de prueba]"); }
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("heading", { name: "Confirma la solicitud" })).toBeInTheDocument();
+    const sendName = kind === "convenio" ? "Solicitar registro de mi empresa" : "Enviar solicitud de jornada";
+    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    expect(screen.getByRole("button", { name: sendName })).toBeDisabled();
+    fireEvent.submit(screen.getByRole("form"));
+    expect(submitCompanyRequest).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("checkbox"));
+    expect(screen.getByRole("button", { name: sendName })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Corregir contacto" }));
+    fill("Teléfono", "+56 9 9876 5432");
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: sendName }));
+    await waitFor(() => expect(submitCompanyRequest).toHaveBeenCalledOnce());
+    expect(vi.mocked(submitCompanyRequest).mock.calls[0][0]).toMatchObject({ origen: kind, autorizacionDatos: true, telefono: "+56 9 9876 5432" });
+  });
+
 });

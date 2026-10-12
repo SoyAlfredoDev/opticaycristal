@@ -50,7 +50,7 @@
 .field [aria-invalid="true"] { border-color: var(--wine); }
 .fieldError { color: var(--wine-deep); font-size: 12px; }
 .fullField { grid-column: 1 / -1; }
-.consent { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; font-size: 12px; }
+.consent { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; font-size: 14px; line-height: 1.6; }
 .consent input { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; accent-color: var(--cta); }
 .consent a { color: var(--wine); text-decoration: underline; }
 .submit { width: 100%; margin-top: 20px; }
@@ -67,7 +67,7 @@
 .summary dl { display: grid; gap: 10px; margin: 10px 0 0; }
 .summary div { display: grid; gap: 2px; }
 .summary dt { color: var(--muted); font-size: 11px; }
-.summary dd { margin: 0; font-size: 15px; }
+.summary dd { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
 .summary button { justify-self: start; margin-top: 8px; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--cta); font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .success { min-height: 330px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 20px; }
 .success > svg { width: 48px; height: 48px; color: var(--cta); }

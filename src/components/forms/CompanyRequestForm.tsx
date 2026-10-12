@@ -2,21 +2,21 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { ArrowUpRight, CheckCircle2 } from "lucide-react";
-import { CHILE_REGIONES, getMesOptions, validateContacto } from "@/lib/jornada-form";
+import { CHILE_REGIONES, getMesOptions, getMesLabel, validateContacto } from "@/lib/jornada-form";
 import { CONVENIO, convenioInterests, isConvenioInterest } from "@/lib/convenios";
 import { emptyCompanyRequest, submitCompanyRequest, validateCompanyRequest, type CompanyErrors, type CompanyRequest, type RequestDetails, type RequestKind } from "@/lib/company-request";
 import site from "@/components/site/Site.module.css";
 import styles from "@/components/site/Views.module.css";
 type FieldKey = Exclude<keyof CompanyRequest, "origen" | "detalles" | "autorizacionDatos"> | keyof RequestDetails;
 type FieldSpec = { key: FieldKey; label: string; type?: "text" | "email" | "tel" | "number" | "date"; autoComplete?: string; required?: boolean; max?: number; full?: boolean };
-const CONVENIO_STEPS = [
-  { id: 1, label: "Quién lo lleva" },
-  { id: 2, label: "La empresa" },
+const REQUEST_STEPS = [
+  { id: 1, label: "Persona de contacto" },
+  { id: 2, label: "Empresa" },
   { id: 3, label: "Confirmación" },
 ] as const;
-type ConvenioStep = (typeof CONVENIO_STEPS)[number]["id"];
-const COMPANY_ERROR_KEYS = ["empresa", "region", "trabajadores", "comuna", "rutEmpresa", "modalidadConvenio"] as const;
-function convenioCompanyErrors(data: CompanyRequest): CompanyErrors {
+type RequestStep = (typeof REQUEST_STEPS)[number]["id"];
+const COMPANY_ERROR_KEYS = ["empresa", "region", "trabajadores", "comuna", "rutEmpresa", "modalidadConvenio", "mesEstimado", "fechaTentativa", "direccion"] as const;
+function companyStepErrors(data: CompanyRequest): CompanyErrors {
   const all = validateCompanyRequest(data);
   return Object.fromEntries(COMPANY_ERROR_KEYS.flatMap((key) => all[key] ? [[key, all[key]]] : []));
 }
@@ -33,7 +33,7 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
   const [status, setStatus] = useState<"idle" | "sending" | "success">("idle");
   const [failure, setFailure] = useState("");
   const [honeypot, setHoneypot] = useState("");
-  const [step, setStep] = useState<ConvenioStep>(1);
+  const [step, setStep] = useState<RequestStep>(1);
   const successRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -59,26 +59,26 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
   function focusInvalid() { pendingFocus.current = true; setFocusToken((value) => value + 1); }
   function update(key: FieldKey | "region" | "mesEstimado" | "autorizacionDatos", value: string | boolean) {
     setData((previous) => {
-      if (key in previous) return { ...previous, [key]: value };
-      return { ...previous, detalles: { ...previous.detalles, [key]: key === "trabajadores" ? value === "" ? undefined : Number(value) : value } };
+      if (key in previous) return { ...previous, [key]: value, autorizacionDatos: key === "autorizacionDatos" ? Boolean(value) : false };
+      return { ...previous, autorizacionDatos: false, detalles: { ...previous.detalles, [key]: key === "trabajadores" ? value === "" ? undefined : Number(value) : value } };
     });
     setErrors((previous) => ({ ...previous, [key]: undefined }));
   }
   function advance() {
-    const nextErrors = step === 1 ? validateContacto(data) : convenioCompanyErrors(data);
+    const nextErrors = step === 1 ? validateContacto(data) : companyStepErrors(data);
     setErrors(nextErrors); setFailure("");
     if (Object.keys(nextErrors).length) { focusInvalid(); return; }
     setStep((current) => current === 1 ? 2 : 3);
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (convenio && step < 3) { advance(); return; }
+    if (step < 3) { advance(); return; }
     if (submitting.current) return;
     const nextErrors = validateCompanyRequest(data);
     setErrors(nextErrors); setFailure("");
     if (Object.keys(nextErrors).length) {
-      if (convenio && Object.keys(validateContacto(data)).length) setStep(1);
-      else if (convenio && Object.keys(convenioCompanyErrors(data)).length) setStep(2);
+      if (Object.keys(validateContacto(data)).length) setStep(1);
+      else if (Object.keys(companyStepErrors(data)).length) setStep(2);
       focusInvalid();
       return;
     }
@@ -91,19 +91,13 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
     <CheckCircle2 strokeWidth={1.4} aria-hidden="true" /><h2>Recibimos tu solicitud</h2><p>{convenio ? "Te contactaremos para registrar tu empresa y dejar el beneficio disponible para tus trabajadores y sus familiares. Las cuotas por nómina se habilitan con un contrato." : "Te contactaremos para revisar disponibilidad y coordinar los detalles de la jornada."}</p>
     <button className={`${site.button} ${site.outline}`} type="button" onClick={() => { setData(emptyCompanyRequest(kind)); setHoneypot(""); setErrors({}); setStep(1); setStatus("idle"); }}>Enviar otra solicitud</button>
   </div>;
-  const fields: readonly FieldSpec[] = convenio ? [] : [
-    ...commonFields,
-    { key: "trabajadores", label: "Participantes estimados (opcional)", type: "number" },
-    { key: "comuna", label: "Comuna", required: true, max: 120 },
-    { key: "fechaTentativa", label: "Fecha tentativa (opcional)", type: "date" },
-    { key: "direccion", label: "Dirección de la jornada (opcional)", max: 250, full: true },
-  ];
   const personFields = commonFields.slice(1);
   const companyFields: readonly FieldSpec[] = [
     commonFields[0],
     { key: "rutEmpresa", label: "RUT de la empresa (opcional)", max: 16 },
-    { key: "trabajadores", label: "Número de trabajadores", type: "number", required: true },
+    { key: "trabajadores", label: convenio ? "Número de trabajadores" : "Participantes estimados (opcional)", type: "number", required: convenio },
     { key: "comuna", label: "Comuna", required: true, max: 120 },
+    ...(!convenio ? [{ key: "fechaTentativa", label: "Fecha tentativa (opcional)", type: "date" }, { key: "direccion", label: "Dirección de la jornada (opcional)", max: 250, full: true }] as const : []),
   ];
   function renderField(field: FieldSpec) {
     const id = `${uid}-${field.key}`;
@@ -120,30 +114,35 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
     <option value="">Selecciona una región</option>{CHILE_REGIONES.map((region) => <option key={region}>{region}</option>)}
   </select>{errors.region ? <span id={`${uid}-region-error`} className={styles.fieldError}>{errors.region}</span> : null}</div>;
   const interest = data.detalles?.modalidadConvenio;
-  const convenioCopy = {
-    1: ["Quién lleva el convenio", "Datos de la persona de tu empresa que coordinará el beneficio."],
-    2: ["Datos de tu empresa", "El convenio queda a nombre de la empresa. El beneficio es para trabajadores y familiares."],
+  const stepCopy = {
+    1: ["Datos de la persona", "Indica quién coordinará la solicitud en tu empresa."],
+    2: ["Datos de la empresa", convenio ? "El convenio queda a nombre de la empresa. El beneficio es para trabajadores y familiares." : "Indica dónde realizar la jornada y el mes que les acomoda. Los campos opcionales están indicados."],
     3: ["Confirma la solicitud", "Revisa los datos antes de enviar. Esta solicitud no firma un contrato."],
   } as const;
   return <div id={anchor} className={styles.formCard}>
-    <h2 id="request-form-title" ref={headingRef} tabIndex={-1}>{convenio ? convenioCopy[step][0] : "Solicita una jornada"}</h2>
-    {convenio ? <ol className={styles.wizardSteps} aria-label="Progreso de la solicitud">{CONVENIO_STEPS.map((item) => <li key={item.id} aria-current={step === item.id ? "step" : undefined}><span>{item.id}</span>{item.label}</li>)}</ol> : null}
-    <p>{convenio ? convenioCopy[step][1] : "Completa el formulario y te contactaremos para revisar los detalles. Los campos opcionales están indicados."}</p>
-    <form ref={formRef} aria-labelledby="request-form-title" onSubmit={submit} noValidate aria-busy={status === "sending"}>
+    <h2 id={`${uid}-title`} ref={headingRef} tabIndex={-1}>{stepCopy[step][0]}</h2>
+    <ol className={styles.wizardSteps} aria-label="Progreso de la solicitud">{REQUEST_STEPS.map((item) => <li key={item.id} aria-current={step === item.id ? "step" : undefined}><span>{item.id}</span>{item.label}</li>)}</ol>
+    <p>{stepCopy[step][1]}</p>
+    <form ref={formRef} aria-labelledby={`${uid}-title`} onSubmit={submit} noValidate aria-busy={status === "sending"}>
       <div className={styles.honeypot} aria-hidden="true"><label>Sitio web<input tabIndex={-1} autoComplete="off" value={honeypot} onChange={(event) => setHoneypot(event.target.value)} /></label></div>
-      {convenio && step === 1 ? <div className={styles.formGrid}>{personFields.map(renderField)}</div> : null}
-      {convenio && step === 2 ? <div className={styles.formGrid}>
+      {step === 1 ? <div className={styles.formGrid}>{personFields.map(renderField)}</div> : null}
+      {step === 2 ? <div className={styles.formGrid}>
         {companyFields.map(renderField)}
         {regionField}
-        <div className={`${styles.field} ${styles.fullField}`}><label htmlFor={`${uid}-interest`}>¿Qué le interesa a tu empresa? (opcional)</label><select id={`${uid}-interest`} name="modalidadConvenio" value={interest ?? ""} onChange={(event) => {
+        {!convenio ? <>
+        <div className={styles.field}><label htmlFor={`${uid}-month`}>Mes estimado</label><select id={`${uid}-month`} name="mesEstimado" value={data.mesEstimado} onChange={(event) => update("mesEstimado", event.target.value)} required aria-invalid={!!errors.mesEstimado} aria-describedby={errors.mesEstimado ? `${uid}-month-error` : undefined}>
+          <option value="">Selecciona un mes</option>{months.map((month) => <option key={month.value} value={month.value}>{month.label}</option>)}
+        </select>{errors.mesEstimado ? <span id={`${uid}-month-error`} className={styles.fieldError}>{errors.mesEstimado}</span> : null}</div>
+        </> : null}
+        {convenio ? <div className={`${styles.field} ${styles.fullField}`}><label htmlFor={`${uid}-interest`}>¿Qué le interesa a tu empresa? (opcional)</label><select id={`${uid}-interest`} name="modalidadConvenio" value={interest ?? ""} onChange={(event) => {
           const value = event.target.value;
-          setData(previous => ({ ...previous, detalles: { ...previous.detalles, modalidadConvenio: isConvenioInterest(value) ? value : undefined } }));
+          setData(previous => ({ ...previous, autorizacionDatos: false, detalles: { ...previous.detalles, modalidadConvenio: isConvenioInterest(value) ? value : undefined } }));
           setErrors(previous => ({ ...previous, modalidadConvenio: undefined }));
-        }} aria-invalid={!!errors.modalidadConvenio} aria-describedby={errors.modalidadConvenio ? `${uid}-interest-error` : undefined}><option value="">Selecciona una opción</option>{Object.entries(convenioInterests).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>{errors.modalidadConvenio ? <span className={styles.fieldError} id={`${uid}-interest-error`}>{errors.modalidadConvenio}</span> : null}</div>
+        }} aria-invalid={!!errors.modalidadConvenio} aria-describedby={errors.modalidadConvenio ? `${uid}-interest-error` : undefined}><option value="">Selecciona una opción</option>{Object.entries(convenioInterests).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>{errors.modalidadConvenio ? <span className={styles.fieldError} id={`${uid}-interest-error`}>{errors.modalidadConvenio}</span> : null}</div> : null}
       </div> : null}
       {convenio && step === 2 ? <p className={styles.status}>Para empresas con 5 o más trabajadores.</p> : null}
-      {convenio && step === 3 ? <div className={styles.summary}>
-        <section><h3>Quién lo lleva</h3><dl>
+      {step === 3 ? <div className={styles.summary}>
+        <section><h3>Persona de contacto</h3><dl>
           <div><dt>Nombre</dt><dd>{data.responsable}</dd></div>
           <div><dt>Cargo</dt><dd>{data.cargo}</dd></div>
           <div><dt>Correo</dt><dd>{data.correo}</dd></div>
@@ -152,31 +151,27 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
         <section><h3>La empresa</h3><dl>
           <div><dt>Empresa</dt><dd>{data.empresa}</dd></div>
           {data.detalles?.rutEmpresa ? <div><dt>RUT</dt><dd>{data.detalles.rutEmpresa}</dd></div> : null}
-          <div><dt>Trabajadores</dt><dd>{data.detalles?.trabajadores}</dd></div>
+          <div><dt>{convenio ? "Trabajadores" : "Participantes estimados"}</dt><dd>{data.detalles?.trabajadores ?? "Por definir"}</dd></div>
           <div><dt>Comuna</dt><dd>{data.detalles?.comuna}</dd></div>
           <div><dt>Región</dt><dd>{data.region}</dd></div>
+          {!convenio ? <div><dt>Mes estimado</dt><dd>{getMesLabel(data.mesEstimado)}</dd></div> : null}
+          {data.detalles?.fechaTentativa ? <div><dt>Fecha tentativa</dt><dd>{data.detalles.fechaTentativa.split("-").reverse().join("/")}</dd></div> : null}
+          {data.detalles?.direccion ? <div><dt>Dirección</dt><dd>{data.detalles.direccion}</dd></div> : null}
           {interest ? <div><dt>Interés</dt><dd>{convenioInterests[interest]}</dd></div> : null}
         </dl><button type="button" onClick={() => setStep(2)}>Corregir empresa</button></section>
-        <label className={`${styles.field} ${styles.fullField}`}>Comentarios o preguntas sobre el convenio (opcional)<textarea name="comentarios" maxLength={2000} value={data.detalles?.comentarios ?? ""} onChange={(event) => update("comentarios", event.target.value)} /></label>
-      </div> : null}
-      {convenio && step === 3 ? <p className={styles.status}>Las cuotas por nómina, si las quieres, se habilitan con un contrato.</p> : null}
-      {!convenio ? <div className={styles.formGrid}>{fields.map(renderField)}
-        {regionField}
-        <div className={styles.field}><label htmlFor={`${uid}-month`}>Mes estimado</label><select id={`${uid}-month`} name="mesEstimado" value={data.mesEstimado} onChange={(event) => update("mesEstimado", event.target.value)} required aria-invalid={!!errors.mesEstimado} aria-describedby={errors.mesEstimado ? `${uid}-month-error` : undefined}>
-          <option value="">Selecciona un mes</option>{months.map((month) => <option key={month.value} value={month.value}>{month.label}</option>)}
-        </select>{errors.mesEstimado ? <span id={`${uid}-month-error`} className={styles.fieldError}>{errors.mesEstimado}</span> : null}</div>
         <label className={`${styles.field} ${styles.fullField}`}>Comentarios o necesidades (opcional)<textarea name="comentarios" maxLength={2000} value={data.detalles?.comentarios ?? ""} onChange={(event) => update("comentarios", event.target.value)} /></label>
       </div> : null}
-      {!convenio || step === 3 ? <label className={styles.consent}><input type="checkbox" name="autorizacionDatos" checked={data.autorizacionDatos} onChange={(event) => update("autorizacionDatos", event.target.checked)} required aria-invalid={!!errors.autorizacionDatos} aria-describedby={errors.autorizacionDatos ? `${uid}-consent-error` : undefined} />
-        <span>Autorizo el tratamiento de mis datos para gestionar esta solicitud y ser contactado. He leído la <Link href="/privacidad" target="_blank" rel="noopener noreferrer">política de privacidad</Link>.</span>
-      </label> : null}{errors.autorizacionDatos && (!convenio || step === 3) ? <p className={styles.fieldError} id={`${uid}-consent-error`}>{errors.autorizacionDatos}</p> : null}
+      {convenio && step === 3 ? <p className={styles.status}>Las cuotas por nómina, si las quieres, se habilitan con un contrato.</p> : null}
+      {step === 3 ? <label className={styles.consent}><input type="checkbox" name="autorizacionDatos" checked={data.autorizacionDatos} onChange={(event) => update("autorizacionDatos", event.target.checked)} required aria-invalid={!!errors.autorizacionDatos} aria-describedby={errors.autorizacionDatos ? `${uid}-consent-error` : undefined} />
+        <span>Confirmo que quiero enviar esta solicitud y autorizo el tratamiento de mis datos para gestionarla y ser contactado. He leído la <Link href="/privacidad" target="_blank" rel="noopener noreferrer">política de privacidad</Link>.</span>
+      </label> : null}{errors.autorizacionDatos && (step === 3) ? <p className={styles.fieldError} id={`${uid}-consent-error`}>{errors.autorizacionDatos}</p> : null}
       {failure ? <p role="alert" className={styles.status}>{failure}</p> : null}
-      {convenio && step < 3 ? <div className={styles.wizardActions}>
+      {step < 3 ? <div className={styles.wizardActions}>
         {step === 2 ? <button type="button" className={`${site.button} ${site.outline}`} onClick={() => setStep(1)}>Volver</button> : null}
         <button type="button" className={`${site.button} ${site.primary} ${styles.submit}`} onClick={advance}>Continuar<ArrowUpRight size={18} aria-hidden="true" /></button>
-      </div> : <div className={convenio ? styles.wizardActions : undefined}>
-        {convenio ? <button type="button" className={`${site.button} ${site.outline}`} onClick={() => setStep(2)}>Volver</button> : null}
-        <button type="submit" className={`${site.button} ${site.primary} ${styles.submit}`} disabled={status === "sending"}>{status === "sending" ? "Enviando solicitud…" : convenio ? "Solicitar registro de mi empresa" : "Enviar solicitud de jornada"}<ArrowUpRight size={18} aria-hidden="true" /></button>
+      </div> : <div className={styles.wizardActions}>
+        <button type="button" className={`${site.button} ${site.outline}`} onClick={() => setStep(2)} disabled={status === "sending"}>Volver</button>
+        <button type="submit" className={`${site.button} ${site.primary} ${styles.submit}`} disabled={status === "sending" || !data.autorizacionDatos}>{status === "sending" ? "Enviando solicitud…" : convenio ? "Solicitar registro de mi empresa" : "Enviar solicitud de jornada"}<ArrowUpRight size={18} aria-hidden="true" /></button>
       </div>}
     </form>
   </div>;
