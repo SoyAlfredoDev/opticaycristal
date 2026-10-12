@@ -12,11 +12,11 @@ export const campaignTemplates = [
   },
   {
     id: "jornada", name: "Jornada · atención en la empresa", objective: "jornada",
-    subject: "Llevemos la atención visual a tu empresa",
-    preheader: "Coordinemos una jornada en sus instalaciones para un equipo de más de 20 trabajadores.",
-    headline: "Cuidar su mirada, cerca de su trabajo.",
-    eyebrow: "Jornadas oftalmológicas", cta: "Consultar una jornada para mi empresa",
-    body: "Hola, equipo de {{empresa}}:\n\nEn Óptica & Cristal coordinamos jornadas de atención visual en las instalaciones de empresas con más de 20 trabajadores. La idea es acercar el servicio al equipo y organizar la atención con una persona responsable de su empresa.\n\nPara preparar una propuesta, revisamos la cantidad de participantes, ubicación, espacios disponibles y fechas posibles. Los servicios, costos y condiciones se detallan antes de confirmar la jornada.\n\nSi les interesa, cuéntennos cuántas personas podrían participar. Nuestro equipo les contactará para evaluar la coordinación.",
+    subject: "Una jornada visual para tu equipo",
+    preheader: "Llevamos nuestro equipo de profesionales a su empresa. Soliciten los precios y las condiciones.",
+    headline: "Ver bien. Sentirse bien.",
+    eyebrow: "Regala a tu equipo un chequeo visual 100% gratuito.", cta: "Sí, quiero más información",
+    body: "Hola, equipo de {{empresa}}:\n\nSomos **Óptica & Cristal**. Queremos ayudarles a acercar el cuidado de la salud visual a sus trabajadores, llevando nuestro equipo de profesionales **directamente a las instalaciones de su empresa**.\n\nLa jornada contempla:\n\n- **Chequeo visual gratuito** para sus trabajadores.\n- **Descuentos de hasta un 30%** en lentes, cristales y accesorios, según las condiciones de la propuesta.\n- Variedad de modelos y alternativas de cristales para distintas necesidades.\n- **Financiamiento opcional** mediante la empresa, con descuento por nómina, **previo acuerdo y contrato**.\n\n**¿Les gustaría recibir más información?**\n\nRespondan a este correo con **«Sí, quiero más información»** y les enviaremos el listado oficial de precios y un PDF con los servicios, requisitos y condiciones para organizar una jornada.",
     highlights: ["Atención en las instalaciones de la empresa", "Fecha y organización acordadas con su equipo", "Propuesta previa con servicios y condiciones"],
   },
   {
