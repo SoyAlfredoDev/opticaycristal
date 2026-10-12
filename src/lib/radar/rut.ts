@@ -1,0 +1,3 @@
+export function normalizeRut(input:string){return input.replace(/[^0-9kK]/g,"").toUpperCase()}
+export function formatRut(input:string){const value=normalizeRut(input);if(value.length<2)return value;return value.slice(0,-1)+"-"+value.slice(-1)}
+export function isValidRut(input:string){const rut=normalizeRut(input);if(!/^\d{7,8}[0-9K]$/.test(rut))return false;const body=rut.slice(0,-1);let sum=0,multiplier=2;for(let i=body.length-1;i>=0;i--){sum+=Number(body[i])*multiplier;multiplier=multiplier===7?2:multiplier+1}const rest=11-(sum%11),digit=rest===11?"0":rest===10?"K":String(rest);return digit===rut.slice(-1)}

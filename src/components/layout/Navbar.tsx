@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   List,
@@ -49,7 +50,7 @@ export default function Navbar() {
         transition={{ duration: 0.4, ease: EASE }}
       >
         <div className="site-header__inner container-site flex items-center justify-between gap-3">
-          <a href="/" className="group flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <Link href="/" className="group flex min-w-0 items-center gap-2.5 sm:gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/[0.05] sm:h-10 sm:w-10">
               <Image
                 src="/logo-optica-y-cristal.png"
@@ -68,7 +69,7 @@ export default function Navbar() {
                 Salud visual corporativa
               </span>
             </span>
-          </a>
+          </Link>
 
           <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex" aria-label="Principal">
             {navLinks.map((link) => (

@@ -1,0 +1,7 @@
+import {assessCompany} from "@/lib/radar/assessment";
+import {getCommercialFit,type Prospect} from "@/lib/radar/types";
+import styles from "./RadarPanel.module.css";
+export function RadarSummary({prospects,onOpen}:{prospects:Prospect[];onOpen:(p:Prospect)=>void}){
+ const active=prospects.filter(p=>p.stage!=="descartado"&&p.stage!=="ganado"),ready=active.filter(p=>p.phone||p.emails?.length),ranked=[...active].sort((a,b)=>assessCompany(b).score-assessCompany(a).score).slice(0,8);
+ return <><div className={styles.metrics}>{[["Empresas guardadas",prospects.length],["Con canal de contacto",ready.length],["Candidatas a jornada",active.filter(p=>getCommercialFit(p.employeeEstimate)==="ambas").length],["Dotación por verificar",active.filter(p=>getCommercialFit(p.employeeEstimate)==="por_clasificar").length]].map(([label,count])=><article key={String(label)}><span>{label}</span><strong>{count}</strong></article>)}</div><section className={styles.summary}><h2>Prospectos para trabajar primero</h2><p>Ordenados por datos publicados y posibilidad de contacto. Las empresas pequeñas también se conservan para convenios.</p>{ranked.map(p=>{const a=assessCompany(p);return <button key={p.id} onClick={()=>onOpen(p)}><strong>{p.name}</strong><span>{a.score}/100 · {a.nextAction}</span></button>})}{!ranked.length&&<p>Busca empresas y guárdalas para comenzar.</p>}</section></>;
+}
