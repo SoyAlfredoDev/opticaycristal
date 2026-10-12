@@ -1,0 +1,13 @@
+import {beforeEach,describe,expect,it,vi} from "vitest";
+const m=vi.hoisted(()=>({allow:vi.fn(()=>true),session:vi.fn(async()=>null as {u:string}|null),search:vi.fn(),sign:vi.fn(()=> "signed")}));
+vi.mock("@/lib/auth",()=>({allowAttempt:m.allow,clientIp:()=>"127.0.0.1",getSession:m.session}));
+vi.mock("@/lib/radar/search",()=>({radarIndustries:["company","other"],radarRegions:["Metropolitana de Santiago"],searchCompaniesByFilters:m.search}));
+vi.mock("@/lib/radar/integrity",()=>({signResult:m.sign}));
+import {POST} from "./route";
+describe("POST /api/admin/radar/search",()=>{
+ beforeEach(()=>{vi.clearAllMocks();m.allow.mockReturnValue(true);m.session.mockResolvedValue(null);m.search.mockResolvedValue({companies:[{providerId:"way:42",name:"Empresa real",source:"OpenStreetMap",categories:[],employeeEstimate:27}],partial:false,warning:null})});
+ it("exige sesión de administración",async()=>{const r=await POST(new Request("http://local/api/admin/radar/search",{method:"POST",body:JSON.stringify({region:"Metropolitana de Santiago",industry:"company"})}));expect(r.status).toBe(401);expect(m.search).not.toHaveBeenCalled()});
+ it("busca con filtros estructurados y conserva la estimación en la firma",async()=>{m.session.mockResolvedValue({u:"admin"});const filters={region:"Metropolitana de Santiago",industry:"company",otherIndustry:""};const r=await POST(new Request("http://local/api/admin/radar/search",{method:"POST",body:JSON.stringify(filters)}));expect(r.status).toBe(200);expect(m.search).toHaveBeenCalledWith(filters);expect(m.sign).toHaveBeenCalledWith(expect.objectContaining({employeeEstimate:27}));expect(await r.json()).toMatchObject({companies:[{company:{providerId:"way:42",employeeEstimate:27},proof:"signed"}],employeeData:expect.stringContaining("se conserva"),coverageWarning:null})});
+ it("valida región y rubro",async()=>{m.session.mockResolvedValue({u:"admin"});expect((await POST(new Request("http://local/api/admin/radar/search",{method:"POST",body:JSON.stringify({region:"Chile",industry:"company"})}))).status).toBe(400);expect((await POST(new Request("http://local/api/admin/radar/search",{method:"POST",body:JSON.stringify({region:"Metropolitana de Santiago",industry:"unknown"})}))).status).toBe(400)});
+ it("rechaza consultas inválidas y respeta el rate limit",async()=>{m.session.mockResolvedValue({u:"admin"});expect((await POST(new Request("http://local/api/admin/radar/search",{method:"POST",body:JSON.stringify({region:"",industry:"company"})}))).status).toBe(400);m.allow.mockReturnValue(false);expect((await POST(new Request("http://local/api/admin/radar/search",{method:"POST",body:JSON.stringify({region:"Metropolitana de Santiago",industry:"company"})}))).status).toBe(429)});
+});

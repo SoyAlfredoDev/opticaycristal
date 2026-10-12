@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/layout/Footer";
+import { pageMetadata, seoPages } from "@/lib/seo";
 
-
-export const metadata = { title: "Política de privacidad | Óptica y Cristal" };
+export const metadata = pageMetadata(seoPages.privacidad);
 
 export default function PrivacidadPage() {
   return (

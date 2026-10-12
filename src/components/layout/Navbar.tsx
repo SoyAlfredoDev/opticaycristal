@@ -8,14 +8,16 @@ import {
   List,
   X,
   WarningCircle,
+  Eye,
   Sparkle,
   Buildings,
   ArrowRight,
 } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/Button";
+import SolicitarJornadaButton from "@/components/forms/SolicitarJornadaButton";
 
 const navLinks = [
   { name: "El problema", href: "/#problema", icon: WarningCircle },
+  { name: "Salud visual", href: "/#salud-visual", icon: Eye },
   { name: "Beneficios", href: "/#beneficios", icon: Sparkle },
   { name: "Nuestra óptica", href: "/#optica", icon: Buildings },
 ];
@@ -80,13 +82,12 @@ export default function Navbar() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
-            <Button
-              href="/#contratar"
+            <SolicitarJornadaButton
               size="sm"
               className="hidden min-h-[42px] rounded-full px-5 lg:inline-flex"
             >
               Solicitar jornada
-            </Button>
+            </SolicitarJornadaButton>
 
             <button
               type="button"
@@ -167,13 +168,12 @@ export default function Navbar() {
               </ul>
 
               <div className="border-t border-border/60 p-4">
-                <Button
-                  href="/#contratar"
+                <SolicitarJornadaButton
                   className="w-full min-h-[52px] text-base"
                   onClick={() => setMenuOpen(false)}
                 >
                   Solicitar jornada
-                </Button>
+                </SolicitarJornadaButton>
               </div>
             </motion.nav>
           </motion.div>

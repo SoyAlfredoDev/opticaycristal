@@ -1,0 +1,66 @@
+.hero { position: relative; isolation: isolate; background: #fbf7f2; overflow: clip; }
+.background { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+.storePhoto { position: absolute; inset: -28% 0 0; }
+.storeImage { object-fit: cover; object-position: 58% 78%; }
+.background::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, #fbf7f2ef 0%, #fbf7f2ef 42%, #fbf7f230 68%); }
+.layout { position: relative; max-width: 1680px; margin-inline: auto; display: grid; }
+.copy { position: relative; z-index: 2; grid-row: 2; padding: 10px 24px 32px; }
+.eyebrow { display: block; color: #6b1f3a; font-size: 10px; line-height: 1.7; letter-spacing: .28em; text-transform: uppercase; }
+.hero .copy h1 { margin: 13px 0 0; color: #242020; font-family: var(--oc-font-display), Georgia, serif; font-size: clamp(60px, 15vw, 84px); font-weight: 400; line-height: .86; letter-spacing: -.045em; }
+.hero .copy h1 em { display: inline-block; color: #6b1f3a; font-weight: 400; white-space: nowrap; }
+.copy > p { margin: 20px 0 22px; color: #393333; font-size: 14px; line-height: 1.5; }
+.actions { display: flex; flex-direction: column; gap: 10px; }
+.actions > a { min-height: 48px; justify-content: center; border-radius: 4px; font-size: 14px; }
+.signature, .sideNote { display: none; }
+.portrait { position: relative; grid-row: 1; min-width: 0; height: 340px; }
+.portraitStage { position: absolute; inset: 0; overflow: hidden; }
+.portraitStage::after { content: ""; position: absolute; inset: auto 0 0; height: 60px; background: linear-gradient(transparent, #fbf7f2); pointer-events: none; }
+.person { position: absolute; inset: 0; opacity: 0; transform: translate3d(24px, 0, 0) scale(1.015); pointer-events: none; transition: opacity 900ms ease, transform 1300ms cubic-bezier(.2,.65,.2,1); }
+.person[data-active="true"] { opacity: 1; transform: none; z-index: 1; }
+.personImage { display: block; position: absolute; left: 50%; top: 12px; transform: translateX(-50%); width: auto; max-width: none; height: 440px; object-fit: contain; object-position: center top; }
+.person[data-person="professional"] .personImage { width: calc(100% - 24px); height: 100%; top: 0; object-position: center bottom; }
+.person[data-person="young"] .personImage { width: calc(100% - 32px); height: 480px; top: 12px; }
+.portraitControls { position: absolute; z-index: 3; right: 16px; bottom: 15px; display: flex; padding: 0 4px; background: #fbf7f2e8; border: 1px solid #6b1f3a20; border-radius: 30px; }
+.portraitControls button { display: grid; place-items: center; width: 36px; height: 44px; border: 0; padding: 0; background: transparent; color: #6b1f3a; cursor: pointer; }
+.portraitControls button:disabled { opacity: .35; cursor: default; }
+.portraitControls button:focus-visible { outline: 2px solid #245c4a; outline-offset: -4px; border-radius: 20px; }
+.portraitControls button span { width: 6px; height: 6px; border-radius: 50%; background: #6b1f3a55; transition: width 250ms, background 250ms; }
+.portraitControls button[aria-pressed="true"] span { width: 18px; border-radius: 6px; background: #6b1f3a; }
+@media (min-width: 600px) and (max-width: 899px) {
+  .portrait { height: 430px; }
+  .personImage { height: 560px; }
+  .person[data-person="professional"] .personImage { height: 440px; }
+  .person[data-person="young"] .personImage { height: 600px; }
+  .copy { max-width: 650px; width: 100%; margin-inline: auto; padding-inline: 40px; }
+  .actions { flex-direction: row; }
+}
+@media (min-width: 900px) {
+  .background { inset: 0; height: auto; }
+  .storePhoto { inset: 0; }
+  .storeImage { object-position: 50% 78%; }
+  .background::after { background: linear-gradient(90deg, #fbf7f2fa 0%, #fbf7f2ed 33%, #fbf7f28a 51%, #241a181c 70%, #241a1833); }
+  .layout { grid-template-columns: 48% 52%; min-height: clamp(560px, 43vw, 690px); }
+  .copy { grid-row: 1; grid-column: 1; align-self: center; padding: 46px 0 40px clamp(40px, 5vw, 84px); }
+  .eyebrow { font-size: 11px; }
+  .hero .copy h1 { margin-top: 24px; font-size: clamp(82px, 8.5vw, 136px); }
+  .copy > p { font-size: clamp(16px, 1.4vw, 21px); margin-block: 26px; }
+  .actions { flex-direction: row; flex-wrap: wrap; gap: 14px; }
+  .actions > a { padding-inline: clamp(20px, 2vw, 34px); min-height: 52px; font-size: clamp(14px, 1.1vw, 17px); }
+  .signature { display: block; width: fit-content; margin: 42px 0 0 80px; color: #6e6363; font-family: var(--oc-font-display), Georgia, serif; font-style: italic; font-size: 30px; line-height: .9; transform: rotate(-5deg); text-align: center; }
+  .portrait { grid-row: 1; grid-column: 2; height: auto; }
+  .portraitStage { inset: 0 -10px 0 -65px; }
+  .portraitStage::after { display: none; }
+  .personImage { top: 24px; height: calc(100% + 70px); }
+  .person[data-person="professional"] .personImage { height: 100%; top: 0; }
+  .person[data-person="young"] .personImage { width: calc(100% - 48px); height: calc(100% + 190px); top: 16px; }
+  .portraitControls { bottom: 22px; right: 38px; }
+  .sideNote { display: block; position: absolute; right: 22px; top: 45px; writing-mode: vertical-rl; text-transform: uppercase; letter-spacing: .3em; color: #fbf7f2; font-size: 9px; }
+  .sideNote::before { content: ""; display: inline-block; width: 1px; height: 36px; background: currentColor; margin-bottom: 18px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .copy { animation: copy-in 800ms cubic-bezier(.2,.65,.2,1) both; }
+  @keyframes copy-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .person, .portraitControls button span { transition: none; transform: none; }
+}

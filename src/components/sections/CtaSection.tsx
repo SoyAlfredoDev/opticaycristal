@@ -2,6 +2,7 @@
 
 import { ArrowRight, Phone } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
+import SolicitarJornadaButton from "@/components/forms/SolicitarJornadaButton";
 import { Reveal } from "@/components/ui/Reveal";
 
 export default function CtaSection() {
@@ -29,14 +30,13 @@ export default function CtaSection() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                  <Button
-                    href="/jornadas"
+                  <SolicitarJornadaButton
                     size="lg"
                     className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 border-none shadow-brand-lg hover:shadow-brand-hover"
                     icon={<ArrowRight size={16} weight="bold" />}
                   >
                     Solicitar jornada
-                  </Button>
+                  </SolicitarJornadaButton>
                   <Button
                     href="tel:+56900000000"
                     variant="outline"

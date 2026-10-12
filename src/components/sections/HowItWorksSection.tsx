@@ -7,7 +7,7 @@ import {
   Eye,
   Eyeglasses,
 } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/Button";
+import SolicitarJornadaButton from "@/components/forms/SolicitarJornadaButton";
 import { Reveal } from "@/components/ui/Reveal";
 
 const steps = [
@@ -44,7 +44,6 @@ const steps = [
 ];
 
 export default function HowItWorksSection({
-  ctaHref = "/jornadas",
   ctaLabel = "Solicitar jornada",
 }: {
   ctaHref?: string;
@@ -99,9 +98,7 @@ export default function HowItWorksSection({
         </div>
 
         <Reveal className="mt-16 text-center" delay={0.3}>
-          <Button href={ctaHref} size="lg">
-            {ctaLabel}
-          </Button>
+          <SolicitarJornadaButton size="lg">{ctaLabel}</SolicitarJornadaButton>
         </Reveal>
       </div>
     </section>

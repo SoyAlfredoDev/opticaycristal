@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import { MapPin, Phone, EnvelopeSimple, Clock } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/Button";
+import SolicitarJornadaButton from "@/components/forms/SolicitarJornadaButton";
 
 const navLinks = [
   { name: "El problema", href: "/#problema" },
+  { name: "Salud visual", href: "/#salud-visual" },
   { name: "Beneficios", href: "/#beneficios" },
   { name: "Nuestra óptica", href: "/#optica" },
   { name: "Contratar jornada", href: "/#contratar" },
@@ -28,9 +29,9 @@ export default function Footer() {
           <p className="mx-auto mb-6 max-w-md text-sm text-white/85 sm:text-base">
             Solicita una jornada oftalmológica <span className="font-bold">sin costo</span> para tu empresa.
           </p>
-          <Button href="/#contratar" size="lg" className="min-h-[52px] bg-white text-primary hover:bg-white/90">
+          <SolicitarJornadaButton size="lg" className="min-h-[52px] bg-white text-primary hover:bg-white/90">
             Solicitar jornada
-          </Button>
+          </SolicitarJornadaButton>
         </div>
 
         <div className="mb-10 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-12">
@@ -98,7 +99,7 @@ export default function Footer() {
         <div className="flex flex-col items-center justify-between gap-3 text-xs text-text-on-dark-muted sm:flex-row sm:text-sm">
           <p>© {new Date().getFullYear()} Óptica y Cristal Chile. Todos los derechos reservados.</p>
           <div className="flex gap-5">
-            <a href="#" className="hover:text-primary">Política de privacidad</a>
+            <a href="/privacidad" className="hover:text-primary">Política de privacidad</a>
             <a href="#" className="hover:text-primary">Términos de servicio</a>
           </div>
         </div>

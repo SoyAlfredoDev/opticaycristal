@@ -4,9 +4,14 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Buildings,
-  UsersThree,
+  CreditCard,
+  CurrencyCircleDollar,
+  Eye,
+  Eyeglasses,
+  Heart,
+  Truck,
   UserCircle,
-  Check,
+  UsersThree,
 } from "@phosphor-icons/react";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -20,27 +25,24 @@ const audiences = [
     image: "/images/audience-workers.png",
     imageAlt: "Equipo corporativo en oficina",
     items: [
-      "Ahorro en horas laborales perdidas por traslados.",
-      "Coordinación simple y sin costo para la empresa.",
-      "Mayor productividad y concentración del equipo.",
-      "Mejora en retención con un beneficio muy valorado.",
+      {
+        text: "Ahorro en horas laborales perdidas por traslados. Nosotros vamos a la empresa.",
+        icon: Truck,
+      },
+      {
+        text: "Es gratis: no pagas nada.",
+        icon: CurrencyCircleDollar,
+      },
+      {
+        text: "Posibilidad de crédito directo a la empresa, para que sus trabajadores paguen en cuotas.",
+        icon: CreditCard,
+      },
+      {
+        text: "Mejora tangible en el clima laboral de su empresa.",
+        icon: UsersThree,
+      },
     ],
     reverse: false,
-  },
-  {
-    id: "rrhh",
-    icon: UsersThree,
-    tag: "Para Recursos Humanos",
-    title: "Implementación sin fricción",
-    image: "/images/solution-corporate.png",
-    imageAlt: "Profesional realizando evaluación visual",
-    items: [
-      "Coordinación ágil con un solo punto de contacto.",
-      "Sin carga administrativa compleja ni logística extra.",
-      "Beneficio tangible que mejora el clima laboral.",
-      "Respuesta y seguimiento en plazos definidos.",
-    ],
-    reverse: true,
   },
   {
     id: "trabajadores",
@@ -50,12 +52,24 @@ const audiences = [
     image: "/images/hero-corporate.png",
     imageAlt: "Colaborador recibiendo atención visual en empresa",
     items: [
-      "Atención en el lugar de trabajo, sin traslados.",
-      "Sin salas de espera ni permisos complicados.",
-      "Asesoría experta para adquirir lentes ópticos.",
-      "Mejora inmediata en calidad de vida y bienestar.",
+      {
+        text: "Chequeo visual gratuito.",
+        icon: Eye,
+      },
+      {
+        text: "Atención en el lugar de trabajo, sin traslados.",
+        icon: Buildings,
+      },
+      {
+        text: "Asesoría experta para adquirir lentes que se adapten a tu estilo.",
+        icon: Eyeglasses,
+      },
+      {
+        text: "Mejora inmediata en calidad de vida y bienestar.",
+        icon: Heart,
+      },
     ],
-    reverse: false,
+    reverse: true,
   },
 ];
 
@@ -74,9 +88,9 @@ export default function BenefitsSection() {
           transition={{ duration: 0.55, ease: EASE }}
           className="mb-10 max-w-2xl sm:mb-14"
         >
-          <h2 className="section-title section-title--caps mb-4">
-            Beneficios de las{" "}
-            <span className="hero-headline-serif normal-case text-primary">jornadas oftalmológicas</span>
+          <h2 className="section-title mb-4">
+            No te preocupes,{" "}
+            <span className="hero-headline-serif text-primary">te ayudamos</span>
           </h2>
           <p className="text-base leading-relaxed text-text-secondary sm:text-lg">
             Un servicio pensado para generar impacto en la empresa, simplificar la gestión de RRHH y mejorar la vida de cada colaborador.
@@ -99,28 +113,35 @@ export default function BenefitsSection() {
               >
                 <div className={`order-2 lg:order-none ${block.reverse ? "lg:[direction:ltr]" : ""}`}>
                   <div className="mb-4 inline-flex items-center gap-2 rounded-full border-2 border-primary/20 bg-primary-mist px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-primary">
-                    <Icon size={16} weight="bold" />
+                    <Icon size={16} weight="regular" />
                     {block.tag}
                   </div>
                   <h3 className="mb-4 text-xl font-extrabold uppercase tracking-tight text-brand-dark sm:mb-5 sm:text-2xl lg:text-3xl">
                     {block.title}
                   </h3>
                   <ul className="space-y-3.5">
-                    {block.items.map((item, i) => (
-                      <motion.li
-                        key={item}
-                        initial={reduce ? false : { opacity: 0, x: -12 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.1 + i * 0.06, duration: 0.4, ease: EASE }}
-                        className="flex items-start gap-3"
-                      >
-                        <span className="flyer-icon-circle mt-0.5 h-6 w-6">
-                          <Check size={12} weight="bold" />
-                        </span>
-                        <span className="text-sm leading-relaxed text-text-primary sm:text-base">{item}</span>
-                      </motion.li>
-                    ))}
+                    {block.items.map((item, i) => {
+                      const ItemIcon = item.icon;
+                      return (
+                        <motion.li
+                          key={item.text}
+                          initial={reduce ? false : { opacity: 0, x: -12 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.1 + i * 0.06, duration: 0.4, ease: EASE }}
+                          className="flex items-start gap-3"
+                        >
+                          <ItemIcon
+                            size={22}
+                            weight="regular"
+                            className="mt-0.5 shrink-0 text-primary"
+                          />
+                          <span className="text-sm leading-relaxed text-text-primary sm:text-base">
+                            {item.text}
+                          </span>
+                        </motion.li>
+                      );
+                    })}
                   </ul>
                 </div>
 

@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Outfit, Playfair_Display } from "next/font/google";
+import { JornadaModalProvider } from "@/components/forms/JornadaModalProvider";
+import { JsonLd } from "@/components/site/JsonLd";
+import { seoPages, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { siteJsonLd } from "@/lib/structured-data";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -22,31 +26,44 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Jornadas Oftalmológicas para Empresas | Óptica y Cristal Chile",
-  description:
-    "Llevamos la salud visual a tu empresa. Chequeos visuales y venta de lentes ópticos en terreno para la comodidad y bienestar de tus trabajadores en Chile.",
-  keywords: [
-    "jornadas oftalmológicas para empresas",
-    "chequeos visuales en empresas",
-    "salud visual laboral",
-    "operativos visuales para empresas",
-    "evaluación visual para trabajadores",
-    "lentes ópticos para trabajadores",
-    "óptica en Santiago Centro",
-    "servicio oftalmológico para empresas en Chile",
-  ],
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: seoPages.home.title,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: seoPages.home.description,
+  applicationName: SITE_NAME,
+  keywords: [...seoPages.home.keywords],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "Óptica",
+  alternates: { canonical: SITE_URL, languages: { "es-CL": SITE_URL } },
   openGraph: {
-    title: "Jornadas Oftalmológicas para Empresas | Óptica y Cristal Chile",
-    description:
-      "Llevamos la salud visual a tu empresa en Santiago Centro. Chequeos visuales y venta de lentes ópticos en terreno para tus trabajadores.",
-    url: "https://opticaycristal.cl",
-    siteName: "Óptica y Cristal Chile",
+    title: seoPages.home.title,
+    description: seoPages.home.description,
+    url: SITE_URL,
+    siteName: SITE_NAME,
     locale: "es_CL",
     type: "website",
+    images: [{ url: seoPages.home.image, alt: seoPages.home.imageAlt }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: seoPages.home.title,
+    description: seoPages.home.description,
+    images: [seoPages.home.image],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
@@ -66,7 +83,8 @@ export default function RootLayout({
         >
           Saltar al contenido
         </a>
-        {children}
+        <JsonLd data={siteJsonLd()} />
+        <JornadaModalProvider>{children}</JornadaModalProvider>
       </body>
     </html>
   );

@@ -9,7 +9,7 @@ import {
   CalendarCheck,
   Users,
 } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/Button";
+import SolicitarJornadaButton from "@/components/forms/SolicitarJornadaButton";
 
 const highlights = [
   { icon: Stethoscope, text: "Chequeos visuales en terreno" },
@@ -60,13 +60,12 @@ export default function JornadasHero() {
               })}
             </div>
 
-            <Button
-              href="#solicitar"
+            <SolicitarJornadaButton
               size="lg"
               icon={<ArrowRight size={16} weight="bold" />}
             >
               Solicitar jornada
-            </Button>
+            </SolicitarJornadaButton>
           </motion.div>
 
           <motion.div

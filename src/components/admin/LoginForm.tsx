@@ -50,7 +50,8 @@ export default function LoginForm() {
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Panel interno</p>
         <h1 className="hero-headline-serif mt-3 text-4xl text-brand-dark">Óptica y Cristal</h1>
         <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-          Acceso privado del equipo al Radar Comercial, los prospectos y las gestiones del CRM.
+          Acceso del equipo. Aquí quedan las solicitudes que llegan desde el sitio para que un
+          ejecutivo pueda contactar a la empresa.
         </p>
 
         <form

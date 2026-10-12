@@ -13,9 +13,9 @@ import {
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const stats = [
-  { value: "+200", label: "Empresas atendidas" },
-  { value: "+10.000", label: "Trabajadores evaluados" },
-  { value: "$0", label: "Costo para la empresa" },
+  { value: "+80", label: "Empresas atendidas" },
+  { value: "+3.200", label: "Trabajadores evaluados" },
+  { value: "$0", label: "Costo para la empresa", featured: true },
 ];
 
 const pillars = [
@@ -82,10 +82,30 @@ export default function OpticaSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.45, ease: EASE }}
-                className="mobile-scroll-card card-dark px-4 py-4 text-center sm:px-4 sm:py-5"
+                className={
+                  stat.featured
+                    ? "mobile-scroll-card rounded-xl bg-primary px-4 py-4 text-center sm:px-4 sm:py-5"
+                    : "mobile-scroll-card card-dark px-4 py-4 text-center sm:px-4 sm:py-5"
+                }
               >
-                <p className="stat-value text-xl font-bold text-primary sm:text-2xl lg:text-3xl">{stat.value}</p>
-                <p className="mt-1 text-[10px] font-medium leading-snug text-text-on-dark-muted sm:text-xs">{stat.label}</p>
+                <p
+                  className={
+                    stat.featured
+                      ? "stat-value text-2xl font-extrabold text-white sm:text-3xl lg:text-4xl"
+                      : "stat-value text-xl font-bold text-primary sm:text-2xl lg:text-3xl"
+                  }
+                >
+                  {stat.value}
+                </p>
+                <p
+                  className={
+                    stat.featured
+                      ? "mt-1 text-[10px] font-semibold leading-snug text-white/90 sm:text-xs"
+                      : "mt-1 text-[10px] font-medium leading-snug text-text-on-dark-muted sm:text-xs"
+                  }
+                >
+                  {stat.label}
+                </p>
               </motion.div>
             ))}
           </motion.div>
@@ -125,7 +145,7 @@ export default function OpticaSection() {
             </div>
             <div className="relative z-10">
               <p className="mb-2 text-2xl font-extrabold uppercase leading-tight sm:text-3xl">
-                Confianza de cientos de empresas
+                Confianza de decenas de empresas
               </p>
               <p className="text-sm leading-relaxed text-white/85 sm:text-base">
                 Desde oficinas corporativas hasta centros de distribución, nos adaptamos a cada entorno laboral.

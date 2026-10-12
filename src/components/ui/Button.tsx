@@ -4,7 +4,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: "primary" | "secondary" | "outline" | "ghost";
   size?: "sm" | "md" | "lg";
   href?: string;
-  as?: React.ElementType;
+  as?: "button" | "a";
   icon?: React.ReactNode;
 }
 
@@ -43,23 +43,23 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const combinedClassName = `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`;
 
-    const Component = as || (href ? "a" : "button");
-
-    return (
-      <Component
-        ref={ref as React.Ref<HTMLButtonElement>}
-        href={href}
-        className={combinedClassName}
-        {...(props as React.ComponentPropsWithoutRef<typeof Component>)}
-      >
+    const content = (
+      <>
         <span className="whitespace-nowrap">{children}</span>
         {icon && (
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-px">
             {icon}
           </span>
         )}
-      </Component>
+      </>
     );
+
+    if (as === "a" || (!as && href)) {
+      return <a href={href} className={combinedClassName}
+        {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}>{content}</a>;
+    }
+
+    return <button ref={ref} className={combinedClassName} {...props}>{content}</button>;
   }
 );
 

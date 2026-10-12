@@ -3,11 +3,12 @@ import React from "react";
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label: string;
   error?: string;
+  placeholder?: string;
   options: { value: string; label: string }[];
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, id, className = "", ...props }, ref) => {
+  ({ label, error, options, placeholder = "Selecciona una opción", id, className = "", ...props }, ref) => {
     const selectId = id || label.toLowerCase().replace(/\s+/g, "-");
 
     return (
@@ -27,7 +28,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           aria-describedby={error ? `${selectId}-error` : undefined}
           {...props}
         >
-          <option value="">Selecciona un mes</option>
+          <option value="">{placeholder}</option>
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}

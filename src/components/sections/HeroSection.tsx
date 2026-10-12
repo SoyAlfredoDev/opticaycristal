@@ -5,26 +5,34 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
-  Check,
+  Eye,
+  FirstAidKit,
   Truck,
-  Clock,
-  CurrencyCircleDollar,
 } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/Button";
+import SolicitarJornadaButton from "@/components/forms/SolicitarJornadaButton";
 import Navbar from "@/components/layout/Navbar";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const proofPoints = [
-  "Chequeos visuales completos en tus instalaciones",
-  "Tecnólogos médicos y equipamiento profesional",
-  "Coordinación simple: nosotros llevamos todo",
+  {
+    text: "Chequeos visuales completos en tus instalaciones",
+    icon: Eye,
+  },
+  {
+    text: "Tecnólogos médicos y equipamiento profesional",
+    icon: FirstAidKit,
+  },
+  {
+    text: "Coordinación simple: nosotros llevamos todo",
+    icon: Truck,
+  },
 ];
 
 const metrics = [
-  { value: "+200", label: "Empresas atendidas" },
-  { value: "+10.000", label: "Trabajadores evaluados" },
-  { value: "$0", label: "Costo para la empresa" },
+  { value: "+80", label: "Empresas atendidas" },
+  { value: "+3.200", label: "Trabajadores evaluados" },
+  { value: "$0", label: "Costo para la empresa", featured: true },
   { value: "48 h", label: "Respuesta garantizada" },
 ];
 
@@ -63,26 +71,31 @@ export default function HeroSection() {
             </p>
 
             <ul className="mb-6 space-y-2.5 sm:mb-8 sm:space-y-3 lg:mb-9">
-              {proofPoints.map((point, i) => (
-                <motion.li
-                  key={point}
-                  initial={reduce ? false : { opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.15 + i * 0.08, duration: 0.45, ease: EASE }}
-                  className="flex items-start gap-2.5 text-sm text-text-primary sm:gap-3 sm:text-[15px]"
-                >
-                  <span className="flyer-icon-circle mt-0.5 h-5 w-5 border-[1.5px]">
-                    <Check size={11} weight="bold" />
-                  </span>
-                  {point}
-                </motion.li>
-              ))}
+              {proofPoints.map((point, i) => {
+                const Icon = point.icon;
+                return (
+                  <motion.li
+                    key={point.text}
+                    initial={reduce ? false : { opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 + i * 0.08, duration: 0.45, ease: EASE }}
+                    className="flex items-start gap-2.5 text-sm text-text-primary sm:gap-3 sm:text-[15px]"
+                  >
+                    <Icon
+                      size={20}
+                      weight="regular"
+                      className="mt-0.5 shrink-0 text-primary"
+                    />
+                    {point.text}
+                  </motion.li>
+                );
+              })}
             </ul>
 
             <div className="hidden flex-col gap-3 sm:flex sm:flex-row sm:items-center sm:gap-4">
-              <Button href="/#contratar" size="lg" className="min-h-[52px] w-full rounded-full sm:w-auto">
+              <SolicitarJornadaButton size="lg" className="min-h-[52px] w-full rounded-full sm:w-auto">
                 Solicitar jornada
-              </Button>
+              </SolicitarJornadaButton>
               <Link
                 href="#beneficios"
                 className="group inline-flex min-h-[48px] items-center justify-center gap-2 text-sm font-semibold text-brand-dark transition-colors hover:text-primary sm:justify-start"
@@ -130,34 +143,6 @@ export default function HeroSection() {
                 />
               </div>
             </div>
-
-            <div className="mt-4 flex flex-col gap-3 sm:mt-0 sm:block">
-              <motion.div
-                initial={reduce ? false : { opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.45, duration: 0.5, ease: EASE }}
-                className="hero-v2__stat-card card-premium relative z-20 flex items-center gap-3 border-l-4 border-l-primary px-4 py-3 sm:absolute sm:-bottom-1 sm:left-0 lg:-left-4"
-              >
-                <span className="flyer-icon-circle h-9 w-9 sm:h-10 sm:w-10">
-                  <CurrencyCircleDollar size={20} weight="regular" className="sm:hidden" />
-                  <CurrencyCircleDollar size={22} weight="regular" className="hidden sm:block" />
-                </span>
-                <div>
-                  <p className="stat-value text-lg font-bold text-primary sm:text-xl">$0</p>
-                  <p className="text-[11px] font-medium text-text-secondary sm:text-xs">Costo para tu empresa</p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={reduce ? false : { opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.55, duration: 0.5, ease: EASE }}
-                className="card-premium flex items-center gap-2 rounded-xl bg-brand-dark px-3 py-2.5 text-white sm:absolute sm:-right-1 sm:top-8 sm:hidden lg:flex"
-              >
-                <Clock size={18} className="text-primary" weight="regular" />
-                <span className="text-xs font-semibold">Sin interrumpir la jornada</span>
-              </motion.div>
-            </div>
           </motion.div>
         </div>
 
@@ -170,10 +155,30 @@ export default function HeroSection() {
           {metrics.map((m) => (
             <div
               key={m.label}
-              className="rounded-xl border border-border bg-white px-3 py-3.5 text-center shadow-brand sm:px-4 sm:py-4 lg:px-5 lg:py-5"
+              className={
+                m.featured
+                  ? "relative overflow-hidden rounded-xl bg-primary px-3 py-3.5 text-center shadow-brand sm:px-4 sm:py-4 lg:px-5 lg:py-5"
+                  : "rounded-xl border border-border bg-white px-3 py-3.5 text-center shadow-brand sm:px-4 sm:py-4 lg:px-5 lg:py-5"
+              }
             >
-              <p className="stat-value text-xl font-bold text-primary sm:text-2xl lg:text-3xl">{m.value}</p>
-              <p className="mt-0.5 text-[10px] font-medium leading-snug text-text-secondary sm:mt-1 sm:text-[11px] lg:text-xs">{m.label}</p>
+              <p
+                className={
+                  m.featured
+                    ? "stat-value text-2xl font-extrabold text-white sm:text-3xl lg:text-4xl"
+                    : "stat-value text-xl font-bold text-primary sm:text-2xl lg:text-3xl"
+                }
+              >
+                {m.value}
+              </p>
+              <p
+                className={
+                  m.featured
+                    ? "mt-0.5 text-[10px] font-semibold leading-snug text-white/90 sm:mt-1 sm:text-[11px] lg:text-xs"
+                    : "mt-0.5 text-[10px] font-medium leading-snug text-text-secondary sm:mt-1 sm:text-[11px] lg:text-xs"
+                }
+              >
+                {m.label}
+              </p>
             </div>
           ))}
         </motion.div>
