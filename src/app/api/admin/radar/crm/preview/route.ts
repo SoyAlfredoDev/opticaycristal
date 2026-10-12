@@ -28,6 +28,7 @@ export async function GET(request: Request) {
           process.env.RADAR_MAIL_COMPANY_ADDRESS ||
           "[Dirección comercial pendiente de configurar]",
         consent: "",
+        templateId: String(c.template_id || "convenio"),
       }),
     );
   } catch (e) {

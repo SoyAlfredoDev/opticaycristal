@@ -4,6 +4,7 @@ import { ensureCrmSchema, crmSql } from "./crm-schema";
 import { RadarApiError } from "./api";
 import { getProspect } from "./db";
 import { dealStages, type CrmSnapshot, type CrmCampaign } from "./crm-model";
+import { campaignTemplates } from "./campaign-templates";
 import {
   requiredText,
   optionalText,
@@ -215,13 +216,14 @@ export async function crmAction(body: Record<string, unknown>, actor: string) {
       subject = requiredText(body, "subject", 150),
       text = requiredText(body, "body", 5000),
       variants = campaignVariants(body.variants);
+    const templateId = body.templateId === undefined ? (objective === "ambas" ? "presentacion" : objective) : enumText(body, "templateId", campaignTemplates.map(t => t.id));
     if (/[\r\n]/.test(subject) || /(https?:\/\/|mailto:|www\.)/i.test(text))
       throw new RadarApiError(
         "Asunto sin saltos de línea y cuerpo sin enlaces: utiliza el CTA principal.",
       );
     if (action === "campaignUpdate") {
       const updated =
-        await sql`WITH updated AS (UPDATE radar_crm_campaigns SET name=${name},objective=${objective},subject=${subject},body=${text},variants=${JSON.stringify(variants)}::jsonb WHERE id=${id} AND status='draft' AND NOT EXISTS(SELECT 1 FROM radar_crm_deliveries WHERE campaign_id=${id}) RETURNING id) INSERT INTO radar_crm_events(id,kind,source,metadata) SELECT ${randomUUID()},'campaign.edited',${actor},${JSON.stringify({ id, name })}::jsonb FROM updated RETURNING id`;
+        await sql`WITH updated AS (UPDATE radar_crm_campaigns SET name=${name},objective=${objective},subject=${subject},body=${text},variants=${JSON.stringify(variants)}::jsonb,template_id=${templateId} WHERE id=${id} AND status='draft' AND NOT EXISTS(SELECT 1 FROM radar_crm_deliveries WHERE campaign_id=${id}) RETURNING id) INSERT INTO radar_crm_events(id,kind,source,metadata) SELECT ${randomUUID()},'campaign.edited',${actor},${JSON.stringify({ id, name })}::jsonb FROM updated RETURNING id`;
       if (!updated.length)
         throw new RadarApiError(
           "Solo puedes editar un borrador sin destinatarios preparados. Crea una nueva campaña para otro experimento.",
@@ -230,7 +232,7 @@ export async function crmAction(body: Record<string, unknown>, actor: string) {
       return { id };
     }
     await sql.transaction([
-      sql`INSERT INTO radar_crm_campaigns(id,name,objective,subject,body,variants) VALUES(${id},${name},${objective},${subject},${text},${JSON.stringify(variants)}::jsonb) ON CONFLICT(id) DO NOTHING`,
+      sql`INSERT INTO radar_crm_campaigns(id,name,objective,subject,body,variants,template_id) VALUES(${id},${name},${objective},${subject},${text},${JSON.stringify(variants)}::jsonb,${templateId}) ON CONFLICT(id) DO NOTHING`,
       audit("campaign.created", { id, name }),
     ]);
     return { id };

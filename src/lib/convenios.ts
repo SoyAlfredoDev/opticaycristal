@@ -1,4 +1,4 @@
-export const CONVENIO = { discountPercent: 20, maxInstallments: 3, minWorkers: 11 } as const;
+export const CONVENIO = { discountPercent: 20, maxInstallments: 3, minWorkers: 5 } as const;
 
 export const convenioInterests = {
   descuento: "Descuento y consulta visual gratuita",
@@ -13,7 +13,7 @@ export function isConvenioInterest(value: unknown): value is ConvenioInterest {
 }
 
 export const convenioSteps = [
-  { title: "Registra tu empresa", description: "Envíanos los datos de la empresa y de la persona de contacto. El convenio es para empresas con más de 10 trabajadores." },
+  { title: "Registra tu empresa", description: "Envíanos los datos de la empresa y de la persona de contacto. El convenio es para empresas con 5 o más trabajadores." },
   { title: "Activamos el beneficio", description: "Te contactamos para dejar el descuento y la consulta visual gratuita a tus trabajadores y sus familiares." },
   { title: "Si quieres, firmamos las cuotas", description: "Para ofrecer hasta tres cuotas por nómina, tu empresa firma un contrato con las condiciones de pago." },
 ] as const;

@@ -120,10 +120,13 @@ async function scheduleSourceRequest<T>(request:()=>Promise<T>):Promise<T>{
 async function geocodeLocation(location:string):Promise<{bounds:SearchBounds;polygon:GeoPolygon}>{
  const key=normalize(location),cached=boundsCache.get(key);if(cached&&cached.expiresAt>Date.now())return{bounds:cached.bounds,polygon:cached.polygon};
  const endpoint=process.env.NOMINATIM_BASE_URL?.trim()||"https://nominatim.openstreetmap.org/search",url=new URL(endpoint);
- url.search=new URLSearchParams({q:`${location}, Chile`,countrycodes:"cl",format:"jsonv2",limit:"1",polygon_geojson:"1"}).toString();
+ url.search=new URLSearchParams({q:`${location}, Chile`,countrycodes:"cl",format:"jsonv2",limit:"5",polygon_geojson:"1"}).toString();
  const response=await scheduleSourceRequest(()=>fetch(url,{headers:{"Accept-Language":"es-CL,es;q=0.9","User-Agent":"OpticaCristalRadar/1.0 (private B2B company search)"},signal:AbortSignal.timeout(12000),cache:"no-store"}));
  if(!response.ok){if(response.status===429)throw new Error("OpenStreetMap limitó temporalmente la geocodificación. Espera un momento e inténtalo de nuevo.");throw new Error(`No se pudo ubicar la comuna o región en OpenStreetMap (estado ${response.status}).`)}
- const records=await response.json() as Array<{boundingbox?:string[];geojson?:GeoPolygon}>;const box=records[0]?.boundingbox?.map(Number),polygon=records[0]?.geojson;
+ const records=await response.json() as Array<{boundingbox?:string[];geojson?:GeoPolygon;type?:string;category?:string;class?:string}>;
+ // Nominatim often ranks a city Point before its administrative boundary (e.g. Santiago).
+ const boundary=Array.isArray(records)?records.find(record=>record.geojson&&["Polygon","MultiPolygon"].includes(record.geojson.type)&&(!record.type||record.type==="administrative"||record.category==="boundary"||record.class==="boundary")):undefined;
+ const box=boundary?.boundingbox?.map(Number),polygon=boundary?.geojson;
  if(!box||box.length!==4||box.some(value=>!Number.isFinite(value))||!polygon||!["Polygon","MultiPolygon"].includes(polygon.type))throw new Error(`No encontré el límite geográfico de “${location}” en Chile.`);
  const [south,north,west,east]=box;if(north<=south||east<=west||south< -90||north>90||west< -180||east>180)throw new Error("La fuente devolvió límites geográficos inválidos.");
  const bounds={south,west,north,east};if(boundsCache.size>=200){const oldest=boundsCache.keys().next().value;if(oldest)boundsCache.delete(oldest)}boundsCache.set(key,{expiresAt:Date.now()+24*60*60*1000,bounds,polygon});return{bounds,polygon};

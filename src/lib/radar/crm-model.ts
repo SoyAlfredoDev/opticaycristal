@@ -54,6 +54,7 @@ export type CrmDeal = {
   version: number;
 };
 export type CrmCampaign = {
+  template_id: string;
   id: string;
   name: string;
   objective: string;

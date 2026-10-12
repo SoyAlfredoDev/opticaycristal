@@ -10,11 +10,11 @@ describe("validación del servidor para solicitudes", () => {
     expect(parseSolicitudBody({ ...base, origen: "convenio", mesEstimado: "", detalles: { trabajadores: 11, comuna: "Santiago", modalidadConvenio } })).toMatchObject({ ok: false });
   });
   it("conserva payloads de jornadas anteriores", () => { expect(parseSolicitudBody(base)).toMatchObject({ ok: true, spam: false, origen: "jornada" }); });
-  it.each([0, 10, 10.5, "11", null])("rechaza convenio con número de trabajadores inválido: %s", (trabajadores) => {
+  it.each([0, 4, 5.5, "5", null])("rechaza convenio con número de trabajadores inválido: %s", (trabajadores) => {
     expect(parseSolicitudBody({ ...base, origen: "convenio", mesEstimado: "", detalles: { trabajadores, comuna: "Santiago" } })).toMatchObject({ ok: false });
   });
-  it("acepta convenio desde 11 trabajadores sin exigir mes de jornada", () => {
-    expect(parseSolicitudBody({ ...base, origen: "convenio", mesEstimado: "", detalles: { trabajadores: 11, comuna: "Santiago", comentarios: " Revisar opciones " } })).toMatchObject({ ok: true, data: { detalles: { trabajadores: 11, comentarios: "Revisar opciones" } } });
+  it("acepta convenio desde 5 trabajadores sin exigir mes de jornada", () => {
+    expect(parseSolicitudBody({ ...base, origen: "convenio", mesEstimado: "", detalles: { trabajadores: 5, comuna: "Santiago", comentarios: " Revisar opciones " } })).toMatchObject({ ok: true, data: { detalles: { trabajadores: 5, comentarios: "Revisar opciones" } } });
   });
   it("rechaza consentimiento ausente, región desconocida y origen inventado", () => {
     for (const change of [{ autorizacionDatos: false }, { region: "Otro país" }, { origen: "inventado" }]) expect(parseSolicitudBody({ ...base, ...change })).toMatchObject({ ok: false });

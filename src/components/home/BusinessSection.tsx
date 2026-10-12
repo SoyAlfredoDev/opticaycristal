@@ -19,7 +19,7 @@ export function BusinessSection() {
             <div className={styles.businessCopy}>
               <h3><Link href="/convenios">Convenio<br />con empresas</Link></h3>
               <p>{CONVENIO.discountPercent}% en la compra online y en la óptica para trabajadores y familiares, y consulta visual gratuita. Hasta tres cuotas por nómina con contrato de empresa.</p>
-              <span className={styles.requirement}>Para empresas con más de 10 trabajadores.</span>
+              <span className={styles.requirement}>Para empresas con 5 o más trabajadores.</span>
               <LinkButton href="/convenios" variant="text" arrow>Conocer convenios</LinkButton>
             </div>
             <div className={styles.businessImage}>

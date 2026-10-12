@@ -16,8 +16,12 @@ describe("API de solicitudes sin efectos externos", () => {
     expect(mocks.mail).toHaveBeenCalledOnce(); expect(mocks.update).toHaveBeenCalledOnce();
   });
   it("rechaza convenio no elegible antes de persistir o enviar", async () => {
-    expect((await POST(request({ ...body, detalles: { ...body.detalles, trabajadores: 10 } }))).status).toBe(400);
+    expect((await POST(request({ ...body, detalles: { ...body.detalles, trabajadores: 4 } }))).status).toBe(400);
     expect(mocks.create).not.toHaveBeenCalled(); expect(mocks.mail).not.toHaveBeenCalled();
+  });
+  it("acepta convenio desde cinco trabajadores", async () => {
+    expect((await POST(request({ ...body, detalles: { ...body.detalles, trabajadores: 5 } }))).status).toBe(200);
+    expect(mocks.create).toHaveBeenCalledOnce();
   });
   it("mantiene rate limit y honeypot", async () => {
     mocks.allow.mockReturnValueOnce(false); expect((await POST(request(body))).status).toBe(429);

@@ -9,6 +9,7 @@ import {
   type CrmDeal,
 } from "@/lib/radar/crm-model";
 import styles from "./RadarCrm.module.css";
+import { campaignTemplates, campaignTemplate } from "@/lib/radar/campaign-templates";
 type View = "gestiones" | "oportunidades" | "campanas" | "resultados";
 const date = (value: string) =>
   new Date(value).toLocaleString("es-CL", {
@@ -75,7 +76,9 @@ export function RadarCrm({
     [selection, setSelection] = useState<string[]>([]),
     [preview, setPreview] = useState(""),
     [ctaTypes, setCtaTypes] = useState<string[]>(["web"]),
+    [templateId, setTemplateId] = useState("convenio"),
     [now, setNow] = useState(0);
+  const chosenTemplate = campaignTemplate(editingCampaign?.template_id || templateId);
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
       try {
@@ -178,6 +181,7 @@ export function RadarCrm({
           objective: b.objective,
           subject: b.subject,
           body: b.body,
+          templateId: b.templateId,
           variants,
         },
         "Borrador guardado. Revisa su contenido antes de aprobar.",
@@ -751,28 +755,48 @@ export function RadarCrm({
               <div className={styles.grid}>
                 <section className={styles.card}>
                   <h3>Diseñar campaña</h3>
+                  <p>Contactos con consentimiento vigente: <strong>{eligible.length}</strong>. {!eligible.length && "Registra o importa contactos y su evidencia de autorización antes de preparar destinatarios."}</p>
                   <p>
                     Un objetivo y un CTA por correo. Mantén el mismo contenido y
                     cambia el canal para comparar.
                   </p>
                   <form
-                    key={editingCampaign?.id || "new-campaign"}
+                    key={editingCampaign?.id || `new-campaign-${templateId}`}
                     onSubmit={(e) => void saveCampaign(e)}
                   >
+                    <label>
+                      Formato corporativo
+                      <select name="templateId" value={chosenTemplate.id} onChange={e => {
+                        setTemplateId(e.target.value);
+                        if (editingCampaign) setEditingCampaign({ ...editingCampaign, template_id: e.target.value });
+                      }}>
+                        {campaignTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      </select>
+                    </label>
+                    <button type="button" disabled={busy} onClick={async () => {
+                      setBusy(true);
+                      try {
+                        const r = await fetch(`/api/admin/radar/crm/templates?id=${chosenTemplate.id}`);
+                        const result = await r.json();
+                        if (!r.ok) throw new Error(result.error);
+                        setPreview(result.html);
+                      } catch (e) { setError(e instanceof Error ? e.message : "No se pudo cargar el formato."); }
+                      finally { setBusy(false); }
+                    }}>Ver formato corporativo</button>
                     <label>
                       Nombre interno
                       <input
                         name="name"
                         required
                         maxLength={200}
-                        defaultValue={editingCampaign?.name || ""}
+                        defaultValue={editingCampaign?.name || chosenTemplate.name}
                       />
                     </label>
                     <label>
                       Objetivo
                       <select
                         name="objective"
-                        defaultValue={editingCampaign?.objective || "convenio"}
+                        defaultValue={editingCampaign?.objective || chosenTemplate.objective}
                       >
                         <option value="convenio">Conseguir convenios</option>
                         <option value="jornada">Coordinar jornadas</option>
@@ -783,7 +807,7 @@ export function RadarCrm({
                       Asunto
                       <input
                         name="subject"
-                        defaultValue={editingCampaign?.subject || ""}
+                        defaultValue={editingCampaign?.subject || chosenTemplate.subject}
                         required
                         maxLength={150}
                         placeholder="Conversemos sobre beneficios ópticos para {{empresa}}"
@@ -793,7 +817,7 @@ export function RadarCrm({
                       Mensaje
                       <textarea
                         name="body"
-                        defaultValue={editingCampaign?.body || ""}
+                        defaultValue={editingCampaign?.body || chosenTemplate.body}
                         required
                         rows={7}
                         maxLength={5000}
@@ -835,10 +859,10 @@ export function RadarCrm({
                                       (v) => v.kind === kind,
                                     )?.label ||
                                     (kind === "web"
-                                      ? "Conocer y solicitar un convenio"
+                                      ? chosenTemplate.cta
                                       : kind === "whatsapp"
                                         ? "Conversar por WhatsApp"
-                                        : "Responder sobre un convenio")
+                                        : "Conversar por correo")
                                   }
                                 />
                               </label>
@@ -850,7 +874,7 @@ export function RadarCrm({
                                     defaultValue={
                                       editingCampaign?.variants.find(
                                         (v) => v.kind === kind,
-                                      )?.destination || ""
+                                      )?.destination || (kind === "whatsapp" ? "https://wa.me/56922452080" : "mailto:contacto@opticaycristal.cl")
                                     }
                                     required
                                     maxLength={500}

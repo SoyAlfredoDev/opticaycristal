@@ -34,7 +34,7 @@ export default function ConveniosPage() {
     <SiteShell active="Convenios">
       <JsonLd data={conveniosJsonLd()} />
       <PageHero
-        audience="Empresas con más de 10 trabajadores"
+        audience="Empresas con 5 o más trabajadores"
         title={<>Convenio para<br />tu empresa</>}
         description={`Tus trabajadores y sus familiares reciben ${CONVENIO.discountPercent}% de descuento en la compra online y en la óptica, y consulta visual gratuita.`}
         image="/images/hero-equipo-trabajo.png"
@@ -93,7 +93,7 @@ export default function ConveniosPage() {
                     <li><Check aria-hidden="true" />Compras online y presenciales</li>
                     <li><Check aria-hidden="true" />Consulta visual gratuita</li>
                   </ul>
-                  <p>Para empresas con más de 10 trabajadores.</p>
+                  <p>Para empresas con 5 o más trabajadores.</p>
                 </figcaption>
               </figure>
               <figure className={styles.payroll}>

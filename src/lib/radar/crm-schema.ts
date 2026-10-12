@@ -21,6 +21,7 @@ export async function ensureCrmSchema() {
       sql`CREATE TABLE IF NOT EXISTS radar_crm_campaigns(id text PRIMARY KEY,name text NOT NULL,objective text NOT NULL CHECK(objective IN ('convenio','jornada','ambas')),subject text NOT NULL,body text NOT NULL,variants jsonb NOT NULL,status text NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','approved','paused','archived')),approved_at timestamptz,created_at timestamptz NOT NULL DEFAULT now())`,
       sql`CREATE TABLE IF NOT EXISTS radar_crm_deliveries(id text PRIMARY KEY,campaign_id text NOT NULL REFERENCES radar_crm_campaigns(id),contact_id text NOT NULL REFERENCES radar_crm_contacts(id),variant_id text NOT NULL,token text NOT NULL UNIQUE,status text NOT NULL DEFAULT 'queued' CHECK(status IN ('queued','sending','sent','failed','uncertain','cancelled')),provider_id text UNIQUE,error text,attempted_at timestamptz,created_at timestamptz NOT NULL DEFAULT now(),sent_at timestamptz,UNIQUE(campaign_id,contact_id))`,
       sql`ALTER TABLE radar_crm_deliveries ADD COLUMN IF NOT EXISTS recipient_email text`,
+      sql`ALTER TABLE radar_crm_campaigns ADD COLUMN IF NOT EXISTS template_id text NOT NULL DEFAULT 'convenio'`,
       sql`UPDATE radar_crm_deliveries d SET recipient_email=c.email FROM radar_crm_contacts c WHERE c.id=d.contact_id AND d.recipient_email IS NULL`,
       sql`CREATE UNIQUE INDEX IF NOT EXISTS radar_crm_campaign_email_unique ON radar_crm_deliveries(campaign_id,recipient_email)`,
       sql`CREATE INDEX IF NOT EXISTS radar_crm_deliveries_queue ON radar_crm_deliveries(status,created_at)`,

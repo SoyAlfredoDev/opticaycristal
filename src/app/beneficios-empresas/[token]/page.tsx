@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { deliveryByToken } from "@/lib/radar/crm-store";
+import { SiteShell } from "@/components/site/SiteShell";
+import { CONVENIO } from "@/lib/convenios";
 export const runtime = "nodejs";
 export const metadata = {
   title: "Beneficios ópticos para empresas | Óptica & Cristal",
@@ -13,27 +15,25 @@ export default async function BenefitsPage({
   const { token } = await params;
   const d = await deliveryByToken(token);
   if (!d) notFound();
+  const jornada = d.objective === "jornada";
   return (
-    <main
+    <SiteShell active={jornada ? "jornadas" : "convenios"}><section
       style={{
         maxWidth: 760,
         margin: "40px auto",
         padding: 24,
         fontFamily: "Arial",
-        color: "#152c40",
+        color: "#242020",
       }}
     >
       <p style={{ color: "#6B1F3A", fontWeight: 700 }}>
         ÓPTICA &amp; CRISTAL · EMPRESAS
       </p>
-      <h1>Conversemos sobre salud visual para tu equipo</h1>
+      <h1>{jornada ? "Coordinemos una jornada para tu equipo" : "Conversemos sobre beneficios ópticos para tu equipo"}</h1>
       <p>
-        Evaluaremos un convenio de beneficios ópticos o una jornada en tu
-        empresa según la dotación y tus necesidades. Los descuentos, las
-        condiciones de pago por nómina y la fecha de una jornada se definen en
-        la propuesta.
+        {jornada ? "Acercamos la atención visual a empresas con más de 20 trabajadores. Revisaremos participantes, ubicación y fechas para preparar una propuesta con servicios, costos y condiciones." : `Nuestro convenio ofrece ${CONVENIO.discountPercent}% de descuento online y en la óptica, y consulta visual gratuita para trabajadores y familiares. Las cuotas por nómina requieren un contrato con la empresa. También podemos evaluar una jornada en tus instalaciones según la dotación.`}
       </p>
-      <section style={{ background: "#f3f7fa", padding: 24, borderRadius: 12 }}>
+      <section style={{ background: "#FBF7F2", padding: 24, borderRadius: 12, border: "1px solid #E9D8C8" }}>
         <h2>Solicita una conversación</h2>
         <p>
           Cuéntanos qué necesitas. Nuestro equipo dará seguimiento a tu
@@ -110,10 +110,10 @@ export default async function BenefitsPage({
               fontWeight: 700,
             }}
           >
-            Quiero conversar sobre un convenio
+            {jornada ? "Solicitar información de una jornada" : "Solicitar una conversación"}
           </button>
         </form>
       </section>
-    </main>
+    </section></SiteShell>
   );
 }

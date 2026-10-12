@@ -155,7 +155,7 @@ export function conveniosJsonLd() {
         areaServed: { "@type": "Country", name: "Chile" },
         audience: {
           "@type": "BusinessAudience",
-          name: `Empresas con más de ${CONVENIO.minWorkers - 1} trabajadores`,
+          name: `Empresas con ${CONVENIO.minWorkers} o más trabajadores`,
         },
         offers: {
           "@type": "Offer",

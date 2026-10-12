@@ -167,7 +167,7 @@ Slogan: ${SLOGAN}
 
 ## Convenio con empresas
 
-- [Convenio con empresas](${convenios}): para empresas con más de ${CONVENIO.minWorkers - 1} trabajadores.
+- [Convenio con empresas](${convenios}): para empresas con ${CONVENIO.minWorkers} o más trabajadores.
 - El ${discount}% de descuento aplica en la compra online y en la óptica.
 - El beneficio es para los trabajadores de la empresa registrada y sus familiares.
 - Incluye consulta visual gratuita.

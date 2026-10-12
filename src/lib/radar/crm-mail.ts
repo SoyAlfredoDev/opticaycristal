@@ -2,44 +2,16 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { crmSql, ensureCrmSchema } from "./crm-schema";
 import { publicBase, marketingConfiguration } from "./crm-store";
-import { escapeEmail, emailAddress } from "./crm-validation";
+import { emailAddress } from "./crm-validation";
 import { RadarApiError } from "./api";
 import type { CampaignVariant } from "./crm-model";
+import { renderCampaignEmail } from "./campaign-render";
 export function automationHint(userAgent: string) {
   return /bot|crawler|spider|preview|scanner|proofpoint|mimecast|barracuda|safelinks|headless/i.test(
     userAgent,
   );
 }
-export function composeCampaign(input: {
-  company: string;
-  subject: string;
-  body: string;
-  variant: CampaignVariant;
-  ctaUrl: string;
-  unsubscribeUrl: string;
-  address: string;
-  consent: string;
-}) {
-  const subject = input.subject
-    .replaceAll("{{empresa}}", input.company)
-    .replace(/[\r\n]+/g, " ")
-    .slice(0, 250);
-  const body = input.body.replaceAll("{{empresa}}", input.company);
-  const html = `<!doctype html><html lang="es"><body style="margin:0;background:#f4f6f8;color:#152c40;font-family:Arial,sans-serif"><table role="presentation" width="100%"><tr><td align="center" style="padding:32px 16px"><table role="presentation" width="100%" style="max-width:600px;background:white;border-top:4px solid #6B1F3A"><tr><td style="padding:32px"><p style="color:#6B1F3A;font-size:13px;font-weight:bold">ÓPTICA &amp; CRISTAL · BENEFICIOS PARA EMPRESAS</p><h1 style="font-size:24px;line-height:1.3">${escapeEmail(subject)}</h1>${body
-    .split(/\n\s*\n/)
-    .map(
-      (p) =>
-        `<p style="font-size:16px;line-height:1.7">${escapeEmail(p).replaceAll("\n", "<br>")}</p>`,
-    )
-    .join(
-      "",
-    )}<p style="margin:28px 0"><a href="${escapeEmail(input.ctaUrl)}" style="display:inline-block;background:#6B1F3A;color:white;text-decoration:none;border-radius:6px;padding:16px 24px;font-weight:bold">${escapeEmail(input.variant.label)}</a></p><p style="font-size:12px;color:#637384;line-height:1.6">Óptica &amp; Cristal · ${escapeEmail(input.address)}<br>Recibes este mensaje porque autorizaste comunicaciones comerciales de Óptica &amp; Cristal.<br><a href="${escapeEmail(input.unsubscribeUrl)}" style="color:#637384">Darme de baja</a></p></td></tr></table></td></tr></table></body></html>`;
-  return {
-    subject,
-    html,
-    text: `Óptica & Cristal\n\n${subject}\n\n${body}\n\n${input.variant.label}: ${input.ctaUrl}\n\nÓptica & Cristal · ${input.address}\nRecibes este mensaje por tu autorización de comunicaciones comerciales.\nDarme de baja: ${input.unsubscribeUrl}`,
-  };
-}
+export const composeCampaign = renderCampaignEmail;
 export async function dispatchCampaign(campaignId: string) {
   const configuration = marketingConfiguration();
   if (!configuration.sendingEnabled || configuration.missing.length)
@@ -68,7 +40,7 @@ export async function dispatchCampaign(campaignId: string) {
     : 50;
   for (const entry of queue) {
     const rows =
-      await sql`UPDATE radar_crm_deliveries d SET status='sending',attempted_at=now() FROM radar_crm_contacts c,radar_crm_campaigns ca,radar_prospects p WHERE d.id=${entry.id} AND d.status='queued' AND c.id=d.contact_id AND c.status='subscribed' AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email) AND ca.id=d.campaign_id AND ca.status='approved' AND p.id=c.prospect_id RETURNING d.*,c.email,c.consent_evidence,p.name AS company_name,c.prospect_id,ca.subject,ca.body,ca.variants`;
+      await sql`UPDATE radar_crm_deliveries d SET status='sending',attempted_at=now() FROM radar_crm_contacts c,radar_crm_campaigns ca,radar_prospects p WHERE d.id=${entry.id} AND d.status='queued' AND c.id=d.contact_id AND c.status='subscribed' AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email) AND ca.id=d.campaign_id AND ca.status='approved' AND p.id=c.prospect_id RETURNING d.*,c.email,c.consent_evidence,p.name AS company_name,c.prospect_id,ca.subject,ca.body,ca.variants,ca.template_id`;
     if (!rows.length) continue;
     const d = rows[0];
     const budget =
@@ -89,6 +61,7 @@ export async function dispatchCampaign(campaignId: string) {
       unsubscribeUrl: `${base}/api/radar/unsubscribe/${d.token}`,
       address: process.env.RADAR_MAIL_COMPANY_ADDRESS!,
       consent: String(d.consent_evidence),
+      templateId: String(d.template_id || "convenio"),
     });
     try {
       const response = await fetch("https://api.resend.com/emails", {
@@ -124,7 +97,8 @@ export async function dispatchCampaign(campaignId: string) {
           sql`INSERT INTO radar_crm_events(id,delivery_id,prospect_id,kind,source,metadata) VALUES(${`sent:${d.id}`},${d.id},${d.prospect_id},'send.accepted','resend',${JSON.stringify({ variantId: d.variant_id })}::jsonb) ON CONFLICT(id) DO NOTHING`,
         ]);
         sent++;
-        await reconcileWebhooks();
+        // Provider acceptance is already persisted; reconciliation failure must not turn it into an uncertain send.
+        try { await reconcileWebhooks(); } catch { /* Stored webhooks are retried by the reconcile operation. */ }
       } else if (response.status === 429) {
         await sql`UPDATE radar_crm_deliveries SET status='queued',attempted_at=NULL,error='Límite temporal del proveedor' WHERE id=${d.id}`;
         break;
@@ -199,8 +173,11 @@ export async function reconcileWebhooks() {
     ];
     if (w.kind === "email.sent")
       q.push(
-        sql`UPDATE radar_crm_deliveries SET status='sent',sent_at=COALESCE(sent_at,${w.occurred_at}::timestamptz),provider_id=COALESCE(provider_id,${w.email_id}),error=NULL WHERE id=${w.delivery_id}`,
+        sql`UPDATE radar_crm_deliveries SET status=CASE WHEN status IN ('failed','cancelled') THEN status ELSE 'sent' END,sent_at=COALESCE(sent_at,${w.occurred_at}::timestamptz),provider_id=COALESCE(provider_id,${w.email_id}),error=CASE WHEN status IN ('failed','cancelled') THEN error ELSE NULL END WHERE id=${w.delivery_id}`,
       );
+    if (w.kind === "email.failed") q.push(
+      sql`UPDATE radar_crm_deliveries SET status='failed',error='El proveedor notificó un fallo de entrega. Revisar Resend antes de reintentar.' WHERE id=${w.delivery_id} AND status<>'cancelled'`,
+    );
     if (
       ["email.bounced", "email.complained", "email.suppressed"].includes(
         String(w.kind),

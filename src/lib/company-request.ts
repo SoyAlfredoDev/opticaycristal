@@ -19,7 +19,7 @@ export function validateCompanyRequest(data: CompanyRequest): CompanyErrors {
   if (!CHILE_REGIONES.includes(data.region as typeof CHILE_REGIONES[number])) errors.region = "Selecciona una región válida.";
   if (data.origen === "jornada" && !/^\d{4}-(0[1-9]|1[0-2])$/.test(data.mesEstimado)) errors.mesEstimado = "Selecciona el mes estimado del operativo.";
   const details = data.detalles ?? {};
-  if (data.origen === "convenio" && (!Number.isInteger(details.trabajadores) || (details.trabajadores ?? 0) < CONVENIO.minWorkers)) errors.trabajadores = "Los convenios son para empresas con más de 10 trabajadores.";
+  if (data.origen === "convenio" && (!Number.isInteger(details.trabajadores) || (details.trabajadores ?? 0) < CONVENIO.minWorkers)) errors.trabajadores = "Los convenios son para empresas con 5 o más trabajadores.";
   if (details.modalidadConvenio !== undefined && !isConvenioInterest(details.modalidadConvenio)) errors.modalidadConvenio = "Selecciona una opción de convenio válida.";
   if (details.trabajadores !== undefined && (!Number.isInteger(details.trabajadores) || details.trabajadores < 1 || details.trabajadores > 1000000)) errors.trabajadores = "Ingresa un número válido de trabajadores o participantes.";
   if (data.detalles && !details.comuna?.trim()) errors.comuna = "Ingresa la comuna.";

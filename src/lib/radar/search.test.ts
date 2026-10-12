@@ -3,6 +3,17 @@ import {buildOverpassQuery,buildStructuredOverpassQuery,interpretSearch,mergeSea
 import {getCommercialFit} from "./types";
 
 describe("radar company search",()=>{
+ it("selects an administrative polygon when Santiago's first result is a city point",async()=>{
+  const polygon={type:"Polygon",coordinates:[[[-71,-34],[-70,-34],[-70,-33],[-71,-33],[-71,-34]]]};
+  const f=vi.fn().mockResolvedValueOnce(Response.json([
+   {type:"city",boundingbox:["-34","-33","-71","-70"],geojson:{type:"Point",coordinates:[-70.6,-33.4]}},
+   {type:"administrative",boundingbox:["-34","-33","-71","-70"],geojson:polygon}
+  ])).mockResolvedValueOnce(Response.json({elements:[{type:"node",id:99541,lat:-33.4,lon:-70.6,tags:{name:"[Empresa de prueba]",office:"logistics"}}]}));
+  vi.stubGlobal("fetch",f);
+  const result=await searchCompanies("empresas de transporte en Santiago");
+  expect(result).toHaveLength(1);
+  expect(new URL(String(f.mock.calls[0][0])).searchParams.get("limit")).toBe("5");
+ });
  beforeEach(()=>{vi.stubEnv("RADAR_AI_API_KEY","");vi.stubEnv("RADAR_AI_BASE_URL","");vi.stubEnv("RADAR_AI_MODEL","");vi.stubEnv("OVERPASS_API_URL","https://overpass.example/api/interpreter")});
  afterEach(()=>vi.unstubAllEnvs());
 

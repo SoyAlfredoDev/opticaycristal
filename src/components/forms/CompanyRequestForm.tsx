@@ -141,7 +141,7 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
           setErrors(previous => ({ ...previous, modalidadConvenio: undefined }));
         }} aria-invalid={!!errors.modalidadConvenio} aria-describedby={errors.modalidadConvenio ? `${uid}-interest-error` : undefined}><option value="">Selecciona una opción</option>{Object.entries(convenioInterests).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>{errors.modalidadConvenio ? <span className={styles.fieldError} id={`${uid}-interest-error`}>{errors.modalidadConvenio}</span> : null}</div>
       </div> : null}
-      {convenio && step === 2 ? <p className={styles.status}>Para empresas con más de 10 trabajadores.</p> : null}
+      {convenio && step === 2 ? <p className={styles.status}>Para empresas con 5 o más trabajadores.</p> : null}
       {convenio && step === 3 ? <div className={styles.summary}>
         <section><h3>Quién lo lleva</h3><dl>
           <div><dt>Nombre</dt><dd>{data.responsable}</dd></div>
