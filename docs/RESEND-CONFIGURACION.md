@@ -23,3 +23,13 @@ Los servidores dns2, dns3 y dns4.servidoresph.com ya responden links.opticaycris
 ## Estado final confirmado
 
 Resend confirmó dominio verified, DKIM y SPF verified, Tracking CNAME verified, openTracking=true y clickTracking=true. Se actualizó RADAR_RESEND_TRACKING_READY=true. RADAR_MARKETING_ENABLED continúa false. Únicos valores pendientes para conectar el Radar: RADAR_PUBLIC_URL y RESEND_WEBHOOK_SECRET. No se enviaron correos. Los apartados anteriores de verificación pendiente describen el estado durante el proceso y quedan superados por este cierre.
+
+## Publicación en Vercel y conexión del webhook
+
+El Radar y CRM se incorporaron al repositorio SoyAlfredoDev/opticaycristal, rama main, conservando la web pública. Proyecto Vercel: optica-y-cristal/opticaycristal. Origen canónico: https://opticaycristal.cl. Se configuraron Neon, autenticación administrativa, Resend y RADAR_PUBLIC_URL como variables de producción; ningún secreto se incorporó al repositorio.
+
+Producción confirmó inicio de sesión correcto, API de capacidades versión 3.0, CRM con 94 empresas y 1 borrador de campaña. El acceso anónimo devuelve 401 y /admin/radar redirige a /admin/login.
+
+Webhook Resend c281020f-550b-4dea-92f4-19a828bcbb74: https://opticaycristal.cl/api/radar/resend/webhook. Suscrito a sent, delivered, opened, clicked, bounced, complained, failed, suppressed y delivery_delayed. RESEND_WEBHOOK_SECRET está guardado como secreto en Vercel y en .env.local del proyecto original. El archivo temporal del secreto fue eliminado. Es necesario aplicar esta última configuración con un despliegue nuevo.
+
+RADAR_MARKETING_ENABLED permanece false. No se enviaron correos ni se verificó la entrega de un evento real de correo. Este apartado supera los pendientes de URL pública y clave de firma descritos anteriormente.
