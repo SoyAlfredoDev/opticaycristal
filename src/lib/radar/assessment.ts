@@ -3,9 +3,9 @@ import {getCommercialFit,type CompanyResult} from "./types";
 /** Transparent rules for contact readiness; this is not a predicted sale probability. */
 export function assessCompany(company:CompanyResult) {
  const facts:string[]=[],missing:string[]=[];let score=0;
- if(company.phone){score+=25;facts.push("Teléfono corporativo publicado.")}else missing.push("Teléfono corporativo");
- if(company.emails?.length){score+=25;facts.push("Correo comercial publicado.")}else missing.push("Correo comercial");
- if(company.website){score+=15;facts.push("Sitio web publicado para verificar la empresa.")}else missing.push("Sitio web");
+ if(company.emails?.length){score+=40;facts.push("Correo comercial publicado; priorizado para contacto por email.")}else missing.push("Correo comercial");
+ if(company.phone){score+=15;facts.push("Teléfono corporativo publicado.")}else missing.push("Teléfono corporativo");
+ if(company.website){score+=10;facts.push("Sitio web publicado para verificar la empresa.")}else missing.push("Sitio web");
  if(company.address){score+=10;facts.push("Dirección publicada.")}else missing.push("Dirección");
  if(company.categories.length){score+=5;facts.push("Actividad etiquetada en la fuente.")}
  const fit=getCommercialFit(company.employeeEstimate);

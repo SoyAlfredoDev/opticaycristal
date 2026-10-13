@@ -31,7 +31,7 @@ describe("marketing delivery audit without real recipients", () => {
     mock.enabled=true;mock.reconcileFails=true;
     expect(await dispatchCampaign("campaign-test")).toMatchObject({ sent: 1, uncertain: 0 });
     expect(mock.queries.some(q=>q.includes("SET status='uncertain',error='No se confirmó"))).toBe(false);
-    expect(mock.queries.find(q=>q.includes("UPDATE radar_crm_deliveries d SET status='sending'"))).toContain("c.status='subscribed'");
+    expect(mock.queries.find(q=>q.includes("UPDATE radar_crm_deliveries d SET status='sending'"))).toContain("c.status IN ('active','subscribed')");
     const init = vi.mocked(fetch).mock.calls[0][1] as RequestInit;
     const body = JSON.parse(String(init.body));
     expect(body.headers["List-Unsubscribe-Post"]).toBe("List-Unsubscribe=One-Click");

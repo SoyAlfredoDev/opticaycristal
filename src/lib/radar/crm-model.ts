@@ -27,8 +27,8 @@ export type CrmContact = {
   email: string;
   name: string;
   role: string;
-  consent_evidence: string;
-  consented_at: string;
+  consent_evidence: string | null;
+  consented_at: string | null;
   status: string;
 };
 export type CrmTask = {

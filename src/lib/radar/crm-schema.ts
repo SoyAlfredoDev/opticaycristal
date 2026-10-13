@@ -13,7 +13,13 @@ export async function ensureCrmSchema() {
     await ensureRadarSchema();
     const sql = crmSql();
     await sql.transaction([
-      sql`CREATE TABLE IF NOT EXISTS radar_crm_contacts(id text PRIMARY KEY,prospect_id text NOT NULL REFERENCES radar_prospects(id),email text NOT NULL,name text NOT NULL DEFAULT '',role text NOT NULL DEFAULT '',consent_evidence text NOT NULL CHECK(length(consent_evidence)>0),consented_at timestamptz NOT NULL DEFAULT now(),status text NOT NULL DEFAULT 'subscribed' CHECK(status IN ('subscribed','unsubscribed')),created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(prospect_id,email))`,
+      sql`SELECT pg_advisory_xact_lock(712012, 1)`,
+      sql`CREATE TABLE IF NOT EXISTS radar_crm_contacts(id text PRIMARY KEY,prospect_id text NOT NULL REFERENCES radar_prospects(id),email text NOT NULL,name text NOT NULL DEFAULT '',role text NOT NULL DEFAULT '',consent_evidence text,consented_at timestamptz,status text NOT NULL DEFAULT 'active' CHECK(status IN ('active','pending','subscribed','unsubscribed')),created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(prospect_id,email))`,
+      sql`ALTER TABLE radar_crm_contacts ALTER COLUMN consent_evidence DROP NOT NULL`,
+      sql`ALTER TABLE radar_crm_contacts ALTER COLUMN consented_at DROP NOT NULL`,
+      sql`ALTER TABLE radar_crm_contacts ALTER COLUMN status SET DEFAULT 'active'`,
+      sql`ALTER TABLE radar_crm_contacts DROP CONSTRAINT IF EXISTS radar_crm_contacts_status_check`,
+      sql`ALTER TABLE radar_crm_contacts ADD CONSTRAINT radar_crm_contacts_status_check CHECK(status IN ('active','pending','subscribed','unsubscribed'))`,
       sql`CREATE TABLE IF NOT EXISTS radar_crm_suppressions(email text PRIMARY KEY,reason text NOT NULL,created_at timestamptz NOT NULL DEFAULT now())`,
       sql`CREATE TABLE IF NOT EXISTS radar_crm_tasks(id text PRIMARY KEY,prospect_id text NOT NULL REFERENCES radar_prospects(id),title text NOT NULL,owner text NOT NULL,due_at timestamptz NOT NULL,status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','done','cancelled')),result text NOT NULL DEFAULT '',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now())`,
       sql`CREATE INDEX IF NOT EXISTS radar_crm_tasks_due ON radar_crm_tasks(status,due_at)`,
@@ -30,6 +36,8 @@ export async function ensureCrmSchema() {
       sql`CREATE INDEX IF NOT EXISTS radar_crm_events_delivery ON radar_crm_events(delivery_id,kind)`,
       sql`CREATE TABLE IF NOT EXISTS radar_crm_webhooks(id text PRIMARY KEY,email_id text NOT NULL,kind text NOT NULL,occurred_at timestamptz NOT NULL,delivery_hint text,metadata jsonb NOT NULL DEFAULT '{}',processed boolean NOT NULL DEFAULT false,received_at timestamptz NOT NULL DEFAULT now())`,
       sql`CREATE TABLE IF NOT EXISTS radar_crm_send_budget(day date PRIMARY KEY,used integer NOT NULL DEFAULT 0)`,
+      sql`UPDATE radar_crm_contacts c SET status='active' WHERE c.status='pending' AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email)`,
+      sql`INSERT INTO radar_crm_contacts(id,prospect_id,email,status) SELECT DISTINCT 'radar:'||md5(p.id||':'||lower(trim(e.email))),p.id,lower(trim(e.email)),CASE WHEN s.email IS NULL THEN 'active' ELSE 'unsubscribed' END FROM radar_prospects p CROSS JOIN LATERAL jsonb_array_elements_text(p.emails) e(email) LEFT JOIN radar_crm_suppressions s ON s.email=lower(trim(e.email)) WHERE length(trim(e.email))<=254 AND trim(e.email) ~ '^[^[:space:]<>@]+@[^[:space:]<>@]+[.][^[:space:]<>@]+$' ON CONFLICT(prospect_id,email) DO NOTHING`,
     ]);
   })().catch((e) => {
     ready = null;

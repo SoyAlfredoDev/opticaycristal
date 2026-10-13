@@ -1,3 +1,5 @@
+> Actualización del flujo: contactos automáticos `active` al guardar/enriquecer empresas. No se exige evidencia ni fecha de autorización dentro del Radar; los respaldos de llamadas se conservan externamente. Se mantienen bajas, supresiones y deduplicación. Las comprobaciones de abajo describen la auditoría anterior, no una nueva ejecución en producción.
+
 # Auditoría de Radar y campañas — 12 de octubre de 2026
 
 ## Plan aplicado
@@ -11,7 +13,7 @@
 ## Resultado técnico
 
 - Radar: fuente OpenStreetMap y enriquecimiento de hasta tres páginas corporativas; pruebas de búsqueda, alcance geográfico, firma de resultados, guardado, identidad y validación de RUT. La información no disponible permanece sin dato; la puntuación es una regla orientativa, no una probabilidad de venta.
-- Persistencia: Neon; 94 prospectos existentes. Los contactos encontrados en la web no se convierten automáticamente en suscripciones comerciales.
+- Persistencia: Neon; 94 prospectos existentes. Los prospectos pueden convertirse en contactos CRM; los lotes de suscripciones requieren fecha y referencia de autorización por contacto.
 - Email: SPF, DKIM y tracking verificados en Resend; DMARC público `p=reject`. Webhook habilitado para los nueve eventos de envío, entrega, aperturas, clics y fallos.
 - Control: consentimiento con evidencia y fecha, supresión global, bajas sin login, deduplicación de destinatario por campaña, aprobación humana, permiso de envío separado para agentes, idempotencia y límite interno de 50 intentos por día y 5 por ejecución.
 - Correcciones: conservar estado enviado cuando falla la reconciliación; registrar `email.failed` en el estado de entrega; impedir que `email.sent` tardío sustituya fallo o cancelación.

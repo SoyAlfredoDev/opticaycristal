@@ -124,27 +124,11 @@ export async function crmAction(body: Record<string, unknown>, actor: string) {
     sql`INSERT INTO radar_crm_events(id,prospect_id,kind,source,metadata) VALUES(${`audit:${action}:${id}`},${pid},${kind},${actor},${JSON.stringify(metadata)}::jsonb) ON CONFLICT(id) DO NOTHING`;
   if (action === "contact") {
     await company();
-    if (body.consent !== true)
-      throw new RadarApiError(
-        "Debes registrar el consentimiento explícito del contacto.",
-      );
-    const consentAt = dateValue(body.consentAt, true)!;
-    if (Date.parse(consentAt) > Date.now())
-      throw new RadarApiError(
-        "La fecha de consentimiento no puede estar en el futuro.",
-      );
     const email = emailAddress(requiredText(body, "email", 254)),
-      evidence = requiredText(body, "consentEvidence", 1500),
-      name = optionalText(body, "name"),
-      role = optionalText(body, "role");
-    const blocked =
-      await sql`SELECT 1 FROM radar_crm_suppressions WHERE email=${email}`;
-    if (blocked.length)
-      throw new RadarApiError(
-        "Este correo está dado de baja, rebotado o bloqueado. No puede reactivarse desde este formulario.",
-        409,
-      );
-    await sql`WITH added AS (INSERT INTO radar_crm_contacts(id,prospect_id,email,name,role,consent_evidence,consented_at) VALUES(${id},${pid},${email},${name},${role},${evidence},${consentAt}::timestamptz) ON CONFLICT(prospect_id,email) DO NOTHING RETURNING id) INSERT INTO radar_crm_events(id,prospect_id,kind,source,metadata) SELECT ${`contact-consent:${id}`},${pid},'contact.consent',${actor},${JSON.stringify({ email, evidence, consentAt })}::jsonb FROM added`;
+      name = optionalText(body, "name"), role = optionalText(body, "role");
+    const blocked = await sql`SELECT 1 FROM radar_crm_suppressions WHERE email=${email}`;
+    const status = blocked.length ? "unsubscribed" : "active";
+    await sql`WITH added AS (INSERT INTO radar_crm_contacts(id,prospect_id,email,name,role,status) VALUES(${id},${pid},${email},${name},${role},${status}) ON CONFLICT(prospect_id,email) DO UPDATE SET name=EXCLUDED.name,role=EXCLUDED.role,status=CASE WHEN radar_crm_contacts.status='unsubscribed' OR EXCLUDED.status='unsubscribed' THEN 'unsubscribed' ELSE 'active' END RETURNING id,status) INSERT INTO radar_crm_events(id,prospect_id,kind,source,metadata) SELECT ${`contact.created:${id}`},${pid},'contact.created',${actor},jsonb_build_object('email',${email}::text,'status',added.status) FROM added ON CONFLICT(id) DO NOTHING`;
     const stored =
       await sql`SELECT id FROM radar_crm_contacts WHERE prospect_id=${pid} AND email=${email}`;
     return { id: stored[0].id };
@@ -260,10 +244,10 @@ export async function crmAction(body: Record<string, unknown>, actor: string) {
     )
       throw new RadarApiError("Selecciona de 1 a 100 contactos.");
     const contacts =
-      await sql`SELECT c.id,c.prospect_id,c.email FROM radar_crm_contacts c WHERE c.id=ANY(${ids}::text[]) AND c.status='subscribed' AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email)`;
+      await sql`SELECT c.id,c.prospect_id,c.email FROM radar_crm_contacts c WHERE c.id=ANY(${ids}::text[]) AND c.status IN ('active','subscribed') AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email)`;
     if (contacts.length !== new Set(ids).size)
       throw new RadarApiError(
-        "Hay contactos sin autorización vigente o bloqueados.",
+        "Hay contactos dados de baja o bloqueados.",
       );
     const queries = contacts.map((c) => {
       const n =

@@ -28,7 +28,7 @@ export async function dispatchCampaign(campaignId: string) {
   const sql = crmSql();
   // A request interrupted after acceptance is never retried automatically beyond Resend's 24h idempotency window.
   await sql`UPDATE radar_crm_deliveries SET status='uncertain',error='Envío interrumpido: reconciliar con Resend antes de reintentar' WHERE status='sending' AND attempted_at<now()-interval '5 minutes'`;
-  await sql`UPDATE radar_crm_deliveries SET status='cancelled',error='Contacto no autorizado o bloqueado' WHERE status='queued' AND (contact_id IN (SELECT id FROM radar_crm_contacts WHERE status<>'subscribed') OR contact_id IN (SELECT c.id FROM radar_crm_contacts c JOIN radar_crm_suppressions s ON s.email=c.email))`;
+  await sql`UPDATE radar_crm_deliveries SET status='cancelled',error='Contacto dado de baja o bloqueado' WHERE status='queued' AND (contact_id IN (SELECT id FROM radar_crm_contacts WHERE status NOT IN ('active','subscribed')) OR contact_id IN (SELECT c.id FROM radar_crm_contacts c JOIN radar_crm_suppressions s ON s.email=c.email))`;
   const queue =
     await sql`SELECT d.id FROM radar_crm_deliveries d JOIN radar_crm_campaigns ca ON ca.id=d.campaign_id WHERE d.campaign_id=${campaignId} AND d.status='queued' AND ca.status='approved' ORDER BY d.created_at LIMIT 5`;
   let sent = 0,
@@ -40,7 +40,7 @@ export async function dispatchCampaign(campaignId: string) {
     : 50;
   for (const entry of queue) {
     const rows =
-      await sql`UPDATE radar_crm_deliveries d SET status='sending',attempted_at=now() FROM radar_crm_contacts c,radar_crm_campaigns ca,radar_prospects p WHERE d.id=${entry.id} AND d.status='queued' AND c.id=d.contact_id AND c.status='subscribed' AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email) AND ca.id=d.campaign_id AND ca.status='approved' AND p.id=c.prospect_id RETURNING d.*,c.email,c.consent_evidence,p.name AS company_name,c.prospect_id,ca.subject,ca.body,ca.variants,ca.template_id`;
+      await sql`UPDATE radar_crm_deliveries d SET status='sending',attempted_at=now() FROM radar_crm_contacts c,radar_crm_campaigns ca,radar_prospects p WHERE d.id=${entry.id} AND d.status='queued' AND c.id=d.contact_id AND c.status IN ('active','subscribed') AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email) AND ca.id=d.campaign_id AND ca.status='approved' AND p.id=c.prospect_id RETURNING d.*,c.email,c.consent_evidence,p.name AS company_name,c.prospect_id,ca.subject,ca.body,ca.variants,ca.template_id`;
     if (!rows.length) continue;
     const d = rows[0];
     const budget =

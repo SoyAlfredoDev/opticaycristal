@@ -45,6 +45,7 @@ export async function saveProspectWithStatus(c:CompanyResult):Promise<{prospect:
   }catch(error){if((error as {code?:string}).code!=="23505")throw error;existing=(await find())[0];if(!existing)throw error;prospect=await merge(existing)}
  }
  await sql`INSERT INTO radar_identities(alias_key,prospect_id) VALUES(${providerAlias},${prospect.id}),(${identityAlias},${prospect.id}) ON CONFLICT DO NOTHING`;
+ await (await import("./crm-contacts")).syncProspectContacts(prospect);
  return {prospect,created};
 }
 export async function saveProspect(c:CompanyResult):Promise<Prospect>{return(await saveProspectWithStatus(c)).prospect}
@@ -58,7 +59,9 @@ export async function saveWebData(id:string,data:WebEnrichment){
  const p=await getProspect(id);if(!p)return null;const sql=client();
  const workers=data.employeeEstimate??p.employeeEstimate??null,workerSource=data.employeeEstimate!=null?data.evidence.find(e=>e.field==="employeeEstimate")?.url??null:p.employeeEstimateSource??null;
  const rows=await sql`UPDATE radar_prospects SET emails=${JSON.stringify([...new Set([...(p.emails||[]),...data.emails])])}::jsonb,social_links=${JSON.stringify([...new Set([...(p.socialLinks||[]),...data.socialLinks])])}::jsonb,phone=COALESCE(phone,${data.phones[0]??null}),evidence=${JSON.stringify(mergeEvidence(p.evidence||[],data.evidence))}::jsonb,employee_estimate=${workers},employee_estimate_source=${workerSource},commercial_fit=${getCommercialFit(workers)},web_checked_at=${data.fetchedAt},web_status=${data.status} WHERE id=${id} RETURNING *`;
- return rows[0]?fromRow(rows[0]):null;
+ const updated=rows[0]?fromRow(rows[0]):null;
+ if(updated)await (await import("./crm-contacts")).syncProspectContacts(updated);
+ return updated;
 }
 export async function updateProspect(id:string,v:{stage?:ProspectStage;notes?:string}){
  await ensureRadarSchema();const sql=client();const rows=await sql`UPDATE radar_prospects SET stage=COALESCE(${v.stage??null}::text,stage),notes=COALESCE(${v.notes??null}::text,notes) WHERE id=${id} RETURNING id`;return rows.length>0;

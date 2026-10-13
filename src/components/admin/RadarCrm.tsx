@@ -24,6 +24,7 @@ const eventLabels: Record<string, string> = {
   "activity.nota": "Nota",
   "campaign.insight": "Aprendizaje de campaña",
   "contact.consent": "Consentimiento registrado",
+  "contact.created": "Contacto CRM creado",
   "task.created": "Tarea programada",
   "task.completed": "Tarea resuelta",
   "deal.created": "Oportunidad creada",
@@ -149,14 +150,12 @@ export function RadarCrm({
     const form = e.currentTarget,
       b = fields(form);
     if (b.dueAt) b.dueAt = new Date(String(b.dueAt)).toISOString();
-    if (b.consentAt) b.consentAt = new Date(String(b.consentAt)).toISOString();
     const result = await mutate(
       {
         ...b,
         action,
         id: crypto.randomUUID(),
         prospectId: company,
-        consent: b.consent === "on",
       },
       "Registro guardado en Neon.",
     );
@@ -197,7 +196,7 @@ export function RadarCrm({
   const eligible =
     data?.contacts.filter(
       (c) =>
-        c.status === "subscribed" &&
+        ["active", "subscribed"].includes(c.status) &&
         !(c as unknown as { suppression_reason?: string }).suppression_reason,
     ) || [];
   async function showPreview(c: CrmCampaign) {
@@ -312,7 +311,7 @@ export function RadarCrm({
             </div>
             <div>
               <b>{eligible.length}</b>
-              <span>Contactos autorizados mostrados</span>
+              <span>Contactos activos mostrados</span>
             </div>
             <div>
               <b>
@@ -445,11 +444,8 @@ export function RadarCrm({
                   )}
                 </section>
                 <section className={styles.card}>
-                  <h3>Contacto con autorización de marketing</h3>
-                  <p>
-                    Encontrar un correo en la web no lo incorpora
-                    automáticamente a las campañas.
-                  </p>
+                  <h3>Contacto CRM</h3>
+                  <p>Los correos guardados desde el Radar se incorporan automáticamente como contactos activos. Los respaldos de las llamadas se conservan en su sistema interno.</p>
                   <form onSubmit={(e) => void submit(e, "contact")}>
                     <label>
                       Correo comercial
@@ -468,25 +464,8 @@ export function RadarCrm({
                       Cargo o área
                       <input name="role" maxLength={200} />
                     </label>
-                    <label>
-                      Fecha y hora de la autorización
-                      <input name="consentAt" type="datetime-local" required />
-                    </label>
-                    <label>
-                      Evidencia del consentimiento
-                      <textarea
-                        name="consentEvidence"
-                        required
-                        maxLength={1500}
-                        placeholder="Fecha, medio y referencia de la autorización"
-                      />
-                    </label>
-                    <label className={styles.checkbox}>
-                      <input name="consent" type="checkbox" required /> Confirmo
-                      autorización explícita para comunicaciones comerciales.
-                    </label>
                     <button disabled={!company || busy}>
-                      Guardar contacto autorizado
+                      Guardar contacto CRM
                     </button>
                   </form>
                   {data.contacts.map((c) => (
@@ -496,12 +475,10 @@ export function RadarCrm({
                         {c.name} · {c.role}
                       </span>
                       <small>
-                        {c.status === "subscribed"
-                          ? "Autorizado"
-                          : "Dado de baja"}{" "}
-                        · {date(c.consented_at)}
+                        {["active", "subscribed"].includes(c.status)
+                          ? "Activo · disponible para campañas"
+                          : "Dado de baja o suprimido"}{" "}
                       </small>
-                      <p>{c.consent_evidence}</p>
                     </article>
                   ))}
                   {!data.contacts.length && (
@@ -755,7 +732,7 @@ export function RadarCrm({
               <div className={styles.grid}>
                 <section className={styles.card}>
                   <h3>Diseñar campaña</h3>
-                  <p>Contactos con consentimiento vigente: <strong>{eligible.length}</strong>. {!eligible.length && "Registra o importa contactos y su evidencia de autorización antes de preparar destinatarios."}</p>
+                  <p>Contactos disponibles para campañas: <strong>{eligible.length}</strong>. {!eligible.length && "Guarda empresas con correo desde el Radar o incorpora contactos manualmente."}</p>
                   <p>
                     Un objetivo y un CTA por correo. Mantén el mismo contenido y
                     cambia el canal para comparar.
@@ -1043,7 +1020,7 @@ export function RadarCrm({
                       </>
                     )}
                   </div>
-                  <h4>Destinatarios autorizados</h4>
+                  <h4>Destinatarios activos</h4>
                   <div className={styles.recipients}>
                     {eligible.map((c) => (
                       <label key={c.id} className={styles.checkbox}>
@@ -1097,7 +1074,7 @@ export function RadarCrm({
                     onClick={async () => {
                       if (
                         !window.confirm(
-                          `Enviar hasta 5 correos reales de «${selectedCampaign.name}» a los destinatarios preparados y autorizados?`,
+                          `Enviar hasta 5 correos reales de «${selectedCampaign.name}» a los destinatarios preparados y activos?`,
                         )
                       )
                         return;
@@ -1299,7 +1276,7 @@ export function RadarCrm({
                 ))}
               <h3>Registros para el agente</h3>
               <p>
-                La API entrega empresas, contactos con consentimiento, tareas,
+                La API entrega empresas, contactos activos, tareas,
                 oportunidades, variantes, envíos y eventos con fecha y origen.
                 El bot podrá documentar hipótesis y registrar acciones; no se
                 modifica ni entrena automáticamente ningún modelo de ChatGPT.
