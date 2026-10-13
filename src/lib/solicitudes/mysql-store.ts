@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS solicitudes (
   correo_detalle VARCHAR(500) NULL,
   correo_cliente_estado VARCHAR(20) NOT NULL DEFAULT 'pendiente',
   correo_cliente_detalle VARCHAR(500) NULL,
+  correo_id VARCHAR(100) NULL,
+  correo_cliente_id VARCHAR(100) NULL,
   creado_en DATETIME(3) NOT NULL,
   PRIMARY KEY (id),
   KEY idx_solicitudes_creado (creado_en)
@@ -44,6 +46,8 @@ type SolicitudRow = {
   correo_detalle: string | null;
   correo_cliente_estado: CorreoEstado | null;
   correo_cliente_detalle: string | null;
+  correo_id?: string | null;
+  correo_cliente_id?: string | null;
   creado_en: Date | string;
 };
 
@@ -74,6 +78,8 @@ async function ensureTable() {
       "ALTER TABLE solicitudes ADD COLUMN detalles LONGTEXT NULL",
       "ALTER TABLE solicitudes ADD COLUMN correo_cliente_estado VARCHAR(20) NOT NULL DEFAULT 'pendiente'",
       "ALTER TABLE solicitudes ADD COLUMN correo_cliente_detalle VARCHAR(500) NULL",
+      "ALTER TABLE solicitudes ADD COLUMN correo_id VARCHAR(100) NULL",
+      "ALTER TABLE solicitudes ADD COLUMN correo_cliente_id VARCHAR(100) NULL",
     ];
     for (const statement of alters) {
       try {
@@ -116,6 +122,8 @@ function mapRow(row: SolicitudRow): Solicitud {
     correoDetalle: row.correo_detalle,
     correoClienteEstado: row.correo_cliente_estado ?? "pendiente",
     correoClienteDetalle: row.correo_cliente_detalle,
+    correoId: row.correo_id ?? null,
+    correoClienteId: row.correo_cliente_id ?? null,
     creadoEn: fromMysqlDate(row.creado_en),
   };
 }
@@ -181,13 +189,15 @@ export const mysqlStore = {
     await ensureTable();
     await getPool().query(
       `UPDATE solicitudes
-       SET correo_estado = ?, correo_detalle = ?, correo_cliente_estado = ?, correo_cliente_detalle = ?
+       SET correo_estado = ?, correo_detalle = ?, correo_cliente_estado = ?, correo_cliente_detalle = ?, correo_id = COALESCE(?, correo_id), correo_cliente_id = COALESCE(?, correo_cliente_id)
        WHERE id = ?`,
       [
         actualizacion.correoEstado,
         actualizacion.correoDetalle,
         actualizacion.correoClienteEstado,
         actualizacion.correoClienteDetalle,
+        actualizacion.correoId ?? null,
+        actualizacion.correoClienteId ?? null,
         id,
       ]
     );

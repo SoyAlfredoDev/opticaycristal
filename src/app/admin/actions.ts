@@ -26,6 +26,8 @@ export async function reenviarAvisoAction(id: string) {
     correoDetalle: correos.interno.detalle,
     correoClienteEstado: correos.cliente.estado,
     correoClienteDetalle: correos.cliente.detalle,
+    correoId: correos.interno.id,
+    correoClienteId: correos.cliente.id,
   });
   revalidatePath("/admin");
 

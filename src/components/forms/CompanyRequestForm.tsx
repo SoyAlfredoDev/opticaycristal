@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { ArrowUpRight, CheckCircle2 } from "lucide-react";
 import { CHILE_REGIONES, getMesOptions, getMesLabel, validateContacto } from "@/lib/jornada-form";
 import { CONVENIO, convenioInterests, isConvenioInterest } from "@/lib/convenios";
-import { emptyCompanyRequest, submitCompanyRequest, validateCompanyRequest, type CompanyErrors, type CompanyRequest, type RequestDetails, type RequestKind } from "@/lib/company-request";
+import { emptyCompanyRequest, submitCompanyRequest, validateCompanyRequest, type CompanyErrors, type CompanyReceipt, type CompanyRequest, type RequestDetails, type RequestKind } from "@/lib/company-request";
 import site from "@/components/site/Site.module.css";
 import styles from "@/components/site/Views.module.css";
 type FieldKey = Exclude<keyof CompanyRequest, "origen" | "detalles" | "autorizacionDatos"> | keyof RequestDetails;
@@ -41,6 +41,8 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
   const pendingFocus = useRef(false);
   const previousStep = useRef(step);
   const submitting = useRef(false);
+  const requestId = useRef<string | undefined>(undefined);
+  const [receipt, setReceipt] = useState<CompanyReceipt | undefined>(undefined);
   const uid = useId();
   const convenio = kind === "convenio";
   const anchor = convenio ? "solicitar-convenio" : "solicitar-jornada";
@@ -58,6 +60,8 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
   }, [focusToken]);
   function focusInvalid() { pendingFocus.current = true; setFocusToken((value) => value + 1); }
   function update(key: FieldKey | "region" | "mesEstimado" | "autorizacionDatos", value: string | boolean) {
+    if (submitting.current) return;
+    requestId.current = undefined;
     setData((previous) => {
       if (key in previous) return { ...previous, [key]: value, autorizacionDatos: key === "autorizacionDatos" ? Boolean(value) : false };
       return { ...previous, autorizacionDatos: false, detalles: { ...previous.detalles, [key]: key === "trabajadores" ? value === "" ? undefined : Number(value) : value } };
@@ -83,13 +87,19 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
       return;
     }
     submitting.current = true; setStatus("sending");
-    try { await submitCompanyRequest(data, honeypot); setStatus("success"); }
+    try {
+      requestId.current ??= crypto.randomUUID();
+      setReceipt(await submitCompanyRequest(data, honeypot, requestId.current));
+      setStatus("success");
+    }
     catch (error) { setFailure(error instanceof Error ? error.message : "No pudimos enviar la solicitud."); setStatus("idle"); }
     finally { submitting.current = false; }
   }
   if (status === "success") return <div id={anchor} ref={successRef} className={`${styles.formCard} ${styles.success}`} role="status" tabIndex={-1}>
-    <CheckCircle2 strokeWidth={1.4} aria-hidden="true" /><h2>Recibimos tu solicitud</h2><p>{convenio ? "Te contactaremos para registrar tu empresa y dejar el beneficio disponible para tus trabajadores y sus familiares. Las cuotas por nómina se habilitan con un contrato." : "Te contactaremos para revisar disponibilidad y coordinar los detalles de la jornada."}</p>
-    <button className={`${site.button} ${site.outline}`} type="button" onClick={() => { setData(emptyCompanyRequest(kind)); setHoneypot(""); setErrors({}); setStep(1); setStatus("idle"); }}>Enviar otra solicitud</button>
+    <CheckCircle2 strokeWidth={1.4} aria-hidden="true" /><h2>Recibimos tu solicitud</h2><p>{convenio ? "Te contactaremos para registrar tu empresa y explicar cómo tus trabajadores y sus familiares pueden usar el beneficio. Las cuotas por nómina se habilitan con un contrato." : "Te contactaremos para compartir los servicios, precios y condiciones, y evaluar una fecha para la jornada. El envío no confirma una reserva."}</p>
+    <p>{receipt?.confirmationSent ? <>Enviamos una confirmación a <strong>{data.correo}</strong>. Si no la ves, revisa la carpeta de spam.</> : <>Tu solicitud quedó guardada. La confirmación por correo está pendiente; no necesitas volver a enviar el formulario.</>}</p>
+    {receipt?.id ? <p>Referencia: {receipt.id.slice(0, 8).toUpperCase()}</p> : null}
+    <button className={`${site.button} ${site.outline}`} type="button" onClick={() => { setData(emptyCompanyRequest(kind)); setHoneypot(""); setErrors({}); setReceipt(undefined); requestId.current = undefined; setStep(1); setStatus("idle"); }}>Enviar otra solicitud</button>
   </div>;
   const personFields = commonFields.slice(1);
   const companyFields: readonly FieldSpec[] = [
@@ -115,9 +125,9 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
   </select>{errors.region ? <span id={`${uid}-region-error`} className={styles.fieldError}>{errors.region}</span> : null}</div>;
   const interest = data.detalles?.modalidadConvenio;
   const stepCopy = {
-    1: ["Datos de la persona", "Indica quién coordinará la solicitud en tu empresa."],
-    2: ["Datos de la empresa", convenio ? "El convenio queda a nombre de la empresa. El beneficio es para trabajadores y familiares." : "Indica dónde realizar la jornada y el mes que les acomoda. Los campos opcionales están indicados."],
-    3: ["Confirma la solicitud", "Revisa los datos antes de enviar. Esta solicitud no firma un contrato."],
+    1: ["Datos de la persona", "Déjanos tus datos para enviarte la información y conversar sobre el beneficio para tu equipo."],
+    2: ["Datos de la empresa", convenio ? "Estos datos nos ayudan a orientarte sobre el beneficio para tus trabajadores y sus familiares." : "Indica dónde realizar la jornada y el mes que les acomoda. Los campos opcionales están indicados."],
+    3: ["Confirma la solicitud", "Revisa los datos antes de enviar. Pedir información no firma un contrato ni reserva una jornada."],
   } as const;
   return <div id={anchor} className={styles.formCard}>
     <h2 id={`${uid}-title`} ref={headingRef} tabIndex={-1}>{stepCopy[step][0]}</h2>
@@ -136,6 +146,7 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
         </> : null}
         {convenio ? <div className={`${styles.field} ${styles.fullField}`}><label htmlFor={`${uid}-interest`}>¿Qué le interesa a tu empresa? (opcional)</label><select id={`${uid}-interest`} name="modalidadConvenio" value={interest ?? ""} onChange={(event) => {
           const value = event.target.value;
+          requestId.current = undefined;
           setData(previous => ({ ...previous, autorizacionDatos: false, detalles: { ...previous.detalles, modalidadConvenio: isConvenioInterest(value) ? value : undefined } }));
           setErrors(previous => ({ ...previous, modalidadConvenio: undefined }));
         }} aria-invalid={!!errors.modalidadConvenio} aria-describedby={errors.modalidadConvenio ? `${uid}-interest-error` : undefined}><option value="">Selecciona una opción</option>{Object.entries(convenioInterests).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>{errors.modalidadConvenio ? <span className={styles.fieldError} id={`${uid}-interest-error`}>{errors.modalidadConvenio}</span> : null}</div> : null}
@@ -147,7 +158,7 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
           <div><dt>Cargo</dt><dd>{data.cargo}</dd></div>
           <div><dt>Correo</dt><dd>{data.correo}</dd></div>
           <div><dt>Teléfono</dt><dd>{data.telefono}</dd></div>
-        </dl><button type="button" onClick={() => setStep(1)}>Corregir contacto</button></section>
+        </dl><button type="button" onClick={() => setStep(1)} disabled={status === "sending"}>Corregir contacto</button></section>
         <section><h3>La empresa</h3><dl>
           <div><dt>Empresa</dt><dd>{data.empresa}</dd></div>
           {data.detalles?.rutEmpresa ? <div><dt>RUT</dt><dd>{data.detalles.rutEmpresa}</dd></div> : null}
@@ -158,11 +169,11 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
           {data.detalles?.fechaTentativa ? <div><dt>Fecha tentativa</dt><dd>{data.detalles.fechaTentativa.split("-").reverse().join("/")}</dd></div> : null}
           {data.detalles?.direccion ? <div><dt>Dirección</dt><dd>{data.detalles.direccion}</dd></div> : null}
           {interest ? <div><dt>Interés</dt><dd>{convenioInterests[interest]}</dd></div> : null}
-        </dl><button type="button" onClick={() => setStep(2)}>Corregir empresa</button></section>
-        <label className={`${styles.field} ${styles.fullField}`}>Comentarios o necesidades (opcional)<textarea name="comentarios" maxLength={2000} value={data.detalles?.comentarios ?? ""} onChange={(event) => update("comentarios", event.target.value)} /></label>
+        </dl><button type="button" onClick={() => setStep(2)} disabled={status === "sending"}>Corregir empresa</button></section>
+        <label className={`${styles.field} ${styles.fullField}`}>Comentarios o necesidades (opcional)<textarea name="comentarios" maxLength={2000} value={data.detalles?.comentarios ?? ""} onChange={(event) => update("comentarios", event.target.value)} disabled={status === "sending"} /></label>
       </div> : null}
       {convenio && step === 3 ? <p className={styles.status}>Las cuotas por nómina, si las quieres, se habilitan con un contrato.</p> : null}
-      {step === 3 ? <label className={styles.consent}><input type="checkbox" name="autorizacionDatos" checked={data.autorizacionDatos} onChange={(event) => update("autorizacionDatos", event.target.checked)} required aria-invalid={!!errors.autorizacionDatos} aria-describedby={errors.autorizacionDatos ? `${uid}-consent-error` : undefined} />
+      {step === 3 ? <label className={styles.consent}><input type="checkbox" name="autorizacionDatos" checked={data.autorizacionDatos} onChange={(event) => update("autorizacionDatos", event.target.checked)} disabled={status === "sending"} required aria-invalid={!!errors.autorizacionDatos} aria-describedby={errors.autorizacionDatos ? `${uid}-consent-error` : undefined} />
         <span>Confirmo que quiero enviar esta solicitud y autorizo el tratamiento de mis datos para gestionarla y ser contactado. He leído la <Link href="/privacidad" target="_blank" rel="noopener noreferrer">política de privacidad</Link>.</span>
       </label> : null}{errors.autorizacionDatos && (step === 3) ? <p className={styles.fieldError} id={`${uid}-consent-error`}>{errors.autorizacionDatos}</p> : null}
       {failure ? <p role="alert" className={styles.status}>{failure}</p> : null}
@@ -171,7 +182,7 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
         <button type="button" className={`${site.button} ${site.primary} ${styles.submit}`} onClick={advance}>Continuar<ArrowUpRight size={18} aria-hidden="true" /></button>
       </div> : <div className={styles.wizardActions}>
         <button type="button" className={`${site.button} ${site.outline}`} onClick={() => setStep(2)} disabled={status === "sending"}>Volver</button>
-        <button type="submit" className={`${site.button} ${site.primary} ${styles.submit}`} disabled={status === "sending" || !data.autorizacionDatos}>{status === "sending" ? "Enviando solicitud…" : convenio ? "Solicitar registro de mi empresa" : "Enviar solicitud de jornada"}<ArrowUpRight size={18} aria-hidden="true" /></button>
+        <button type="submit" className={`${site.button} ${site.primary} ${styles.submit}`} disabled={status === "sending" || !data.autorizacionDatos}>{status === "sending" ? "Enviando solicitud…" : convenio ? "Solicitar información del convenio" : "Enviar solicitud de jornada"}<ArrowUpRight size={18} aria-hidden="true" /></button>
       </div>}
     </form>
   </div>;

@@ -16,7 +16,7 @@ export function correoConfigurado() {
 }
 
 export function correoDestino() {
-  return process.env.MAIL_TO?.trim() || CONTACTO_EMAIL;
+  return CONTACTO_EMAIL;
 }
 
 function store() {

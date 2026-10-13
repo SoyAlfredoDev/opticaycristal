@@ -15,4 +15,14 @@ describe("correos de las nuevas solicitudes", () => {
   it("escapa contenido del cliente en HTML", () => {
     for (const email of [correoCliente(request), correoInterno(request)]) { expect(email.html).not.toContain("<script>"); expect(email.html).not.toContain("<b>opciones</b>"); expect(email.html).toContain("&lt;"); }
   });
+  it("distingue convenio y jornada con financiamiento opcional y marca oficial", () => {
+    const convenio = correoCliente(request), jornada = correoCliente({ ...request, origen: "jornada" });
+    expect(convenio.text).toContain("20%"); expect(jornada.text).toContain("30%");
+    for (const email of [convenio, jornada]) {
+      expect(email.text).toContain("opcional y requiere acuerdo y contrato");
+      expect(email.html).toContain("#6B1F3A"); expect(email.html).not.toContain("#b21f24");
+      expect(email.html).toContain('lang="es"'); expect(email.replyTo).toBe("contacto@opticaycristal.cl");
+    }
+    expect(correoInterno(request).replyTo).toBe(request.correo);
+  });
 });

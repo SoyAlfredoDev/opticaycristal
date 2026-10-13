@@ -1,0 +1,12 @@
+.intro { max-width: 640px; margin-top: 20px !important; color: var(--muted); font-size: 16px; line-height: 1.7; }
+.benefits { list-style: none; display: grid; gap: 0 40px; margin: 28px 0 0; padding: 0; }
+.benefits li { display: flex; align-items: flex-start; gap: 18px; padding-block: 24px; border-top: 1px solid var(--line); }
+.benefits svg { flex: 0 0 auto; color: var(--wine); margin-top: 4px; }
+.benefits h3 { font-size: 28px; line-height: 1.15; }
+.benefits p { margin-top: 10px; font-size: 15px; line-height: 1.65; }
+.faqList { margin-top: 24px; }
+.faq details { padding-block: 20px; border-bottom: 1px solid var(--line); }
+.faq summary { color: var(--ink); font-size: 15px; font-weight: 500; cursor: pointer; }
+.faq summary:focus-visible { outline: 2px solid var(--wine); outline-offset: 5px; }
+.faq details p { max-width: 780px; margin-top: 14px; font-size: 15px; line-height: 1.7; color: var(--muted); }
+@media (min-width: 700px) { .benefits { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

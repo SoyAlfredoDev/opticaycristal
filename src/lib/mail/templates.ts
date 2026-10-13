@@ -1,11 +1,11 @@
 import { readFileSync } from "fs";
 import path from "path";
 import { getMesLabel } from "@/lib/jornada-form";
-import { convenioInterests } from "@/lib/convenios";
+import { CONVENIO, convenioInterests } from "@/lib/convenios";
 import { CONTACTO_EMAIL, ORIGEN_LABEL, type Solicitud } from "@/lib/solicitudes/types";
 
 export const LOGO_CID = "logo-opticaycristal";
-export const FROM_ADDRESS = `Óptica y Cristal <${CONTACTO_EMAIL}>`;
+export const FROM_ADDRESS = `Óptica & Cristal <${CONTACTO_EMAIL}>`;
 
 const ADDRESS = "Huérfanos 713, local 18, Santiago Centro";
 
@@ -22,7 +22,7 @@ function oneLine(value: string) {
 }
 
 export function logoAttachment() {
-  const file = readFileSync(path.join(process.cwd(), "public", "logo-email.png"));
+  const file = readFileSync(path.join(process.cwd(), "public", "images", "home", "oc-logo-oficial.png"));
   return {
     filename: "logo.png",
     content: file.toString("base64"),
@@ -34,34 +34,38 @@ export function logoAttachment() {
 function shell(title: string, bodyHtml: string) {
   return `<!doctype html>
 <html lang="es">
-  <body style="margin:0;padding:0;background:#f6f6f6;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f6;">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>${escapeHtml(title)}</title></head>
+  <body style="margin:0;padding:0;background:#FBF7F2;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FBF7F2;">
       <tr>
         <td align="center" style="padding:36px 16px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #ececec;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #E9D8C8;">
             <tr>
-              <td style="height:3px;background:#b21f24;font-size:0;line-height:0;">&nbsp;</td>
+              <td style="height:4px;background:#6B1F3A;font-size:0;line-height:0;">&nbsp;</td>
             </tr>
             <tr>
-              <td align="center" style="padding:36px 36px 8px;">
-                <img src="cid:${LOGO_CID}" width="188" alt="Óptica y Cristal" style="display:block;width:188px;max-width:188px;height:auto;border:0;" />
+              <td style="padding:28px 24px 12px;">
+                <img src="cid:${LOGO_CID}" width="160" alt="Óptica &amp; Cristal" style="display:block;width:160px;max-width:100%;height:auto;border:0;" />
               </td>
             </tr>
             <tr>
-              <td style="padding:12px 36px 8px;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.25;color:#1a1a1a;">
-                ${title}
+              <td style="padding:12px 24px 8px;">
+                <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;line-height:1.25;color:#6B1F3A;">${escapeHtml(title)}</h1>
               </td>
             </tr>
             <tr>
-              <td style="padding:8px 36px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#3a3a3a;">
+              <td style="padding:8px 24px 28px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.65;color:#242020;">
                 ${bodyHtml}
               </td>
             </tr>
           </table>
-          <p style="margin:18px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#8a8a8a;">
-            Óptica y Cristal<br />
+          <p style="margin:18px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:#62565A;">
+            Óptica &amp; Cristal · Tu mirada, nuestra prioridad<br />
             ${ADDRESS}<br />
-            <a href="mailto:${CONTACTO_EMAIL}" style="color:#8a8a8a;text-decoration:none;">${CONTACTO_EMAIL}</a>
+            <a href="mailto:${CONTACTO_EMAIL}" style="color:#6B1F3A;">${CONTACTO_EMAIL}</a><br />
+            <a href="https://opticaycristal.cl/" style="color:#6B1F3A;">opticaycristal.cl</a> ·
+            <a href="https://wa.me/56922452080" style="color:#6B1F3A;">WhatsApp</a> ·
+            <a href="https://www.instagram.com/opticaycristal.cl/" style="color:#6B1F3A;">Instagram</a>
           </p>
         </td>
       </tr>
@@ -72,15 +76,19 @@ function shell(title: string, bodyHtml: string) {
 
 function fila(label: string, value: string) {
   return `<tr>
-    <td style="padding:7px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#8a8a8a;vertical-align:top;width:148px;">${escapeHtml(label)}</td>
-    <td style="padding:7px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1a1a1a;">${escapeHtml(value)}</td>
+    <td style="padding:8px 12px 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#62565A;vertical-align:top;width:36%;overflow-wrap:break-word;">${escapeHtml(label)}</td>
+    <td style="padding:8px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#242020;overflow-wrap:anywhere;word-break:break-word;">${escapeHtml(value)}</td>
   </tr>`;
 }
 
 function tabla(filas: Array<[string, string]>) {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 8px;border-top:1px solid #ececec;">${filas
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;margin:18px 0 8px;border-top:1px solid #E9D8C8;">${filas
     .map(([label, value]) => fila(label, value))
     .join("")}</table>`;
+}
+
+function button(label: string, href: string) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td bgcolor="#6B1F3A" style="border-radius:4px;"><a href="${escapeHtml(href)}" style="display:inline-block;padding:14px 22px;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;line-height:1.4;text-decoration:none;">${escapeHtml(label)}</a></td></tr></table>`;
 }
 
 
@@ -97,23 +105,30 @@ function requestRows(solicitud: Solicitud): Array<[string, string]> {
 export function correoCliente(solicitud: Solicitud) {
   const nombre = oneLine(solicitud.responsable);
   const empresa = oneLine(solicitud.empresa);
-  const kind = solicitud.origen === "convenio" ? "convenio" : "jornada oftalmológica";
-  const description = `Recibimos la solicitud de ${kind} para ${empresa}. Te contactaremos para revisar los detalles y condiciones.`;
-  const rows = requestRows(solicitud);
+  const convenio = solicitud.origen === "convenio";
+  const kind = convenio ? "convenio" : "jornada visual";
+  const description = `Recibimos tu solicitud de ${kind} para ${empresa}. Nuestro equipo comercial te contactará para compartir la información y resolver tus dudas.`;
+  const benefit = convenio
+    ? `El convenio ofrece ${CONVENIO.discountPercent}% de descuento en compras online y en nuestra óptica, y consulta visual gratuita para trabajadores y familiares. Coordinaremos contigo el registro de tu empresa y cómo utilizarlo.`
+    : "En una jornada llevamos la atención visual a las instalaciones de tu empresa: chequeo visual gratuito y descuentos de hasta un 30%, según las condiciones de la propuesta. Revisaremos participantes, espacios y fechas contigo.";
+  const financing = "El financiamiento mediante la empresa, con descuento por nómina, es opcional y requiere acuerdo y contrato.";
+  const rows: Array<[string, string]> = [["Empresa", empresa], ["Persona de contacto", nombre], ["Correo", solicitud.correo], ["Teléfono", solicitud.telefono], ...requestRows(solicitud)];
+  const reference = `Referencia de solicitud: ${solicitud.id}`;
+  const reply = `mailto:${CONTACTO_EMAIL}?subject=${encodeURIComponent(`Consulta sobre mi solicitud de ${kind} · ${solicitud.id.slice(0, 8)}`)}`;
   return {
-    subject: `Recibimos tu solicitud de ${solicitud.origen}`,
-    text: [`Estimado/a ${nombre}:`, "", description, "", ...rows.map(([label, value]) => `${label}: ${oneLine(value)}`), "", "Si necesitas corregir algún dato, responde a este correo.", "Óptica & Cristal", CONTACTO_EMAIL].join("\n"),
-    html: shell("Recibimos tu solicitud", `<p>Estimado/a ${escapeHtml(nombre)}:</p><p>${escapeHtml(description)}</p>${tabla(rows)}<p>Si necesitas corregir algún dato, responde a este correo.</p>`),
+    subject: `Recibimos tu solicitud de ${kind}`,
+    text: [`Hola, ${nombre}:`, "", description, "", benefit, "", financing, "", ...rows.map(([label, value]) => `${label}: ${oneLine(value)}`), "", "Si quieres agregar información o corregir algún dato, responde a este correo.", "La solicitud no firma un contrato ni confirma una reserva de jornada.", reference, "Óptica & Cristal", CONTACTO_EMAIL, "https://opticaycristal.cl/"].join("\n"),
+    html: shell("Tu solicitud está en nuestras manos", `<p>Hola, ${escapeHtml(nombre)}:</p><p>${escapeHtml(description)}</p><p>${escapeHtml(benefit)}</p><p style="padding:14px;background:#FBF7F2;font-size:14px;">${escapeHtml(financing)}</p>${tabla(rows)}<p>Si quieres agregar información o corregir algún dato, responde a este correo.</p>${button("Responder al equipo", reply)}<p style="font-size:12px;color:#62565A;">La solicitud no firma un contrato ni confirma una reserva de jornada.<br />${escapeHtml(reference)}</p>`),
     replyTo: CONTACTO_EMAIL,
   };
 }
 export function correoInterno(solicitud: Solicitud) {
   const empresa = oneLine(solicitud.empresa);
-  const rows: Array<[string, string]> = [["Origen", ORIGEN_LABEL[solicitud.origen]], ["Empresa", empresa], ["Responsable", solicitud.responsable], ["Cargo", solicitud.cargo], ["Teléfono", solicitud.telefono], ["Correo", solicitud.correo], ...requestRows(solicitud)];
+  const rows: Array<[string, string]> = [["Origen", ORIGEN_LABEL[solicitud.origen]], ["Empresa", empresa], ["Responsable", solicitud.responsable], ["Cargo", solicitud.cargo], ["Teléfono", solicitud.telefono], ["Correo", solicitud.correo], ...requestRows(solicitud), ["Contacto autorizado", solicitud.autorizacionDatos ? "Sí, confirmado al enviar el formulario" : "No"], ["Referencia", solicitud.id]];
   return {
     subject: oneLine(`Nueva solicitud de ${solicitud.origen} — ${empresa}`).slice(0, 180),
-    text: [`Nueva solicitud de ${solicitud.origen} para ${empresa}.`, "", ...rows.map(([label, value]) => `${label}: ${oneLine(value)}`)].join("\n"),
-    html: shell("Nueva solicitud", `<p>Llegó una solicitud de ${escapeHtml(solicitud.origen)} para <strong>${escapeHtml(empresa)}</strong>.</p>${tabla(rows)}`),
+    text: [`Nueva solicitud de ${solicitud.origen} para ${empresa}.`, "", ...rows.map(([label, value]) => `${label}: ${oneLine(value)}`), "", "Próxima acción: contactar al responsable, resolver sus dudas y preparar una propuesta.", "https://opticaycristal.cl/admin"].join("\n"),
+    html: shell("Una empresa quiere conversar", `<p>Llegó una solicitud de ${escapeHtml(solicitud.origen)} para <strong>${escapeHtml(empresa)}</strong>.</p>${tabla(rows)}<p><strong>Próxima acción:</strong> contactar al responsable, resolver sus dudas y preparar una propuesta.</p>${button("Revisar solicitudes en el panel", "https://opticaycristal.cl/admin")}`),
     replyTo: oneLine(solicitud.correo),
   };
 }

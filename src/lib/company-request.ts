@@ -31,11 +31,15 @@ export function validateCompanyRequest(data: CompanyRequest): CompanyErrors {
   }
   return errors;
 }
-export async function submitCompanyRequest(data: CompanyRequest, sitioWeb: string) {
-  const response = await fetch("/api/solicitudes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...data, sitioWeb }) });
+export type CompanyReceipt = { id?: string; confirmationSent: boolean };
+export async function submitCompanyRequest(data: CompanyRequest, sitioWeb: string, requestId?: string): Promise<CompanyReceipt> {
+  const response = await fetch("/api/solicitudes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...data, sitioWeb, ...(requestId ? { requestId } : {}) }) });
   if (!response.ok) {
     let message = "No pudimos registrar la solicitud. Inténtalo nuevamente.";
     try { const body: unknown = await response.json(); if (body && typeof body === "object" && "error" in body && typeof body.error === "string") message = body.error; } catch { /* Non-JSON responses use the safe fallback. */ }
     throw new Error(message);
   }
+  const body: unknown = await response.json();
+  if (!body || typeof body !== "object" || !("ok" in body) || body.ok !== true) throw new Error("No pudimos confirmar el registro. Inténtalo nuevamente.");
+  return { id: "id" in body && typeof body.id === "string" ? body.id : undefined, confirmationSent: "confirmationSent" in body && body.confirmationSent === true };
 }

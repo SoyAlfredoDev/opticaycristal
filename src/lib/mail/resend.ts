@@ -6,6 +6,8 @@ export type EnvioCorreo = {
   html: string;
   text: string;
   replyTo: string;
+  idempotencyKey?: string;
+  tags?: Array<{ name: string; value: string }>;
 };
 
 export type ResultadoEnvio = {
@@ -30,6 +32,7 @@ async function enviar(message: EnvioCorreo): Promise<ResultadoEnvio> {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      ...(message.idempotencyKey ? { "Idempotency-Key": message.idempotencyKey } : {}),
     },
     body: JSON.stringify({
       from: FROM_ADDRESS,
@@ -39,6 +42,7 @@ async function enviar(message: EnvioCorreo): Promise<ResultadoEnvio> {
       html: message.html,
       text: message.text,
       attachments: [logoAttachment()],
+      ...(message.tags ? { tags: message.tags } : {}),
     }),
   });
 
@@ -51,7 +55,8 @@ async function enviar(message: EnvioCorreo): Promise<ResultadoEnvio> {
     };
   }
 
-  return { ok: true, id: body?.id ?? null, error: null };
+  if (!body?.id) return { ok: false, id: null, error: "El proveedor no confirmó la referencia de envío." };
+  return { ok: true, id: body.id, error: null };
 }
 
 export async function enviarConResend(message: EnvioCorreo): Promise<ResultadoEnvio> {

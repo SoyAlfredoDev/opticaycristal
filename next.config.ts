@@ -4,8 +4,8 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   serverExternalPackages: ["mysql2"],
   outputFileTracingIncludes: {
-    "/api/solicitudes": ["./public/logo-email.png"],
-    "/admin": ["./public/logo-email.png"],
+    "/api/solicitudes": ["./public/logo-email.png", "./public/images/home/oc-logo-oficial.png"],
+    "/admin": ["./public/logo-email.png", "./public/images/home/oc-logo-oficial.png"],
   },
   images: {
     qualities: [75, 90],

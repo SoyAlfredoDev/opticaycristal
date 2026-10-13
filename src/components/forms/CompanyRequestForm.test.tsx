@@ -10,7 +10,7 @@ vi.mock("@/lib/company-request", async importOriginal => ({
 }));
 
 describe("solicitud de incorporación de empresa", () => {
-  beforeEach(() => vi.mocked(submitCompanyRequest).mockClear());
+  beforeEach(() => vi.mocked(submitCompanyRequest).mockReset().mockResolvedValue({ confirmationSent: false }));
 
   function fill(label: string, value: string) {
     fireEvent.change(screen.getByLabelText(label, { exact: true }), { target: { value } });
@@ -36,8 +36,8 @@ describe("solicitud de incorporación de empresa", () => {
     expect(screen.queryByLabelText("Nombre de la empresa", { exact: true })).not.toBeInTheDocument();
     completeForm("financiamiento");
     expect(screen.getByRole("heading", { name: "Confirma la solicitud" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Solicitar registro de mi empresa" }));
-    await waitFor(() => expect(submitCompanyRequest).toHaveBeenCalledWith(expect.objectContaining({ origen: "convenio", detalles: expect.objectContaining({ trabajadores: 15, modalidadConvenio: "financiamiento" }) }), ""));
+    fireEvent.click(screen.getByRole("button", { name: "Solicitar información del convenio" }));
+    await waitFor(() => expect(submitCompanyRequest).toHaveBeenCalledWith(expect.objectContaining({ origen: "convenio", detalles: expect.objectContaining({ trabajadores: 15, modalidadConvenio: "financiamiento" }) }), "", expect.any(String)));
     expect(await screen.findByRole("heading", { name: "Recibimos tu solicitud" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Las cuotas por nómina se habilitan con un contrato");
   });
@@ -45,7 +45,7 @@ describe("solicitud de incorporación de empresa", () => {
   it("permite solicitar registro sin elegir financiamiento", async () => {
     render(<CompanyRequestForm kind="convenio" />);
     completeForm();
-    fireEvent.click(screen.getByRole("button", { name: "Solicitar registro de mi empresa" }));
+    fireEvent.click(screen.getByRole("button", { name: "Solicitar información del convenio" }));
     await waitFor(() => expect(submitCompanyRequest).toHaveBeenCalledOnce());
     expect(vi.mocked(submitCompanyRequest).mock.calls[0][0].detalles?.modalidadConvenio).toBeUndefined();
   });
@@ -69,7 +69,7 @@ describe("solicitud de incorporación de empresa", () => {
     else { fill("Mes estimado", getMesOptions()[0].value); fill("Dirección de la jornada (opcional)", "[Dirección de prueba]"); }
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
     expect(screen.getByRole("heading", { name: "Confirma la solicitud" })).toBeInTheDocument();
-    const sendName = kind === "convenio" ? "Solicitar registro de mi empresa" : "Enviar solicitud de jornada";
+    const sendName = kind === "convenio" ? "Solicitar información del convenio" : "Enviar solicitud de jornada";
     expect(screen.getByRole("checkbox")).not.toBeChecked();
     expect(screen.getByRole("button", { name: sendName })).toBeDisabled();
     fireEvent.submit(screen.getByRole("form"));
@@ -87,4 +87,27 @@ describe("solicitud de incorporación de empresa", () => {
     expect(vi.mocked(submitCompanyRequest).mock.calls[0][0]).toMatchObject({ origen: kind, autorizacionDatos: true, telefono: "+56 9 9876 5432" });
   });
 
+  it("muestra el correo confirmado únicamente cuando el servidor lo confirma", async () => {
+    vi.mocked(submitCompanyRequest).mockResolvedValueOnce({ id: "12345678-1234-1234-1234-123456789abc", confirmationSent: true });
+    render(<CompanyRequestForm kind="convenio" />); completeForm();
+    fireEvent.click(screen.getByRole("button", { name: "Solicitar información del convenio" }));
+    const success = await screen.findByRole("status");
+    expect(success).toHaveTextContent("Enviamos una confirmación a prueba@example.com");
+    expect(success).toHaveTextContent("Referencia: 12345678");
+  });
+  it("informa que la solicitud está guardada si la confirmación queda pendiente", async () => {
+    render(<CompanyRequestForm kind="convenio" />); completeForm();
+    fireEvent.click(screen.getByRole("button", { name: "Solicitar información del convenio" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("La confirmación por correo está pendiente");
+  });
+  it("conserva la referencia al reintentar tras un error de red", async () => {
+    vi.mocked(submitCompanyRequest).mockRejectedValueOnce(new Error("Error de red aislado"));
+    render(<CompanyRequestForm kind="convenio" />); completeForm();
+    fireEvent.click(screen.getByRole("button", { name: "Solicitar información del convenio" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Error de red aislado");
+    const firstId = vi.mocked(submitCompanyRequest).mock.calls[0][2];
+    fireEvent.click(screen.getByRole("button", { name: "Solicitar información del convenio" }));
+    await screen.findByRole("status");
+    expect(vi.mocked(submitCompanyRequest).mock.calls[1][2]).toBe(firstId);
+  });
 });

@@ -24,6 +24,8 @@ export type Solicitud = {
   correoDetalle: string | null;
   correoClienteEstado: CorreoEstado;
   correoClienteDetalle: string | null;
+  correoId?: string | null;
+  correoClienteId?: string | null;
   creadoEn: string;
 };
 
@@ -42,6 +44,8 @@ export type ActualizacionCorreo = {
   correoDetalle: string | null;
   correoClienteEstado: CorreoEstado;
   correoClienteDetalle: string | null;
+  correoId?: string | null;
+  correoClienteId?: string | null;
 };
 
 export const ORIGEN_LABEL: Record<OrigenSolicitud, string> = {
