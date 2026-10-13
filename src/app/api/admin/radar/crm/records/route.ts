@@ -8,6 +8,7 @@ const tables: Record<string, string> = {
   campaigns: "radar_crm_campaigns",
   events: "radar_crm_events",
   deliveries: "radar_crm_deliveries",
+  followups: "radar_crm_followups",
 };
 export async function GET(request: Request) {
   if (!(await hasRadarAccess(request, "read")))

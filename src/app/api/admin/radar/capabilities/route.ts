@@ -135,7 +135,7 @@ export async function GET(request: Request) {
         path: "/api/admin/radar/crm/records",
         scope: "read",
         returns:
-          "entity=contacts|tasks|deals|campaigns|deliveries|events, limit hasta 200, cursor por id",
+          "entity=contacts|tasks|deals|campaigns|deliveries|events|followups, limit hasta 200, cursor por id",
       },
       {
         method: "POST",

@@ -17,6 +17,8 @@ La automatización se configura mediante CRON_SECRET, RADAR_INBOUND_DOMAIN, RADA
 
 - 65 pruebas unitarias aprobadas; TypeScript, ESLint y compilación de producción correctos. Consulta de segmentación validada con EXPLAIN en Neon, sin ejecutar el INSERT.
 - Consulta real del Dashboard: 1.893 empresas, 4 emails únicos y 0 destinatarios habilitados; la fuente pública no garantiza publicar correo para todas las empresas.
+- Extracción real verificada en producción con Agroriego Tattersall: dos páginas con evidencias consultadas, sin correo público encontrado. Se conserva el resultado real, sin completar datos ficticios.
+- API paginada de seguimientos para agentes: /api/admin/radar/crm/records?entity=followups. Credencial opcional por entorno, con alcance de lectura predeterminado.
 - Dos borradores de octubre guardados: invitación a la jornada y seguimiento para abrir una conversación. Se revisan y aprueban desde Campañas.
 - Resend: subdominio respuestas.opticaycristal.cl verificado, MX y DKIM verificados, webhook existente con email.received. Clave de recepción Full access separada, guardada como secreto en Vercel con autorización del propietario; clave anterior conservada por su instrucción.
 - CRON_SECRET configurado y recepción activada. El envío automático permanece pausado; no se enviaron pruebas a prospectos ni se simularon respuestas reales.
