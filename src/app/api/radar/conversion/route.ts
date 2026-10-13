@@ -42,6 +42,7 @@ export async function POST(request: Request) {
     if (!d) return new Response("Enlace no disponible.", { status: 404 });
     const sql = crmSql();
     await sql.transaction([
+      sql`INSERT INTO radar_crm_followups(id,prospect_id,contact_id,delivery_id,source,subject,message,status) VALUES(${`web:${d.id}`},${d.prospect_id},${d.contact_id},${d.id},'web-form','Solicitud de información',${message},'interested') ON CONFLICT DO NOTHING`,
       sql`INSERT INTO radar_crm_events(id,delivery_id,prospect_id,kind,source,metadata) VALUES(${`conversation:${d.id}`},${d.id},${d.prospect_id},'conversation','web-form',${JSON.stringify({ name, role, message, confirmed: true, contactAuthorization: true })}::jsonb) ON CONFLICT(id) DO NOTHING`,
       sql`INSERT INTO radar_crm_tasks(id,prospect_id,title,owner,due_at) VALUES(${`conversion-task:${d.id}`},${d.prospect_id},'Responder solicitud de convenio o jornada','Equipo comercial',now()+interval '1 day') ON CONFLICT(id) DO NOTHING`,
     ]);

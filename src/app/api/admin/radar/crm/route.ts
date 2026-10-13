@@ -7,6 +7,7 @@ import {
 import { getSession } from "@/lib/auth";
 import { crmAction, crmSnapshot } from "@/lib/radar/crm-store";
 import { dispatchCampaign, reconcileWebhooks } from "@/lib/radar/crm-mail";
+import { reconcileInbound } from "@/lib/radar/crm-inbound";
 import { requiredText } from "@/lib/radar/crm-validation";
 export const runtime = "nodejs";
 export async function GET(request: Request) {
@@ -54,10 +55,14 @@ export async function POST(request: Request) {
       );
     if (action === "dispatch")
       return Response.json(
-        await dispatchCampaign(requiredText(body, "campaignId", 100)),
+        await dispatchCampaign(
+          requiredText(body, "campaignId", 100),
+          human && body.confirmSend === true,
+        ),
       );
     if (action === "reconcile") {
       await reconcileWebhooks();
+      await reconcileInbound();
       return Response.json({ ok: true });
     }
     return Response.json(await crmAction(body, human ? "admin" : "agent"));

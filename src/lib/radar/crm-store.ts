@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID, createHash } from "node:crypto";
 import { ensureCrmSchema, crmSql } from "./crm-schema";
+import { marketingEnabled } from "./crm-settings";
 import { RadarApiError } from "./api";
 import { getProspect } from "./db";
 import { dealStages, type CrmSnapshot, type CrmCampaign } from "./crm-model";
@@ -87,6 +88,8 @@ export async function crmSnapshot(
       "El inventario supera el selector del CRM; usa la API paginada de prospectos para elegir empresa.",
       422,
     );
+  const configuration = marketingConfiguration();
+  configuration.sendingEnabled = await marketingEnabled();
   return {
     companies,
     contacts: contacts.slice(0, 200),
@@ -96,7 +99,7 @@ export async function crmSnapshot(
     deliveries: deliveries.slice(0, 200),
     events: events.slice(0, 200),
     metrics,
-    configuration: marketingConfiguration(),
+    configuration,
     truncated: {
       contacts: contacts.length > 200,
       tasks: tasks.length > 200,
@@ -125,12 +128,15 @@ export async function crmAction(body: Record<string, unknown>, actor: string) {
   if (action === "contact") {
     await company();
     const email = emailAddress(requiredText(body, "email", 254)),
-      name = optionalText(body, "name"), role = optionalText(body, "role");
-    const blocked = await sql`SELECT 1 FROM radar_crm_suppressions WHERE email=${email}`;
+      name = optionalText(body, "name"),
+      role = optionalText(body, "role");
+    const blocked =
+      await sql`SELECT 1 FROM radar_crm_suppressions WHERE email=${email}`;
     const status = blocked.length ? "unsubscribed" : "active";
     await sql`WITH added AS (INSERT INTO radar_crm_contacts(id,prospect_id,email,name,role,status) VALUES(${id},${pid},${email},${name},${role},${status}) ON CONFLICT(prospect_id,email) DO UPDATE SET name=EXCLUDED.name,role=EXCLUDED.role,status=CASE WHEN radar_crm_contacts.status='unsubscribed' OR EXCLUDED.status='unsubscribed' THEN 'unsubscribed' ELSE 'active' END RETURNING id,status) INSERT INTO radar_crm_events(id,prospect_id,kind,source,metadata) SELECT ${`contact.created:${id}`},${pid},'contact.created',${actor},jsonb_build_object('email',${email}::text,'status',added.status) FROM added ON CONFLICT(id) DO NOTHING`;
     const stored =
       await sql`SELECT id FROM radar_crm_contacts WHERE prospect_id=${pid} AND email=${email}`;
+    await sql`UPDATE radar_prospects SET emails=(SELECT COALESCE(jsonb_agg(value),'[]'::jsonb) FROM (SELECT DISTINCT value FROM jsonb_array_elements(emails||${JSON.stringify([email])}::jsonb)) e) WHERE id=${pid}`;
     return { id: stored[0].id };
   }
   if (action === "task") {
@@ -200,7 +206,16 @@ export async function crmAction(body: Record<string, unknown>, actor: string) {
       subject = requiredText(body, "subject", 150),
       text = requiredText(body, "body", 5000),
       variants = campaignVariants(body.variants);
-    const templateId = body.templateId === undefined ? (objective === "ambas" ? "presentacion" : objective) : enumText(body, "templateId", campaignTemplates.map(t => t.id));
+    const templateId =
+      body.templateId === undefined
+        ? objective === "ambas"
+          ? "presentacion"
+          : objective
+        : enumText(
+            body,
+            "templateId",
+            campaignTemplates.map((t) => t.id),
+          );
     if (/[\r\n]/.test(subject) || /(https?:\/\/|mailto:|www\.)/i.test(text))
       throw new RadarApiError(
         "Asunto sin saltos de línea y cuerpo sin enlaces: utiliza el CTA principal.",
@@ -244,11 +259,9 @@ export async function crmAction(body: Record<string, unknown>, actor: string) {
     )
       throw new RadarApiError("Selecciona de 1 a 100 contactos.");
     const contacts =
-      await sql`SELECT c.id,c.prospect_id,c.email FROM radar_crm_contacts c WHERE c.id=ANY(${ids}::text[]) AND c.status IN ('active','subscribed') AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email)`;
+      await sql`SELECT c.id,c.prospect_id,c.email FROM radar_crm_contacts c WHERE c.id=ANY(${ids}::text[]) AND c.status IN ('active','subscribed') AND c.marketing_ready AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email)`;
     if (contacts.length !== new Set(ids).size)
-      throw new RadarApiError(
-        "Hay contactos dados de baja o bloqueados.",
-      );
+      throw new RadarApiError("Hay contactos dados de baja o bloqueados.");
     const queries = contacts.map((c) => {
       const n =
         createHash("sha256")
@@ -276,6 +289,7 @@ export async function crmAction(body: Record<string, unknown>, actor: string) {
         );
     }
     await sql`INSERT INTO radar_crm_events(id,delivery_id,prospect_id,kind,source,metadata) VALUES(${id},${deliveryId || null},${pid},'conversation',${actor},${JSON.stringify({ note, confirmed: true })}::jsonb) ON CONFLICT(id) DO NOTHING`;
+    await sql`INSERT INTO radar_crm_followups(id,prospect_id,delivery_id,source,subject,message,status) VALUES(${`manual:${id}`},${pid},${deliveryId || null},'manual','Conversación registrada',${note},'interested') ON CONFLICT DO NOTHING`;
     return { id };
   }
   if (action === "insight") {

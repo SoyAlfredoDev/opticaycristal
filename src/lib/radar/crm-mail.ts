@@ -1,10 +1,12 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { crmSql, ensureCrmSchema } from "./crm-schema";
+import { marketingEnabled } from "./crm-settings";
 import { publicBase, marketingConfiguration } from "./crm-store";
 import { emailAddress } from "./crm-validation";
 import { RadarApiError } from "./api";
 import type { CampaignVariant } from "./crm-model";
+import { replyAddress, ingestInbound } from "./crm-inbound";
 import { renderCampaignEmail } from "./campaign-render";
 export function automationHint(userAgent: string) {
   return /bot|crawler|spider|preview|scanner|proofpoint|mimecast|barracuda|safelinks|headless/i.test(
@@ -12,9 +14,15 @@ export function automationHint(userAgent: string) {
   );
 }
 export const composeCampaign = renderCampaignEmail;
-export async function dispatchCampaign(campaignId: string) {
+export async function dispatchCampaign(
+  campaignId: string,
+  humanConfirmed = false,
+) {
   const configuration = marketingConfiguration();
-  if (!configuration.sendingEnabled || configuration.missing.length)
+  if (
+    (!(await marketingEnabled()) && !humanConfirmed) ||
+    configuration.missing.length
+  )
     throw new RadarApiError(
       `Envío no habilitado. Revisa configuración: ${configuration.missing.join(", ") || "RADAR_MARKETING_ENABLED"}.`,
       503,
@@ -26,11 +34,15 @@ export async function dispatchCampaign(campaignId: string) {
   emailAddress(from.match(/<([^<>]+)>/)?.[1] || from);
   await ensureCrmSchema();
   const sql = crmSql();
+  const campaignWindow =
+    await sql`SELECT id FROM radar_crm_campaigns WHERE id=${campaignId} AND (scheduled_at IS NULL OR scheduled_at<=now()) AND (expires_at IS NULL OR expires_at>now())`;
+  if (!campaignWindow.length)
+    return { sent: 0, failed: 0, uncertain: 0, batchLimit: 5, scheduled: true };
   // A request interrupted after acceptance is never retried automatically beyond Resend's 24h idempotency window.
   await sql`UPDATE radar_crm_deliveries SET status='uncertain',error='Envío interrumpido: reconciliar con Resend antes de reintentar' WHERE status='sending' AND attempted_at<now()-interval '5 minutes'`;
-  await sql`UPDATE radar_crm_deliveries SET status='cancelled',error='Contacto dado de baja o bloqueado' WHERE status='queued' AND (contact_id IN (SELECT id FROM radar_crm_contacts WHERE status NOT IN ('active','subscribed')) OR contact_id IN (SELECT c.id FROM radar_crm_contacts c JOIN radar_crm_suppressions s ON s.email=c.email))`;
+  await sql`UPDATE radar_crm_deliveries SET status='cancelled',error='Contacto dado de baja o bloqueado' WHERE status='queued' AND (contact_id IN (SELECT id FROM radar_crm_contacts WHERE status NOT IN ('active','subscribed') OR NOT marketing_ready) OR contact_id IN (SELECT c.id FROM radar_crm_contacts c JOIN radar_crm_suppressions s ON s.email=c.email))`;
   const queue =
-    await sql`SELECT d.id FROM radar_crm_deliveries d JOIN radar_crm_campaigns ca ON ca.id=d.campaign_id WHERE d.campaign_id=${campaignId} AND d.status='queued' AND ca.status='approved' ORDER BY d.created_at LIMIT 5`;
+    await sql`SELECT d.id FROM radar_crm_deliveries d JOIN radar_crm_campaigns ca ON ca.id=d.campaign_id WHERE d.campaign_id=${campaignId} AND d.status='queued' AND ca.status='approved' AND NOT EXISTS(SELECT 1 FROM radar_crm_deliveries recent WHERE recent.recipient_email=d.recipient_email AND recent.sent_at>now()-interval '7 days') ORDER BY d.created_at LIMIT 5`;
   let sent = 0,
     failed = 0,
     uncertain = 0;
@@ -40,12 +52,19 @@ export async function dispatchCampaign(campaignId: string) {
     : 50;
   for (const entry of queue) {
     const rows =
-      await sql`UPDATE radar_crm_deliveries d SET status='sending',attempted_at=now() FROM radar_crm_contacts c,radar_crm_campaigns ca,radar_prospects p WHERE d.id=${entry.id} AND d.status='queued' AND c.id=d.contact_id AND c.status IN ('active','subscribed') AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email) AND ca.id=d.campaign_id AND ca.status='approved' AND p.id=c.prospect_id RETURNING d.*,c.email,c.consent_evidence,p.name AS company_name,c.prospect_id,ca.subject,ca.body,ca.variants,ca.template_id`;
+      await sql`UPDATE radar_crm_deliveries d SET status='sending',attempted_at=now() FROM radar_crm_contacts c,radar_crm_campaigns ca,radar_prospects p WHERE d.id=${entry.id} AND d.status='queued' AND c.id=d.contact_id AND c.status IN ('active','subscribed') AND c.marketing_ready AND NOT EXISTS(SELECT 1 FROM radar_crm_suppressions s WHERE s.email=c.email) AND ca.id=d.campaign_id AND ca.status='approved' AND (ca.scheduled_at IS NULL OR ca.scheduled_at<=now()) AND (ca.expires_at IS NULL OR ca.expires_at>now()) AND NOT EXISTS(SELECT 1 FROM radar_crm_followups f WHERE f.prospect_id=c.prospect_id AND f.status IN ('new','working','interested','proposal','quarantine')) AND p.id=c.prospect_id RETURNING d.*,c.email,c.consent_evidence,p.name AS company_name,c.prospect_id,ca.subject,ca.body,ca.variants,ca.template_id`;
     if (!rows.length) continue;
     const d = rows[0];
+    const reservation =
+      await sql`INSERT INTO radar_crm_recipient_schedule(email,delivery_id,next_attempt_at) VALUES(${d.email},${d.id},now()+interval '7 days') ON CONFLICT(email) DO UPDATE SET delivery_id=EXCLUDED.delivery_id,next_attempt_at=EXCLUDED.next_attempt_at WHERE radar_crm_recipient_schedule.next_attempt_at<=now() RETURNING email`;
+    if (!reservation.length) {
+      await sql`UPDATE radar_crm_deliveries SET status='queued',attempted_at=NULL WHERE id=${d.id} AND status='sending'`;
+      continue;
+    }
     const budget =
       await sql`INSERT INTO radar_crm_send_budget(day,used) VALUES((now() AT TIME ZONE 'America/Santiago')::date,1) ON CONFLICT(day) DO UPDATE SET used=radar_crm_send_budget.used+1 WHERE radar_crm_send_budget.used<${dailyLimit} RETURNING used`;
     if (!budget.length) {
+      await sql`DELETE FROM radar_crm_recipient_schedule WHERE email=${d.email} AND delivery_id=${d.id}`;
       await sql`UPDATE radar_crm_deliveries SET status='queued',attempted_at=NULL WHERE id=${d.id} AND status='sending'`;
       break;
     }
@@ -74,7 +93,7 @@ export async function dispatchCampaign(campaignId: string) {
         body: JSON.stringify({
           from,
           to: [d.email],
-          reply_to: process.env.RADAR_MAIL_REPLY_TO,
+          reply_to: replyAddress(String(d.token)),
           subject: mail.subject,
           html: mail.html,
           text: mail.text,
@@ -98,8 +117,13 @@ export async function dispatchCampaign(campaignId: string) {
         ]);
         sent++;
         // Provider acceptance is already persisted; reconciliation failure must not turn it into an uncertain send.
-        try { await reconcileWebhooks(); } catch { /* Stored webhooks are retried by the reconcile operation. */ }
+        try {
+          await reconcileWebhooks();
+        } catch {
+          /* Stored webhooks are retried by the reconcile operation. */
+        }
       } else if (response.status === 429) {
+        await sql`DELETE FROM radar_crm_recipient_schedule WHERE email=${d.email} AND delivery_id=${d.id}`;
         await sql`UPDATE radar_crm_deliveries SET status='queued',attempted_at=NULL,error='Límite temporal del proveedor' WHERE id=${d.id}`;
         break;
       } else if (response.status >= 500 || response.ok) {
@@ -123,6 +147,7 @@ export async function ingestWebhook(
   id: string,
   event: Record<string, unknown>,
 ) {
+  if (event.type === "email.received") return ingestInbound(id, event);
   await ensureCrmSchema();
   const sql = crmSql();
   const data = event.data as Record<string, unknown> | undefined;
@@ -175,9 +200,10 @@ export async function reconcileWebhooks() {
       q.push(
         sql`UPDATE radar_crm_deliveries SET status=CASE WHEN status IN ('failed','cancelled') THEN status ELSE 'sent' END,sent_at=COALESCE(sent_at,${w.occurred_at}::timestamptz),provider_id=COALESCE(provider_id,${w.email_id}),error=CASE WHEN status IN ('failed','cancelled') THEN error ELSE NULL END WHERE id=${w.delivery_id}`,
       );
-    if (w.kind === "email.failed") q.push(
-      sql`UPDATE radar_crm_deliveries SET status='failed',error='El proveedor notificó un fallo de entrega. Revisar Resend antes de reintentar.' WHERE id=${w.delivery_id} AND status<>'cancelled'`,
-    );
+    if (w.kind === "email.failed")
+      q.push(
+        sql`UPDATE radar_crm_deliveries SET status='failed',error='El proveedor notificó un fallo de entrega. Revisar Resend antes de reintentar.' WHERE id=${w.delivery_id} AND status<>'cancelled'`,
+      );
     if (
       ["email.bounced", "email.complained", "email.suppressed"].includes(
         String(w.kind),

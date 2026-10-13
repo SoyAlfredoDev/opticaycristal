@@ -55,6 +55,7 @@ export default function LoginForm() {
         </p>
 
         <form
+          method="post"
           onSubmit={onSubmit}
           className="mt-8 space-y-4 rounded-[1.25rem] border border-border bg-white p-6 shadow-[var(--shadow-card)]"
         >

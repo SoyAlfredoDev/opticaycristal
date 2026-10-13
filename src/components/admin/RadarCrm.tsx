@@ -9,7 +9,10 @@ import {
   type CrmDeal,
 } from "@/lib/radar/crm-model";
 import styles from "./RadarCrm.module.css";
-import { campaignTemplates, campaignTemplate } from "@/lib/radar/campaign-templates";
+import {
+  campaignTemplates,
+  campaignTemplate,
+} from "@/lib/radar/campaign-templates";
 type View = "gestiones" | "oportunidades" | "campanas" | "resultados";
 const date = (value: string) =>
   new Date(value).toLocaleString("es-CL", {
@@ -60,8 +63,10 @@ function fields(form: HTMLFormElement) {
 }
 export function RadarCrm({
   initialView = "gestiones",
+  campaignOnly = false,
 }: {
   initialView?: View;
+  campaignOnly?: boolean;
 }) {
   const [view, setView] = useState<View>(initialView),
     [company, setCompany] = useState(""),
@@ -79,7 +84,9 @@ export function RadarCrm({
     [ctaTypes, setCtaTypes] = useState<string[]>(["web"]),
     [templateId, setTemplateId] = useState("convenio"),
     [now, setNow] = useState(0);
-  const chosenTemplate = campaignTemplate(editingCampaign?.template_id || templateId);
+  const chosenTemplate = campaignTemplate(
+    editingCampaign?.template_id || templateId,
+  );
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
       try {
@@ -197,6 +204,7 @@ export function RadarCrm({
     data?.contacts.filter(
       (c) =>
         ["active", "subscribed"].includes(c.status) &&
+        c.marketing_ready &&
         !(c as unknown as { suppression_reason?: string }).suppression_reason,
     ) || [];
   async function showPreview(c: CrmCampaign) {
@@ -237,8 +245,12 @@ export function RadarCrm({
       <nav className={styles.tabs} aria-label="Áreas del CRM">
         {(
           [
-            ["gestiones", "Gestiones y contactos"],
-            ["oportunidades", "Oportunidades"],
+            ...(!campaignOnly
+              ? [
+                  ["gestiones", "Gestiones y contactos"],
+                  ["oportunidades", "Oportunidades"],
+                ]
+              : []),
             ["campanas", "Campañas"],
             ["resultados", "Resultados y aprendizaje"],
           ] as [View, string][]
@@ -255,32 +267,34 @@ export function RadarCrm({
           </button>
         ))}
       </nav>
-      <div className={styles.filter}>
-        <label>
-          Empresa
-          <select
-            disabled={busy || loading}
-            value={company}
-            onChange={(e) => {
-              setLoading(true);
-              setCompany(e.target.value);
-              setSelection([]);
-              setTask(null);
-              setDeal(null);
-            }}
-          >
-            <option value="">Todas las empresas</option>
-            {data?.companies.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <small>
-          Selecciona una empresa para crear contactos, tareas u oportunidades.
-        </small>
-      </div>
+      {!campaignOnly && (
+        <div className={styles.filter}>
+          <label>
+            Empresa
+            <select
+              disabled={busy || loading}
+              value={company}
+              onChange={(e) => {
+                setLoading(true);
+                setCompany(e.target.value);
+                setSelection([]);
+                setTask(null);
+                setDeal(null);
+              }}
+            >
+              <option value="">Todas las empresas</option>
+              {data?.companies.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <small>
+            Selecciona una empresa para crear contactos, tareas u oportunidades.
+          </small>
+        </div>
+      )}
       {error && (
         <p className={styles.error} role="alert">
           {error}
@@ -294,36 +308,39 @@ export function RadarCrm({
       {loading && <p role="status">Consultando el CRM…</p>}
       {data && (
         <>
-          <div className={styles.metrics}>
-            <div>
-              <b>{data.tasks.filter((t) => t.status === "pending").length}</b>
-              <span>Tareas pendientes mostradas</span>
+          {!campaignOnly && (
+            <div className={styles.metrics}>
+              <div>
+                <b>{data.tasks.filter((t) => t.status === "pending").length}</b>
+                <span>Tareas pendientes mostradas</span>
+              </div>
+              <div>
+                <b>
+                  {
+                    data.tasks.filter(
+                      (t) =>
+                        t.status === "pending" && Date.parse(t.due_at) < now,
+                    ).length
+                  }
+                </b>
+                <span>Seguimientos vencidos mostrados</span>
+              </div>
+              <div>
+                <b>{eligible.length}</b>
+                <span>Contactos activos mostrados</span>
+              </div>
+              <div>
+                <b>
+                  {
+                    data.deals.filter(
+                      (d) => d.stage !== "perdido" && d.stage !== "ganado",
+                    ).length
+                  }
+                </b>
+                <span>Oportunidades abiertas mostradas</span>
+              </div>
             </div>
-            <div>
-              <b>
-                {
-                  data.tasks.filter(
-                    (t) => t.status === "pending" && Date.parse(t.due_at) < now,
-                  ).length
-                }
-              </b>
-              <span>Seguimientos vencidos mostrados</span>
-            </div>
-            <div>
-              <b>{eligible.length}</b>
-              <span>Contactos activos mostrados</span>
-            </div>
-            <div>
-              <b>
-                {
-                  data.deals.filter(
-                    (d) => d.stage !== "perdido" && d.stage !== "ganado",
-                  ).length
-                }
-              </b>
-              <span>Oportunidades abiertas mostradas</span>
-            </div>
-          </div>
+          )}
           {Object.values(data.truncated).some(Boolean) && (
             <p className={styles.notice}>
               Hay más registros que los mostrados. Filtra por empresa; el agente
@@ -445,7 +462,11 @@ export function RadarCrm({
                 </section>
                 <section className={styles.card}>
                   <h3>Contacto CRM</h3>
-                  <p>Los correos guardados desde el Radar se incorporan automáticamente como contactos activos. Los respaldos de las llamadas se conservan en su sistema interno.</p>
+                  <p>
+                    Los correos guardados desde el Radar se incorporan
+                    automáticamente como contactos activos. Los respaldos de las
+                    llamadas se conservan en su sistema interno.
+                  </p>
                   <form onSubmit={(e) => void submit(e, "contact")}>
                     <label>
                       Correo comercial
@@ -732,7 +753,12 @@ export function RadarCrm({
               <div className={styles.grid}>
                 <section className={styles.card}>
                   <h3>Diseñar campaña</h3>
-                  <p>Contactos disponibles para campañas: <strong>{eligible.length}</strong>. {!eligible.length && "Guarda empresas con correo desde el Radar o incorpora contactos manualmente."}</p>
+                  <p>
+                    Contactos disponibles para campañas:{" "}
+                    <strong>{eligible.length}</strong>.{" "}
+                    {!eligible.length &&
+                      "Guarda empresas con correo desde el Radar o incorpora contactos manualmente."}
+                  </p>
                   <p>
                     Un objetivo y un CTA por correo. Mantén el mismo contenido y
                     cambia el canal para comparar.
@@ -743,37 +769,68 @@ export function RadarCrm({
                   >
                     <label>
                       Formato corporativo
-                      <select name="templateId" value={chosenTemplate.id} onChange={e => {
-                        setTemplateId(e.target.value);
-                        if (editingCampaign) setEditingCampaign({ ...editingCampaign, template_id: e.target.value });
-                      }}>
-                        {campaignTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      <select
+                        name="templateId"
+                        value={chosenTemplate.id}
+                        onChange={(e) => {
+                          setTemplateId(e.target.value);
+                          if (editingCampaign)
+                            setEditingCampaign({
+                              ...editingCampaign,
+                              template_id: e.target.value,
+                            });
+                        }}
+                      >
+                        {campaignTemplates.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name}
+                          </option>
+                        ))}
                       </select>
                     </label>
-                    <button type="button" disabled={busy} onClick={async () => {
-                      setBusy(true);
-                      try {
-                        const r = await fetch(`/api/admin/radar/crm/templates?id=${chosenTemplate.id}`);
-                        const result = await r.json();
-                        if (!r.ok) throw new Error(result.error);
-                        setPreview(result.html);
-                      } catch (e) { setError(e instanceof Error ? e.message : "No se pudo cargar el formato."); }
-                      finally { setBusy(false); }
-                    }}>Ver formato corporativo</button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={async () => {
+                        setBusy(true);
+                        try {
+                          const r = await fetch(
+                            `/api/admin/radar/crm/templates?id=${chosenTemplate.id}`,
+                          );
+                          const result = await r.json();
+                          if (!r.ok) throw new Error(result.error);
+                          setPreview(result.html);
+                        } catch (e) {
+                          setError(
+                            e instanceof Error
+                              ? e.message
+                              : "No se pudo cargar el formato.",
+                          );
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                    >
+                      Ver formato corporativo
+                    </button>
                     <label>
                       Nombre interno
                       <input
                         name="name"
                         required
                         maxLength={200}
-                        defaultValue={editingCampaign?.name || chosenTemplate.name}
+                        defaultValue={
+                          editingCampaign?.name || chosenTemplate.name
+                        }
                       />
                     </label>
                     <label>
                       Objetivo
                       <select
                         name="objective"
-                        defaultValue={editingCampaign?.objective || chosenTemplate.objective}
+                        defaultValue={
+                          editingCampaign?.objective || chosenTemplate.objective
+                        }
                       >
                         <option value="convenio">Conseguir convenios</option>
                         <option value="jornada">Coordinar jornadas</option>
@@ -784,7 +841,9 @@ export function RadarCrm({
                       Asunto
                       <input
                         name="subject"
-                        defaultValue={editingCampaign?.subject || chosenTemplate.subject}
+                        defaultValue={
+                          editingCampaign?.subject || chosenTemplate.subject
+                        }
                         required
                         maxLength={150}
                         placeholder="Conversemos sobre beneficios ópticos para {{empresa}}"
@@ -794,7 +853,9 @@ export function RadarCrm({
                       Mensaje
                       <textarea
                         name="body"
-                        defaultValue={editingCampaign?.body || chosenTemplate.body}
+                        defaultValue={
+                          editingCampaign?.body || chosenTemplate.body
+                        }
                         required
                         rows={7}
                         maxLength={5000}
@@ -851,7 +912,10 @@ export function RadarCrm({
                                     defaultValue={
                                       editingCampaign?.variants.find(
                                         (v) => v.kind === kind,
-                                      )?.destination || (kind === "whatsapp" ? "https://wa.me/56922452080" : "mailto:contacto@opticaycristal.cl")
+                                      )?.destination ||
+                                      (kind === "whatsapp"
+                                        ? "https://wa.me/56922452080"
+                                        : "mailto:contacto@opticaycristal.cl")
                                     }
                                     required
                                     maxLength={500}

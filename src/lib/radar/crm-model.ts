@@ -27,6 +27,7 @@ export type CrmContact = {
   email: string;
   name: string;
   role: string;
+  marketing_ready: boolean;
   consent_evidence: string | null;
   consented_at: string | null;
   status: string;
@@ -54,6 +55,9 @@ export type CrmDeal = {
   version: number;
 };
 export type CrmCampaign = {
+  month?: string;
+  scheduled_at?: string | null;
+  expires_at?: string | null;
   template_id: string;
   id: string;
   name: string;

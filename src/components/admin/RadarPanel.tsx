@@ -1,78 +1,1596 @@
 "use client";
 import Link from "next/link";
-import {useEffect,useMemo,useRef,useState} from "react";
-import {logoutAction} from "@/app/admin/actions";
-import {Activity,CompanyResult,getCommercialFit,Prospect,ProspectStage} from "@/lib/radar/types";
-import {radarRegions as regions,industryOptions as industries} from "@/lib/radar/catalog";
-import {assessCompany} from "@/lib/radar/assessment";
-import {RadarResults} from "./RadarResults";
-import {RadarSummary} from "./RadarSummary";
-import {RadarActivityView} from "./RadarActivityView";
-import {RadarCrm} from "./RadarCrm";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { logoutAction } from "@/app/admin/actions";
+import {
+  Activity,
+  CompanyResult,
+  getCommercialFit,
+  Prospect,
+  ProspectStage,
+} from "@/lib/radar/types";
+import {
+  radarRegions as regions,
+  industryOptions as industries,
+} from "@/lib/radar/catalog";
+import { assessCompany } from "@/lib/radar/assessment";
+import { RadarResults } from "./RadarResults";
+import { RadarWorkspace } from "./RadarWorkspace";
+import { RadarCampaignCenter } from "./RadarCampaignCenter";
+import {
+  LayoutDashboard,
+  Search,
+  Users,
+  Mail,
+  MessageSquare,
+} from "lucide-react";
+import { RadarActivityView } from "./RadarActivityView";
+import { RadarCrm } from "./RadarCrm";
 import styles from "./RadarPanel.module.css";
-type Signed={company:CompanyResult;proof:string};type Analysis={score:number|null;reasons:string[];strategy:string;nextAction:string;message:string;label:string;facts:Record<string,unknown>};
-const stages:ProspectStage[]=["nuevo","contactado","oportunidad","ganado","descartado"];
-const stageNames:Record<ProspectStage,string>={nuevo:"Nuevo",contactado:"Contactado",oportunidad:"Oportunidad",ganado:"Ganado",descartado:"Descartado"};
-const dateLabel=(value:string)=>new Intl.DateTimeFormat("es-CL",{dateStyle:"medium",timeZone:"America/Santiago"}).format(new Date(value));
-const fitLabel=(fit:Prospect["commercialFit"])=>({convenio_bajo:"Convenio · baja escala",convenio:"Convenio",jornada:"Jornada",ambas:"Convenio y jornada",por_clasificar:"Por clasificar"}[fit]||"Por clasificar");
-export function RadarPanel({initialProspects,providers,dbError}:{initialProspects:Prospect[];providers:{openStreetMap:boolean;neon:boolean;ai:boolean};dbError:string|null}){
- const [tab,setTab]=useState<"resumen"|"buscar"|"prospectos"|"oportunidades"|"actividad"|"crm">("buscar"),[region,setRegion]=useState(""),[industry,setIndustry]=useState("company"),[otherIndustry,setOtherIndustry]=useState(""),[rows,setRows]=useState<Signed[]>([]),[saved,setSaved]=useState(initialProspects),[savedResultIds,setSavedResultIds]=useState<string[]>([]),[loading,setLoading]=useState(false),[savingAll,setSavingAll]=useState(false),[notice,setNotice]=useState(""),[criteria,setCriteria]=useState(""),[filter,setFilter]=useState(""),[selected,setSelected]=useState<Prospect|null>(null),[activities,setActivities]=useState<Activity[]>([]),[activityKind,setActivityKind]=useState<Activity["kind"]>("llamada"),[activityNote,setActivityNote]=useState("");const [importing,setImporting]=useState(false);const [rutInput,setRutInput]=useState("");const [analysis,setAnalysis]=useState<Analysis|null>(null);const [analyzing,setAnalyzing]=useState(false);
- const [crmSection,setCrmSection]=useState<"gestiones"|"oportunidades">("gestiones");
- const [commune,setCommune]=useState(""),[webLoading,setWebLoading]=useState(false),[savingIds,setSavingIds]=useState<Set<string>>(new Set()),[saveProgress,setSaveProgress]=useState(""),[fitFilter,setFitFilter]=useState(""),[sortProspects,setSortProspects]=useState("priority"),[elapsed,setElapsed]=useState(0),[searchStats,setSearchStats]=useState<{raw:number;outsideRegion:number;merged:number;cacheHit:boolean}|null>(null);
- const [emailScan,setEmailScan]=useState(false),[emailScanProgress,setEmailScanProgress]=useState("");
- const emailScanController=useRef<AbortController|null>(null);
- const searchController=useRef<AbortController|null>(null),drawerRef=useRef<HTMLElement|null>(null),openVersion=useRef(0);
- useEffect(()=>{if(!loading)return;const timer=setInterval(()=>setElapsed(value=>value+1),1000);return()=>clearInterval(timer)},[loading]);
- useEffect(()=>()=>{searchController.current?.abort();emailScanController.current?.abort()},[]);
- const selectedId=selected?.id;
- useEffect(()=>{if(!selectedId)return;const previous=document.activeElement as HTMLElement|null;drawerRef.current?.querySelector<HTMLButtonElement>("button")?.focus();const key=(event:KeyboardEvent)=>{if(event.key==="Escape"){openVersion.current++;setSelected(null);}if(event.key!=="Tab")return;const elements=drawerRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input,textarea,select,a[href]');if(!elements?.length)return;const first=elements[0],last=elements[elements.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}};document.addEventListener("keydown",key);return()=>{document.removeEventListener("keydown",key);previous?.focus()}},[selectedId]);
- async function webEnrich(){if(!selected)return;const version=openVersion.current;setWebLoading(true);setNotice("");try{const r=await fetch("/api/admin/radar/website",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prospectId:selected.id,refresh:true})}),d=await r.json();if(!r.ok||!d.prospect)throw new Error(d.error||"No se pudo consultar la web.");if(version===openVersion.current)setSelected(d.prospect);setSaved(values=>values.map(p=>p.id===d.prospect.id?d.prospect:p));setNotice(d.cached?"Se conserva la consulta web realizada durante las últimas 24 horas.":"Datos publicados de la web guardados con fuente y fecha.")}catch(error){setNotice(error instanceof Error?error.message:"No se pudo consultar la web.")}finally{setWebLoading(false)}}
- async function saveNotes(){if(!selected)return;try{const r=await fetch(`/api/admin/radar/prospects/${encodeURIComponent(selected.id)}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({notes:selected.notes})}),d=await r.json();if(!r.ok)throw new Error(d.error||"No se pudo guardar la observación.");setSaved(values=>values.map(p=>p.id===selected.id?selected:p));setNotice("Observación guardada.")}catch(error){setNotice(error instanceof Error?error.message:"No se pudo guardar la observación.")}}
- const filtered=useMemo(()=>{const q=filter.toLocaleLowerCase("es-CL");return saved.filter(p=>(tab!=="oportunidades"||p.stage==="oportunidad")&&(!fitFilter||getCommercialFit(p.employeeEstimate)===fitFilter)&&[p.name,p.address,p.website,p.phone,...(p.emails||[])].filter(Boolean).join(" ").toLocaleLowerCase("es-CL").includes(q)).sort((a,b)=>sortProspects==="name"?a.name.localeCompare(b.name,"es"):(Number(Boolean(b.emails?.length))-Number(Boolean(a.emails?.length)))||assessCompany(b).score-assessCompany(a).score)},[saved,filter,fitFilter,sortProspects,tab]);
- async function scanEmails(){
-  const candidates=filtered.filter(p=>p.website&&!p.emails?.length);
-  if(emailScanController.current)return;const controller=new AbortController();emailScanController.current=controller;setEmailScan(true);setNotice("");
-  let completed=0,found=0,failed=0;
-  try{for(const prospect of candidates){
-   if(controller.signal.aborted)break;
-   setEmailScanProgress(`${completed+1}/${candidates.length}`);
-   const response=await fetch("/api/admin/radar/website",{method:"POST",headers:{"Content-Type":"application/json"},signal:controller.signal,body:JSON.stringify({prospectId:prospect.id})});
-   const data=await response.json();
-   if(response.status===429||response.status===401)throw new Error(`${data.error||"Consulta detenida por el límite del servicio."} Se conservan ${completed} webs consultadas y ${found} empresas con correo.`)
-   completed++;
-   if(response.ok&&data.prospect){if(data.prospect.emails?.length)found++;setSaved(values=>values.map(p=>p.id===data.prospect.id?data.prospect:p))}else failed++;
-   if(completed<candidates.length)await new Promise<void>(resolve=>{const finish=()=>{clearTimeout(timer);controller.signal.removeEventListener("abort",finish);resolve()};const timer=setTimeout(finish,3200);controller.signal.addEventListener("abort",finish,{once:true})});
+type Signed = { company: CompanyResult; proof: string };
+type Analysis = {
+  score: number | null;
+  reasons: string[];
+  strategy: string;
+  nextAction: string;
+  message: string;
+  label: string;
+  facts: Record<string, unknown>;
+};
+const stages: ProspectStage[] = [
+  "nuevo",
+  "contactado",
+  "oportunidad",
+  "ganado",
+  "descartado",
+];
+const stageNames: Record<ProspectStage, string> = {
+  nuevo: "Nuevo",
+  contactado: "Contactado",
+  oportunidad: "Oportunidad",
+  ganado: "Ganado",
+  descartado: "Descartado",
+};
+const dateLabel = (value: string) =>
+  new Intl.DateTimeFormat("es-CL", {
+    dateStyle: "medium",
+    timeZone: "America/Santiago",
+  }).format(new Date(value));
+const fitLabel = (fit: Prospect["commercialFit"]) =>
+  ({
+    convenio_bajo: "Convenio · baja escala",
+    convenio: "Convenio",
+    jornada: "Jornada",
+    ambas: "Convenio y jornada",
+    por_clasificar: "Por clasificar",
+  })[fit] || "Por clasificar";
+export function RadarPanel({
+  initialProspects,
+  providers,
+  dbError,
+}: {
+  initialProspects: Prospect[];
+  providers: { openStreetMap: boolean; neon: boolean; ai: boolean };
+  dbError: string | null;
+}) {
+  const [tab, setTab] = useState<
+      | "resumen"
+      | "buscar"
+      | "prospectos"
+      | "oportunidades"
+      | "actividad"
+      | "crm"
+      | "campanas"
+      | "seguimientos"
+    >("resumen"),
+    [region, setRegion] = useState(""),
+    [industry, setIndustry] = useState("company"),
+    [otherIndustry, setOtherIndustry] = useState(""),
+    [rows, setRows] = useState<Signed[]>([]),
+    [saved, setSaved] = useState(initialProspects),
+    [savedResultIds, setSavedResultIds] = useState<string[]>([]),
+    [loading, setLoading] = useState(false),
+    [savingAll, setSavingAll] = useState(false),
+    [notice, setNotice] = useState(""),
+    [criteria, setCriteria] = useState(""),
+    [filter, setFilter] = useState(""),
+    [selected, setSelected] = useState<Prospect | null>(null),
+    [activities, setActivities] = useState<Activity[]>([]),
+    [activityKind, setActivityKind] = useState<Activity["kind"]>("llamada"),
+    [activityNote, setActivityNote] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [rutInput, setRutInput] = useState("");
+  const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [crmSection, setCrmSection] = useState<"gestiones" | "oportunidades">(
+    "gestiones",
+  );
+  const [commune, setCommune] = useState(""),
+    [webLoading, setWebLoading] = useState(false),
+    [savingIds, setSavingIds] = useState<Set<string>>(new Set()),
+    [saveProgress, setSaveProgress] = useState(""),
+    [fitFilter, setFitFilter] = useState(""),
+    [sortProspects, setSortProspects] = useState("priority"),
+    [elapsed, setElapsed] = useState(0),
+    [searchStats, setSearchStats] = useState<{
+      raw: number;
+      outsideRegion: number;
+      merged: number;
+      cacheHit: boolean;
+    } | null>(null);
+  const [emailScan, setEmailScan] = useState(false),
+    [emailScanProgress, setEmailScanProgress] = useState("");
+  const emailScanController = useRef<AbortController | null>(null);
+  const searchController = useRef<AbortController | null>(null),
+    drawerRef = useRef<HTMLElement | null>(null),
+    openVersion = useRef(0);
+  useEffect(() => {
+    if (!loading) return;
+    const timer = setInterval(() => setElapsed((value) => value + 1), 1000);
+    return () => clearInterval(timer);
+  }, [loading]);
+  useEffect(
+    () => () => {
+      searchController.current?.abort();
+      emailScanController.current?.abort();
+    },
+    [],
+  );
+  const selectedId = selected?.id;
+  useEffect(() => {
+    if (!selectedId) return;
+    const previous = document.activeElement as HTMLElement | null;
+    drawerRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        openVersion.current++;
+        setSelected(null);
+      }
+      if (event.key !== "Tab") return;
+      const elements = drawerRef.current?.querySelectorAll<HTMLElement>(
+        "button:not(:disabled),input,textarea,select,a[href]",
+      );
+      if (!elements?.length) return;
+      const first = elements[0],
+        last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", key);
+    return () => {
+      document.removeEventListener("keydown", key);
+      previous?.focus();
+    };
+  }, [selectedId]);
+  async function webEnrich() {
+    if (!selected) return;
+    const version = openVersion.current;
+    setWebLoading(true);
+    setNotice("");
+    try {
+      const r = await fetch("/api/admin/radar/website", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prospectId: selected.id, refresh: true }),
+        }),
+        d = await r.json();
+      if (!r.ok || !d.prospect)
+        throw new Error(d.error || "No se pudo consultar la web.");
+      if (version === openVersion.current) setSelected(d.prospect);
+      setSaved((values) =>
+        values.map((p) => (p.id === d.prospect.id ? d.prospect : p)),
+      );
+      setNotice(
+        d.cached
+          ? "Se conserva la consulta web realizada durante las últimas 24 horas."
+          : "Datos publicados de la web guardados con fuente y fecha.",
+      );
+    } catch (error) {
+      setNotice(
+        error instanceof Error ? error.message : "No se pudo consultar la web.",
+      );
+    } finally {
+      setWebLoading(false);
+    }
   }
-  setNotice(`Consulta web ${controller.signal.aborted?"detenida":"finalizada"}: ${completed}/${candidates.length} webs, ${found} empresas con correo incorporado al CRM, ${failed} errores. Las bajas se conservan.`);
-  }catch(error){setNotice(controller.signal.aborted?"Consulta detenida. Los datos ya obtenidos se conservan.":error instanceof Error?error.message:"No se pudo consultar las webs.")}
-  finally{setEmailScan(false);setEmailScanProgress("");emailScanController.current=null}
- }
- async function search(e:React.FormEvent<HTMLFormElement>){e.preventDefault();if(!region)return;const submitter=(e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement|null;const onlyEmail=submitter?.value==="email-only";searchController.current?.abort();const controller=new AbortController();searchController.current=controller;setElapsed(0);setLoading(true);setNotice("");setRows([]);setSearchStats(null);setCriteria("");try{const response=await fetch("/api/admin/radar/search",{method:"POST",headers:{"Content-Type":"application/json"},signal:controller.signal,body:JSON.stringify({region,commune:commune.trim(),industry,otherIndustry:industry==="other"?otherIndustry.trim():"",emailOnly:onlyEmail})});const data=await response.json() as {companies?:Signed[];criteria?:string;coverageWarning?:string|null;stats?:{raw:number;outsideRegion:number;merged:number;cacheHit:boolean};error?:string};if(!response.ok)throw new Error(data.error||"No se pudo buscar.");setRows(data.companies??[]);setSearchStats(data.stats??null);const industryName=industry==="other"?otherIndustry.trim():industries.find(([value])=>value===industry)?.[1]||industry;setCriteria(`${region}${commune.trim()?` · ${commune.trim()}`:""} · ${industryName}${onlyEmail?" · solo con email publicado":""}`);if(data.coverageWarning)setNotice(data.coverageWarning);else if(!data.companies?.length)setNotice("La fuente no devolvió empresas con email publicado para estos criterios. Prueba buscar todas y completar datos desde sus webs.");}catch(e){setNotice(controller.signal.aborted?"Búsqueda cancelada.":e instanceof Error?e.message:"No se pudo completar la búsqueda.")}finally{setLoading(false)}}
- async function save(item:Signed){if(savingIds.has(item.company.providerId))return;setSavingIds(values=>new Set([...values,item.company.providerId]));setNotice("");try{const response=await fetch("/api/admin/radar/prospects",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(item)});const data=await response.json() as {prospect?:Prospect;error?:string};if(!response.ok)throw new Error(data.error||"No se pudo guardar.");if(data.prospect)setSaved(s=>[data.prospect!,...s.filter(p=>p.id!==data.prospect!.id)]);setSavedResultIds(s=>s.includes(item.company.providerId)?s:[...s,item.company.providerId]);setNotice("Empresa guardada · correos disponibles incorporados al CRM en el CRM.");}catch(e){setNotice(e instanceof Error?e.message:"No se pudo guardar.")}finally{setSavingIds(values=>{const next=new Set(values);next.delete(item.company.providerId);return next})}}
- async function saveAll(){if(!rows.length)return;setSavingAll(true);setSaveProgress("");setNotice("");try{const pending=rows.filter(item=>!savedIds.has(item.company.providerId));let created=0,duplicates=0,failed=0;const successfulIds:string[]=[],successfulProspectIds:string[]=[];let firstFailure="";for(let offset=0;offset<pending.length;offset+=100){const batch=pending.slice(offset,offset+100);setSaveProgress(`${offset} de ${pending.length}`);const response=await fetch("/api/admin/radar/prospects",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:batch})});const data=await response.json() as {prospects?:Prospect[];savedProviderIds?:string[];created?:number;duplicates?:number;failed?:number;failures?:Array<{providerId:string;error:string}>;error?:string};if(!response.ok)throw new Error(data.error||"No se pudieron guardar los resultados.");created+=data.created??0;duplicates+=data.duplicates??0;failed+=data.failed??0;if(!firstFailure)firstFailure=data.failures?.[0]?.error||"";successfulIds.push(...(data.savedProviderIds||[]));setSavedResultIds(values=>[...new Set([...values,...(data.savedProviderIds||[])])]);setSaveProgress(`${Math.min(offset+100,pending.length)} de ${pending.length}`);successfulProspectIds.push(...(data.prospects||[]).map(p=>p.id));if(data.prospects?.length)setSaved(s=>[...data.prospects!,...s.filter(p=>!data.prospects!.some(n=>n.id===p.id))]);}const verifyResponse=await fetch("/api/admin/radar/prospects",{cache:"no-store"});const verifyData=await verifyResponse.json() as {prospects?:Prospect[];error?:string};if(!verifyResponse.ok)throw new Error(verifyData.error||"Se guardaron los resultados, pero no se pudo verificar el listado de Neon.");const persisted=verifyData.prospects||[];setSaved(persisted);const persistedIds=new Set(persisted.map(p=>p.id));const missing=successfulProspectIds.filter(id=>!persistedIds.has(id)).length;if(missing)throw new Error(`Neon confirmó ${successfulProspectIds.length-missing} resultados; ${missing} no aparecen en el listado al verificar. Intenta guardarlos de nuevo.`);if(successfulIds.length)setSavedResultIds(s=>[...new Set([...s,...successfulIds])]);setNotice(failed?`Guardado parcial verificado en Neon: ${created} nuevas, ${duplicates} ya existían, ${failed} con error. ${firstFailure?`Detalle: ${firstFailure}`:""}`:`Guardado verificado en Neon: ${created} nuevas, ${duplicates} ya existían.`);}catch(e){setNotice(e instanceof Error?e.message:"No se pudieron guardar los resultados.")}finally{setSavingAll(false);setSaveProgress("")}}
- async function changeStage(id:string,stage:ProspectStage){try{const response=await fetch(`/api/admin/radar/prospects/${encodeURIComponent(id)}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({stage})}),data=await response.json();if(!response.ok)throw new Error(data.error||"No se pudo actualizar el estado comercial.");setSaved(values=>values.map(p=>p.id===id?{...p,stage}:p));setSelected(value=>value?.id===id?{...value,stage}:value)}catch(error){setNotice(error instanceof Error?error.message:"No se pudo actualizar el estado comercial.")}}
- async function openProspect(p:Prospect){const version=++openVersion.current;setNotice("");setActivityNote("");setSelected(p);setRutInput(p.rut||"");setAnalysis(null);setActivities([]);try{const r=await fetch(`/api/admin/radar/prospects/${encodeURIComponent(p.id)}`),d=await r.json() as {activities?:Activity[];error?:string};if(!r.ok)throw new Error(d.error||"No se pudo cargar el historial.");if(version===openVersion.current)setActivities(d.activities??[])}catch{setNotice("No se pudo cargar el historial.")}}
- async function addActivity(e:React.FormEvent){e.preventDefault();if(!selected||!activityNote.trim())return;const version=openVersion.current;try{const r=await fetch("/api/admin/radar/prospects",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"activity",prospectId:selected.id,kind:activityKind,note:activityNote.trim()})}),d=await r.json();if(!r.ok)throw new Error(d.error||"No se pudo guardar la actividad.");if(version===openVersion.current){if(d.activity)setActivities(values=>[d.activity,...values]);setActivityNote("");setNotice("Actividad registrada.")}}catch(error){setNotice(error instanceof Error?error.message:"No se pudo guardar la actividad.")}}
- async function enrichRut(e:React.FormEvent){e.preventDefault();if(!selected)return;setNotice("");try{const r=await fetch("/api/admin/radar/enrich",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prospectId:selected.id,rut:rutInput})});const d=await r.json() as {prospect?:Prospect;error?:string};if(!r.ok||!d.prospect)throw new Error(d.error||"No se pudo consultar SRE/SII.");setSelected(d.prospect);setSaved(s=>s.map(p=>p.id===d.prospect!.id?d.prospect!:p));setRutInput(d.prospect.rut||"");setNotice("Datos oficiales del SII actualizados.");}catch(e){setNotice(e instanceof Error?e.message:"No se pudo enriquecer.");}}
- async function importCsvFile(e:React.ChangeEvent<HTMLInputElement>){const file=e.target.files?.[0];if(!file)return;setImporting(true);setNotice("");try{const csv=await file.text();const r=await fetch("/api/admin/radar/import",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({csv})});const d=await r.json() as {prospects?:Prospect[];error?:string;count?:number};if(!r.ok)throw new Error(d.error||"No se pudo importar.");setSaved(s=>[...(d.prospects||[]),...s.filter(p=>!(d.prospects||[]).some(n=>n.id===p.id))]);setNotice(`Importados ${d.count||0} registros. Los datos manuales quedan marcados sin verificar.`)}catch(error){setNotice(error instanceof Error?error.message:"No se pudo leer el archivo.")}finally{setImporting(false);e.target.value=""}} async function analyzeProspect(){if(!selected)return;const version=openVersion.current;setAnalyzing(true);setAnalysis(null);setNotice("");try{const r=await fetch("/api/admin/radar/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prospectId:selected.id})});const d=await r.json() as {analysis?:Analysis;error?:string};if(!r.ok||!d.analysis)throw new Error(d.error||"No se pudo analizar.");if(version===openVersion.current)setAnalysis(d.analysis)}catch(e){setNotice(e instanceof Error?e.message:"No se pudo analizar.")}finally{setAnalyzing(false)}} function exportCsv(){const head=["empresa","dirección","región","sitio_web","teléfono","correos","trabajadores_aprox","fuente_trabajadores","modalidad","prioridad_orientativa","fuente","consultado","estado","observaciones"];const esc=(v:unknown)=>`"${String(v??"").replace(/^[=+@-]/,"'$&").replaceAll('"','""')}"`;const lines=[head,...filtered.map(p=>[p.name,p.address,p.region,p.website,p.phone,p.emails?.join("; "),p.employeeEstimate,p.employeeEstimateSource,fitLabel(getCommercialFit(p.employeeEstimate)),assessCompany(p).score,p.source,p.fetchedAt,stageNames[p.stage],p.notes])].map(r=>r.map(esc).join(","));const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="radar-prospectos.csv";a.click();URL.revokeObjectURL(url)}
- const noticeIsError=/invalid|error|no se |no pudo|sin configurar|falta |expiró|no tiene|restringe|límite|no es pública|no existe|no encontré/i.test(notice);
- const savedIds=new Set([...saved.map(p=>p.providerId),...savedResultIds]);
- return <div className={styles.shell}>
-  <aside className={styles.sidebar}><div className={styles.brand}><span className={styles.mark}>◉</span><span><strong>Radar Comercial B2B</strong><small>Óptica &amp; Cristal</small></span></div><nav className={styles.nav} aria-label="Secciones comerciales"><button className={tab==="resumen"?styles.navActive:styles.navItem} onClick={()=>setTab("resumen")}>⌂ <span>Resumen</span></button><button className={tab==="buscar"?styles.navActive:styles.navItem} onClick={()=>setTab("buscar")}>⌕ <span>Búsqueda inteligente</span></button><button className={tab==="prospectos"?styles.navActive:styles.navItem} onClick={()=>setTab("prospectos")}>♧ <span>Prospectos</span></button><button className={tab==="oportunidades"?styles.navActive:styles.navItem} onClick={()=>{setCrmSection("oportunidades");setTab("crm")}}>▣ <span>Oportunidades</span></button><button className={tab==="actividad"?styles.navActive:styles.navItem} onClick={()=>setTab("actividad")}>◷ <span>Actividad</span></button><button className={tab==="crm"?styles.navActive:styles.navItem} onClick={()=>{setCrmSection("gestiones");setTab("crm")}}>▣ <span>CRM y campañas</span></button></nav><div className={styles.sideFoot}>Impulsando conexiones<br/>que hacen crecer Chile.</div></aside>
-  <div className={styles.content}><header className={styles.topbar}><Link href="/admin">Panel administrativo</Link><span>Radar Comercial B2B</span><form action={logoutAction}><button type="submit">Cerrar sesión</button></form></header>
-   <main className={styles.main}>
-    <div className={styles.titleRow}><div><h1>{{buscar:"Búsqueda de empresas",prospectos:"Prospectos",resumen:"Resumen comercial",oportunidades:"Oportunidades",actividad:"Actividad",crm:"CRM y campañas"}[tab]}</h1><p>{tab==="buscar"?"Encuentra empresas reales y completa sus canales comerciales.":"Prioriza contactos y oportunidades para convenios y jornadas ópticas."}</p></div>{tab==="prospectos"&&<div className={styles.importExport}><label className={styles.outline}>{importing?"Importando…":"Importar CSV"}<input type="file" accept=".csv,text/csv" disabled={importing} onChange={e=>void importCsvFile(e)}/></label><button className={styles.outline} onClick={exportCsv} disabled={!filtered.length}>Exportar CSV</button></div>}</div>
-    {dbError&&<p className={styles.alert}>{dbError}</p>}{notice&&<p className={noticeIsError?styles.alert:styles.notice} role={noticeIsError?"alert":"status"}>{notice}</p>}
-    <section className={styles.providers} aria-label="Estado de proveedores"><div><b>Fuente de empresas</b><span className={styles.good}>OpenStreetMap · Nominatim + Overpass</span></div><div><b>Base de datos</b><span className={providers.neon?styles.good:styles.missing}>{providers.neon?"Neon · conectado":"Neon · sin configurar"}</span></div><div><b>Análisis comercial IA</b><span className={providers.ai?styles.good:styles.optional}>{providers.ai?"Disponible para fichas":"IA no conectada"}</span></div></section>
-    {tab==="crm"?<RadarCrm initialView={crmSection} key={crmSection}/>:tab==="resumen"?<RadarSummary prospects={saved} onOpen={p=>void openProspect(p)}/>:tab==="actividad"?<RadarActivityView/>:tab==="buscar"?<>
-      <form className={styles.searchForm} autoComplete="off" onSubmit={search}><label>Define los criterios de búsqueda</label><div className={styles.filterLine}><label htmlFor="radar-region">Región<select id="radar-region" value={region} onChange={e=>{setRegion(e.target.value);setCommune("")}} required><option value="">Selecciona una región</option>{regions.map(item=><option key={item} value={item}>{item}</option>)}</select></label><label htmlFor="radar-industry">Rubro<select id="radar-industry" value={industry} onChange={e=>setIndustry(e.target.value)}>{industries.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label htmlFor="radar-commune">Comuna (opcional)<input id="radar-commune" value={commune} onChange={e=>setCommune(e.target.value)} maxLength={80} placeholder="Ej.: Quilicura"/></label></div>{industry==="other"&&<label htmlFor="radar-other-industry">Especifica el rubro<input id="radar-other-industry" value={otherIndustry} onChange={e=>setOtherIndustry(e.target.value)} maxLength={80} placeholder="Ej.: energía solar" required/></label>}<div className={styles.searchLine}><button type="submit" value="all" disabled={loading||!region||(industry==="other"&&!otherIndustry.trim())}>{loading?"Buscando…":"Buscar empresas"}</button><button type="submit" value="email-only" className={styles.outline} disabled={loading||!region||(industry==="other"&&!otherIndustry.trim())}>{loading?"Buscando…":"Buscar solo empresas con email"}</button>{loading&&<button type="button" className={styles.outline} onClick={()=>searchController.current?.abort()}>Cancelar</button>}</div><small className={styles.criteria}>La opción «solo con email» filtra correos publicados en OpenStreetMap; las empresas que solo tienen email en su web no aparecerán en ese filtro. No inventamos datos. Para ampliar, busca todas las empresas y usa luego el buscador de emails en sus webs.</small><small className={styles.criteria}>No filtramos por trabajadores: guardamos empresas de cualquier tamaño. La cifra aproximada se conserva con su fuente; sin estimación queda “Por clasificar”. Con 1 a 4 se marca convenio de baja escala; con 5 a 20, convenio; con más de 20, ambas modalidades.</small></form>
-      {criteria&&<p className={styles.criteria}>Filtros usados: {criteria}</p>}{searchStats&&<p className={styles.muted}>Fuente: {searchStats.raw} registros · {searchStats.outsideRegion} fuera de zona · {searchStats.merged} coincidencias consolidadas · {searchStats.cacheHit?"consulta en caché":"consulta nueva"}.</p>}
-      <div className={styles.resultsHead}><div><h2>Empresas encontradas</h2><p>{rows.length?rows.length+" resultados reales":"Los resultados aparecerán con fuente y fecha de consulta."}</p></div>{rows.length>0&&<button className={styles.saveButton} disabled={!providers.neon||savingAll||rows.every(r=>savedIds.has(r.company.providerId))} onClick={()=>void saveAll()}>{savingAll?`Guardando ${saveProgress}…`:`Guardar todos (${rows.filter(r=>!savedIds.has(r.company.providerId)).length})`}</button>}<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a></div>
-      {rows.length>0?<RadarResults rows={rows} savedIds={savedIds} savingIds={savingIds} enabled={providers.neon&&!savingAll} onSave={item=>void save(item)}/>:<div className={styles.empty} aria-busy={loading}><span className={`${styles.radarIcon} ${loading?styles.scanning:""}`} aria-hidden="true">◎</span><h2>{loading?"Buscando lugares etiquetados en OpenStreetMap…":notice?"No hay resultados para esta búsqueda":"Busca empresas reales en Chile"}</h2><p>{loading?`Consultando la fuente · ${elapsed} s. Los resultados parciales se conservarán.`:notice||"Se consultará la cobertura pública disponible en el rubro y la ubicación indicados."}</p>{!providers.neon&&<small>Configura Neon para guardar prospectos en forma persistente.</small>}</div>}
-    </>:<><div className={styles.crmToolbar}><input value={filter} onChange={e=>setFilter(e.target.value)} placeholder="Buscar prospecto por empresa o ubicación" aria-label="Filtrar prospectos"/><label>Modalidad<select aria-label="Filtrar modalidad" value={fitFilter} onChange={e=>setFitFilter(e.target.value)}><option value="">Todas</option><option value="ambas">Convenio y jornada</option><option value="convenio">Convenio</option><option value="convenio_bajo">Baja escala</option><option value="por_clasificar">Por clasificar</option></select></label><label>Ordenar<select aria-label="Ordenar prospectos" value={sortProspects} onChange={e=>setSortProspects(e.target.value)}><option value="priority">Prioridad · correo primero</option><option value="name">Nombre</option></select></label><button className={styles.outline} disabled={emailScan||!filtered.some(p=>p.website&&!p.emails?.length)} onClick={()=>void scanEmails()}>{emailScan?`Buscando correos ${emailScanProgress}…`:"Buscar correos en webs"}</button>{emailScan&&<button className={styles.outline} onClick={()=>emailScanController.current?.abort()}>Detener</button>}<span>{filtered.length} prospectos · {filtered.filter(p=>p.emails?.length).length} con correo</span></div><div className={styles.board}>{stages.map(stage=><section className={styles.column} key={stage}><header><h2>{stageNames[stage]}</h2><span>{filtered.filter(p=>p.stage===stage).length}</span></header>{filtered.filter(p=>p.stage===stage).length>100&&<p className={styles.muted}>Mostrando los primeros 100. Filtra para encontrar otros registros; el CSV incluye todos los seleccionados.</p>}{filtered.filter(p=>p.stage===stage).slice(0,100).map(p=><article className={styles.prospectCard} key={p.id}><button className={styles.cardTitle} onClick={()=>void openProspect(p)}>{p.name}</button><p>{p.address||"Dirección no publicada"}</p><small>Prioridad {assessCompany(p).score}/100 · {p.emails?.length?"Correo publicado":p.phone?"Teléfono publicado":"Contacto por completar"}</small><small>{p.employeeEstimate?`≈ ${p.employeeEstimate.toLocaleString("es-CL")} trabajadores · `:"Trabajadores: sin dato · "}{fitLabel(p.commercialFit)} · {p.source} · {dateLabel(p.fetchedAt)}</small><select aria-label={`Estado de ${p.name}`} value={p.stage} onChange={e=>void changeStage(p.id,e.target.value as ProspectStage)}>{stages.map(s=><option key={s} value={s}>{stageNames[s]}</option>)}</select></article>)}</section>)}</div>{!filtered.length&&<div className={styles.empty}><h2>Aún no hay prospectos guardados</h2><p>Busca empresas y guárdalas para organizar su seguimiento.</p><button className={styles.primary} onClick={()=>setTab("buscar")}>Ir a búsqueda</button></div>}</>}
-    <footer className={styles.attribution}>Nominatim ubica la región; Overpass busca elementos etiquetados en OpenStreetMap (licencia ODbL). No se filtra por tamaño. La fuente solo publica dotación en algunos registros, que se conservan como aproximados con su origen; los demás quedan por clasificar. La cobertura pública puede ser parcial o agotar el tiempo de espera. <a href="https://operations.osmfoundation.org/policies/nominatim/" target="_blank" rel="noreferrer">Política de Nominatim</a> · <a href="https://wiki.openstreetmap.org/wiki/Overpass_API" target="_blank" rel="noreferrer">API Overpass</a></footer>
-   </main>
-  </div>
-  {selected&&<div className={styles.overlay} role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget){openVersion.current++;setSelected(null)}}}><section className={styles.drawer} ref={drawerRef} role="dialog" aria-modal="true" aria-labelledby="drawer-title"><button className={styles.close} onClick={()=>{openVersion.current++;setSelected(null)}} aria-label="Cerrar ficha">×</button><p className={styles.kicker}>Ficha de empresa · {selected.source}</p><h2 id="drawer-title">{selected.name}</h2>{notice&&<p className={noticeIsError?styles.alert:styles.notice} role={noticeIsError?"alert":"status"}>{notice}</p>}<p className={styles.drawerMeta}>{selected.address||"Dirección no publicada"}</p><dl className={styles.details}><div><dt>Teléfono publicado</dt><dd>{selected.phone||"No disponible"}</dd></div><div><dt>Sitio web</dt><dd>{selected.website?<a href={selected.website} target="_blank" rel="noreferrer">{selected.website}</a>:"No disponible"}</dd></div><div><dt>Consultado</dt><dd>{dateLabel(selected.fetchedAt)}</dd></div><div><dt>Potencial comercial</dt><dd>{fitLabel(selected.commercialFit)}</dd></div><div><dt>RUT</dt><dd>{selected.rut||"No consultado"}</dd></div><div><dt>Razón social</dt><dd>{selected.legalName||"No disponible"}</dd></div><div><dt>Giro</dt><dd>{selected.economicDescription||"No disponible"}</dd></div><div><dt>Actividades</dt><dd>{selected.economicActivities?.join(", ")||"No disponibles"}</dd></div></dl><form className={styles.enrichForm} onSubmit={e=>void enrichRut(e)}><label>Consultar RUT en SRE/SII<input value={rutInput} onChange={e=>setRutInput(e.target.value)} placeholder="76.123.456-7" maxLength={14} required/></label><button className={styles.outline}>Consultar datos oficiales</button><small>El servicio entrega solo información publicada por el SII. Verifica que la razón social corresponda a esta empresa.</small>{selected.officialSource&&<small>Fuente: {selected.officialSource} · {dateLabel(selected.officialFetchedAt||selected.fetchedAt)}</small>}</form><section className={styles.analysis}><h3>Prioridad comercial: {assessCompany(selected).score}/100</h3><small>{assessCompany(selected).label}</small>{assessCompany(selected).facts.map(fact=><p key={fact}>{fact}</p>)}<p><b>Próxima acción:</b> {assessCompany(selected).nextAction}</p><p><b>Por completar:</b> {assessCompany(selected).missing.join(" · ")||"Datos básicos disponibles"}</p></section><section className={styles.analysis}><h3>Datos publicados en la web</h3><p>Consulta hasta tres páginas corporativas accesibles. Conserva solo contactos comerciales y cifras explícitas con su fuente.</p><button className={styles.outline} disabled={!selected.website||webLoading} onClick={()=>void webEnrich()}>{webLoading?"Consultando web…":"Completar desde web"}</button>{selected.webCheckedAt&&<p>{selected.webStatus} · {dateLabel(selected.webCheckedAt)}</p>}<p><b>Trabajadores aprox.:</b> {selected.employeeEstimate?`≈ ${selected.employeeEstimate.toLocaleString("es-CL")}`:"Sin dato publicado"}</p>{selected.emails?.map(email=><p key={email}>{email}</p>)}{selected.socialLinks?.map(link=><p key={link}><a href={link} target="_blank" rel="noreferrer">Red corporativa ↗</a></p>)}{selected.evidence?.map((e,i)=><p key={`${e.field}-${i}`}><b>{e.field}:</b> {e.value} · <a href={e.url} target="_blank" rel="noreferrer">Fuente</a> · {dateLabel(e.fetchedAt)}{e.excerpt&&<small className={styles.muted}> · «{e.excerpt}» (declarado por la empresa)</small>}</p>)}</section><label className={styles.noteLabel}>Observación comercial<textarea value={selected.notes} maxLength={5000} onChange={e=>setSelected({...selected,notes:e.target.value})}/></label><button className={styles.primary} onClick={()=>void saveNotes()}>Guardar observación</button><section className={styles.analysis}><div className={styles.analysisHead}><div><h3>Análisis comercial</h3><p>Análisis opcional de IA basado en hechos de la ficha. Requiere proveedor configurado.</p></div><button className={styles.outline} onClick={()=>void analyzeProspect()} disabled={analyzing||!providers.ai}>{analyzing?"Analizando…":"Analizar prospecto"}</button></div>{analysis&&<><span className={styles.score}>{analysis.score===null?"—":analysis.score}<small>/100 · estimación</small></span>{analysis.reasons.map((reason,i)=><p className={styles.reason} key={i}>{reason}</p>)}{analysis.strategy&&<p><b>Estrategia sugerida:</b> {analysis.strategy}</p>}{analysis.nextAction&&<p><b>Próxima acción:</b> {analysis.nextAction}</p>}{analysis.message&&<label className={styles.noteLabel}>Borrador de mensaje<textarea readOnly value={analysis.message}/></label>}<small className={styles.muted}>Solo propuesta. Verifica los hechos antes de contactar.</small></>}</section><h3>Registrar actividad</h3><form className={styles.activityForm} onSubmit={e=>void addActivity(e)}><select value={activityKind} onChange={e=>setActivityKind(e.target.value as Activity["kind"])} aria-label="Tipo de actividad"><option value="llamada">Llamada</option><option value="correo">Correo</option><option value="reunion">Reunión</option><option value="nota">Nota</option></select><textarea value={activityNote} onChange={e=>setActivityNote(e.target.value)} maxLength={2000} placeholder="Detalle de la gestión" required/><button className={styles.outline}>Registrar</button></form><h3>Historial</h3><ul className={styles.activityList}>{activities.map(a=><li key={a.id}><b>{a.kind}</b><time>{dateLabel(a.createdAt)}</time><p>{a.note}</p></li>)}{!activities.length&&<li className={styles.muted}>No hay actividades registradas.</li>}</ul></section></div>}
- </div>
+  async function saveNotes() {
+    if (!selected) return;
+    try {
+      const r = await fetch(
+          `/api/admin/radar/prospects/${encodeURIComponent(selected.id)}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ notes: selected.notes }),
+          },
+        ),
+        d = await r.json();
+      if (!r.ok)
+        throw new Error(d.error || "No se pudo guardar la observación.");
+      setSaved((values) =>
+        values.map((p) => (p.id === selected.id ? selected : p)),
+      );
+      setNotice("Observación guardada.");
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar la observación.",
+      );
+    }
+  }
+  const filtered = useMemo(() => {
+    const q = filter.toLocaleLowerCase("es-CL");
+    return saved
+      .filter(
+        (p) =>
+          (tab !== "oportunidades" || p.stage === "oportunidad") &&
+          (!fitFilter || getCommercialFit(p.employeeEstimate) === fitFilter) &&
+          [p.name, p.address, p.website, p.phone, ...(p.emails || [])]
+            .filter(Boolean)
+            .join(" ")
+            .toLocaleLowerCase("es-CL")
+            .includes(q),
+      )
+      .sort((a, b) =>
+        sortProspects === "name"
+          ? a.name.localeCompare(b.name, "es")
+          : Number(Boolean(b.emails?.length)) -
+              Number(Boolean(a.emails?.length)) ||
+            assessCompany(b).score - assessCompany(a).score,
+      );
+  }, [saved, filter, fitFilter, sortProspects, tab]);
+  async function scanEmails() {
+    const candidates = filtered.filter((p) => p.website && !p.emails?.length);
+    if (emailScanController.current) return;
+    const controller = new AbortController();
+    emailScanController.current = controller;
+    setEmailScan(true);
+    setNotice("");
+    let completed = 0,
+      found = 0,
+      failed = 0;
+    try {
+      for (const prospect of candidates) {
+        if (controller.signal.aborted) break;
+        setEmailScanProgress(`${completed + 1}/${candidates.length}`);
+        const response = await fetch("/api/admin/radar/website", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({ prospectId: prospect.id }),
+        });
+        const data = await response.json();
+        if (response.status === 429 || response.status === 401)
+          throw new Error(
+            `${data.error || "Consulta detenida por el límite del servicio."} Se conservan ${completed} webs consultadas y ${found} empresas con correo.`,
+          );
+        completed++;
+        if (response.ok && data.prospect) {
+          if (data.prospect.emails?.length) found++;
+          setSaved((values) =>
+            values.map((p) => (p.id === data.prospect.id ? data.prospect : p)),
+          );
+        } else failed++;
+        if (completed < candidates.length)
+          await new Promise<void>((resolve) => {
+            const finish = () => {
+              clearTimeout(timer);
+              controller.signal.removeEventListener("abort", finish);
+              resolve();
+            };
+            const timer = setTimeout(finish, 3200);
+            controller.signal.addEventListener("abort", finish, { once: true });
+          });
+      }
+      setNotice(
+        `Consulta web ${controller.signal.aborted ? "detenida" : "finalizada"}: ${completed}/${candidates.length} webs, ${found} empresas con correo incorporado al CRM, ${failed} errores. Las bajas se conservan.`,
+      );
+    } catch (error) {
+      setNotice(
+        controller.signal.aborted
+          ? "Consulta detenida. Los datos ya obtenidos se conservan."
+          : error instanceof Error
+            ? error.message
+            : "No se pudo consultar las webs.",
+      );
+    } finally {
+      setEmailScan(false);
+      setEmailScanProgress("");
+      emailScanController.current = null;
+    }
+  }
+  async function search(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!region) return;
+    const onlyEmail =
+      ((e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null)
+        ?.value === "email-only";
+    searchController.current?.abort();
+    const controller = new AbortController();
+    searchController.current = controller;
+    setElapsed(0);
+    setLoading(true);
+    setNotice("");
+    setRows([]);
+    setSearchStats(null);
+    setCriteria("");
+    try {
+      const response = await fetch("/api/admin/radar/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          region,
+          commune: commune.trim(),
+          industry,
+          otherIndustry: industry === "other" ? otherIndustry.trim() : "",
+          emailOnly: onlyEmail,
+          includeWebCandidates: onlyEmail,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "No se pudo buscar.");
+      const matches: Signed[] = data.companies || [];
+      setRows(matches);
+      setSearchStats(data.stats || null);
+      const industryName =
+        industry === "other"
+          ? otherIndustry.trim()
+          : industries.find(([value]) => value === industry)?.[1] || industry;
+      setCriteria(
+        `${region}${commune.trim() ? ` · ${commune.trim()}` : ""} · ${industryName}${onlyEmail ? " · email publicado en mapas o web" : ""}`,
+      );
+      const candidates: Signed[] = data.webCandidates || [];
+      let failed = 0,
+        visited = 0;
+      for (const candidate of candidates) {
+        if (controller.signal.aborted) break;
+        setNotice(
+          `Buscando correos publicados en webs: ${visited + 1}/${candidates.length}. Puedes detener y guardar lo encontrado.`,
+        );
+        const started = Date.now();
+        try {
+          const result = await fetch("/api/admin/radar/discovery", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify(candidate),
+          });
+          const found = await result.json();
+          if (result.status === 401 || result.status === 429)
+            throw new Error(found.error || "Consulta detenida.");
+          if (result.ok && found.company?.emails?.length) {
+            matches.push(found);
+            setRows([...matches]);
+          } else failed++;
+        } catch (error) {
+          if (controller.signal.aborted) throw error;
+          failed++;
+          if (
+            error instanceof Error &&
+            /detenida|autorizado|minuto/.test(error.message)
+          )
+            throw error;
+        }
+        visited++;
+        const delay = Math.max(0, 3200 - (Date.now() - started));
+        if (delay)
+          await new Promise<void>((resolve) => {
+            const finish = () => {
+              clearTimeout(timer);
+              controller.signal.removeEventListener("abort", finish);
+              resolve();
+            };
+            const timer = setTimeout(finish, delay);
+            controller.signal.addEventListener("abort", finish, { once: true });
+          });
+      }
+      setNotice(
+        onlyEmail
+          ? `${matches.length} empresas con email publicado. ${visited} webs consultadas; ${failed} sin correo accesible o con error.${data.partial ? " Cobertura parcial de mapas." : ""}`
+          : data.coverageWarning ||
+              (!matches.length
+                ? "La fuente no devolvió empresas para estos criterios."
+                : ""),
+      );
+    } catch (error) {
+      setNotice(
+        controller.signal.aborted
+          ? "Consulta detenida. Los resultados encontrados se conservan."
+          : error instanceof Error
+            ? error.message
+            : "No se pudo completar la búsqueda.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function save(item: Signed) {
+    if (savingIds.has(item.company.providerId)) return;
+    setSavingIds((values) => new Set([...values, item.company.providerId]));
+    setNotice("");
+    try {
+      const response = await fetch("/api/admin/radar/prospects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      });
+      const data = (await response.json()) as {
+        prospect?: Prospect;
+        error?: string;
+      };
+      if (!response.ok) throw new Error(data.error || "No se pudo guardar.");
+      if (data.prospect)
+        setSaved((s) => [
+          data.prospect!,
+          ...s.filter((p) => p.id !== data.prospect!.id),
+        ]);
+      setSavedResultIds((s) =>
+        s.includes(item.company.providerId)
+          ? s
+          : [...s, item.company.providerId],
+      );
+      setNotice(
+        "Empresa guardada · correos disponibles incorporados al CRM en el CRM.",
+      );
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "No se pudo guardar.");
+    } finally {
+      setSavingIds((values) => {
+        const next = new Set(values);
+        next.delete(item.company.providerId);
+        return next;
+      });
+    }
+  }
+  async function saveAll() {
+    if (!rows.length) return;
+    setSavingAll(true);
+    setSaveProgress("");
+    setNotice("");
+    try {
+      const pending = rows.filter(
+        (item) => !savedIds.has(item.company.providerId),
+      );
+      let created = 0,
+        duplicates = 0,
+        failed = 0;
+      const successfulIds: string[] = [],
+        successfulProspectIds: string[] = [];
+      let firstFailure = "";
+      for (let offset = 0; offset < pending.length; offset += 100) {
+        const batch = pending.slice(offset, offset + 100);
+        setSaveProgress(`${offset} de ${pending.length}`);
+        const response = await fetch("/api/admin/radar/prospects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: batch }),
+        });
+        const data = (await response.json()) as {
+          prospects?: Prospect[];
+          savedProviderIds?: string[];
+          created?: number;
+          duplicates?: number;
+          failed?: number;
+          failures?: Array<{ providerId: string; error: string }>;
+          error?: string;
+        };
+        if (!response.ok)
+          throw new Error(
+            data.error || "No se pudieron guardar los resultados.",
+          );
+        created += data.created ?? 0;
+        duplicates += data.duplicates ?? 0;
+        failed += data.failed ?? 0;
+        if (!firstFailure) firstFailure = data.failures?.[0]?.error || "";
+        successfulIds.push(...(data.savedProviderIds || []));
+        setSavedResultIds((values) => [
+          ...new Set([...values, ...(data.savedProviderIds || [])]),
+        ]);
+        setSaveProgress(
+          `${Math.min(offset + 100, pending.length)} de ${pending.length}`,
+        );
+        successfulProspectIds.push(...(data.prospects || []).map((p) => p.id));
+        if (data.prospects?.length)
+          setSaved((s) => [
+            ...data.prospects!,
+            ...s.filter((p) => !data.prospects!.some((n) => n.id === p.id)),
+          ]);
+      }
+      const verifyResponse = await fetch("/api/admin/radar/prospects", {
+        cache: "no-store",
+      });
+      const verifyData = (await verifyResponse.json()) as {
+        prospects?: Prospect[];
+        error?: string;
+      };
+      if (!verifyResponse.ok)
+        throw new Error(
+          verifyData.error ||
+            "Se guardaron los resultados, pero no se pudo verificar el listado de Neon.",
+        );
+      const persisted = verifyData.prospects || [];
+      setSaved(persisted);
+      const persistedIds = new Set(persisted.map((p) => p.id));
+      const missing = successfulProspectIds.filter(
+        (id) => !persistedIds.has(id),
+      ).length;
+      if (missing)
+        throw new Error(
+          `Neon confirmó ${successfulProspectIds.length - missing} resultados; ${missing} no aparecen en el listado al verificar. Intenta guardarlos de nuevo.`,
+        );
+      if (successfulIds.length)
+        setSavedResultIds((s) => [...new Set([...s, ...successfulIds])]);
+      setNotice(
+        failed
+          ? `Guardado parcial verificado en Neon: ${created} nuevas, ${duplicates} ya existían, ${failed} con error. ${firstFailure ? `Detalle: ${firstFailure}` : ""}`
+          : `Guardado verificado en Neon: ${created} nuevas, ${duplicates} ya existían.`,
+      );
+    } catch (e) {
+      setNotice(
+        e instanceof Error
+          ? e.message
+          : "No se pudieron guardar los resultados.",
+      );
+    } finally {
+      setSavingAll(false);
+      setSaveProgress("");
+    }
+  }
+  async function changeStage(id: string, stage: ProspectStage) {
+    try {
+      const response = await fetch(
+          `/api/admin/radar/prospects/${encodeURIComponent(id)}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stage }),
+          },
+        ),
+        data = await response.json();
+      if (!response.ok)
+        throw new Error(
+          data.error || "No se pudo actualizar el estado comercial.",
+        );
+      setSaved((values) =>
+        values.map((p) => (p.id === id ? { ...p, stage } : p)),
+      );
+      setSelected((value) => (value?.id === id ? { ...value, stage } : value));
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "No se pudo actualizar el estado comercial.",
+      );
+    }
+  }
+  async function openProspect(p: Prospect) {
+    const version = ++openVersion.current;
+    setNotice("");
+    setActivityNote("");
+    setSelected(p);
+    setRutInput(p.rut || "");
+    setAnalysis(null);
+    setActivities([]);
+    try {
+      const r = await fetch(
+          `/api/admin/radar/prospects/${encodeURIComponent(p.id)}`,
+        ),
+        d = (await r.json()) as { activities?: Activity[]; error?: string };
+      if (!r.ok) throw new Error(d.error || "No se pudo cargar el historial.");
+      if (version === openVersion.current) setActivities(d.activities ?? []);
+    } catch {
+      setNotice("No se pudo cargar el historial.");
+    }
+  }
+  async function addActivity(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selected || !activityNote.trim()) return;
+    const version = openVersion.current;
+    try {
+      const r = await fetch("/api/admin/radar/prospects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "activity",
+            prospectId: selected.id,
+            kind: activityKind,
+            note: activityNote.trim(),
+          }),
+        }),
+        d = await r.json();
+      if (!r.ok) throw new Error(d.error || "No se pudo guardar la actividad.");
+      if (version === openVersion.current) {
+        if (d.activity) setActivities((values) => [d.activity, ...values]);
+        setActivityNote("");
+        setNotice("Actividad registrada.");
+      }
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar la actividad.",
+      );
+    }
+  }
+  async function enrichRut(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selected) return;
+    setNotice("");
+    try {
+      const r = await fetch("/api/admin/radar/enrich", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prospectId: selected.id, rut: rutInput }),
+      });
+      const d = (await r.json()) as { prospect?: Prospect; error?: string };
+      if (!r.ok || !d.prospect)
+        throw new Error(d.error || "No se pudo consultar SRE/SII.");
+      setSelected(d.prospect);
+      setSaved((s) =>
+        s.map((p) => (p.id === d.prospect!.id ? d.prospect! : p)),
+      );
+      setRutInput(d.prospect.rut || "");
+      setNotice("Datos oficiales del SII actualizados.");
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "No se pudo enriquecer.");
+    }
+  }
+  async function importCsvFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setNotice("");
+    try {
+      const csv = await file.text();
+      const r = await fetch("/api/admin/radar/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csv }),
+      });
+      const d = (await r.json()) as {
+        prospects?: Prospect[];
+        error?: string;
+        count?: number;
+      };
+      if (!r.ok) throw new Error(d.error || "No se pudo importar.");
+      setSaved((s) => [
+        ...(d.prospects || []),
+        ...s.filter((p) => !(d.prospects || []).some((n) => n.id === p.id)),
+      ]);
+      setNotice(
+        `Importados ${d.count || 0} registros. Los datos manuales quedan marcados sin verificar.`,
+      );
+    } catch (error) {
+      setNotice(
+        error instanceof Error ? error.message : "No se pudo leer el archivo.",
+      );
+    } finally {
+      setImporting(false);
+      e.target.value = "";
+    }
+  }
+  async function analyzeProspect() {
+    if (!selected) return;
+    const version = openVersion.current;
+    setAnalyzing(true);
+    setAnalysis(null);
+    setNotice("");
+    try {
+      const r = await fetch("/api/admin/radar/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prospectId: selected.id }),
+      });
+      const d = (await r.json()) as { analysis?: Analysis; error?: string };
+      if (!r.ok || !d.analysis)
+        throw new Error(d.error || "No se pudo analizar.");
+      if (version === openVersion.current) setAnalysis(d.analysis);
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "No se pudo analizar.");
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+  function exportCsv() {
+    const head = [
+      "empresa",
+      "dirección",
+      "región",
+      "sitio_web",
+      "teléfono",
+      "correos",
+      "trabajadores_aprox",
+      "fuente_trabajadores",
+      "modalidad",
+      "prioridad_orientativa",
+      "fuente",
+      "consultado",
+      "estado",
+      "observaciones",
+    ];
+    const esc = (v: unknown) =>
+      `"${String(v ?? "")
+        .replace(/^[=+@-]/, "'$&")
+        .replaceAll('"', '""')}"`;
+    const lines = [
+      head,
+      ...filtered.map((p) => [
+        p.name,
+        p.address,
+        p.region,
+        p.website,
+        p.phone,
+        p.emails?.join("; "),
+        p.employeeEstimate,
+        p.employeeEstimateSource,
+        fitLabel(getCommercialFit(p.employeeEstimate)),
+        assessCompany(p).score,
+        p.source,
+        p.fetchedAt,
+        stageNames[p.stage],
+        p.notes,
+      ]),
+    ].map((r) => r.map(esc).join(","));
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], {
+        type: "text/csv;charset=utf-8",
+      }),
+      url = URL.createObjectURL(blob),
+      a = document.createElement("a");
+    a.href = url;
+    a.download = "radar-prospectos.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  const noticeIsError =
+    /invalid|error|no se |no pudo|sin configurar|falta |expiró|no tiene|restringe|límite|no es pública|no existe|no encontré/i.test(
+      notice,
+    );
+  const savedIds = new Set([
+    ...saved.map((p) => p.providerId),
+    ...savedResultIds,
+  ]);
+  return (
+    <div className={styles.shell}>
+      <aside className={styles.sidebar}>
+        <div className={styles.brand}>
+          <span className={styles.mark}>◉</span>
+          <span>
+            <strong>Radar Comercial B2B</strong>
+            <small>Óptica &amp; Cristal</small>
+          </span>
+        </div>
+        <nav className={styles.nav} aria-label="Secciones comerciales">
+          {(
+            [
+              ["resumen", "Dashboard", LayoutDashboard],
+              ["buscar", "Radar", Search],
+              ["prospectos", "Clientes", Users],
+              ["campanas", "Campañas", Mail],
+              ["seguimientos", "Seguimientos", MessageSquare],
+            ] as const
+          ).map(([id, label, Icon]) => (
+            <button
+              key={id}
+              className={tab === id ? styles.navActive : styles.navItem}
+              aria-current={tab === id ? "page" : undefined}
+              onClick={() => setTab(id)}
+            >
+              <Icon size={18} aria-hidden="true" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className={styles.sideFoot}>
+          Impulsando conexiones
+          <br />
+          que hacen crecer Chile.
+        </div>
+      </aside>
+      <div className={styles.content}>
+        <header className={styles.topbar}>
+          <Link href="/admin">Panel administrativo</Link>
+          <span>Radar Comercial B2B</span>
+          <form action={logoutAction}>
+            <button type="submit">Cerrar sesión</button>
+          </form>
+        </header>
+        <main className={styles.main}>
+          <div className={styles.titleRow}>
+            <div>
+              <h1>
+                {
+                  {
+                    buscar: "Radar de empresas",
+                    prospectos: "Clientes y contactos",
+                    resumen: "Dashboard comercial",
+                    oportunidades: "Oportunidades",
+                    actividad: "Actividad",
+                    crm: "Gestiones comerciales",
+                    campanas: "Campañas",
+                    seguimientos: "Seguimientos",
+                  }[tab]
+                }
+              </h1>
+              <p>
+                {tab === "buscar"
+                  ? "Encuentra empresas reales y completa sus canales comerciales."
+                  : "Prioriza contactos y oportunidades para convenios y jornadas ópticas."}
+              </p>
+            </div>
+            {tab === "prospectos" && (
+              <>
+                <button
+                  className={styles.outline}
+                  disabled={
+                    emailScan ||
+                    !saved.some((p) => p.website && !p.emails?.length)
+                  }
+                  onClick={() => void scanEmails()}
+                >
+                  {emailScan
+                    ? `Buscando ${emailScanProgress}…`
+                    : "Buscar correos en webs"}
+                </button>
+                {emailScan && (
+                  <button
+                    className={styles.outline}
+                    onClick={() => emailScanController.current?.abort()}
+                  >
+                    Detener
+                  </button>
+                )}
+                <button
+                  className={styles.outline}
+                  onClick={() => {
+                    setCrmSection("oportunidades");
+                    setTab("crm");
+                  }}
+                >
+                  Oportunidades
+                </button>
+                <div className={styles.importExport}>
+                  <label className={styles.outline}>
+                    {importing ? "Importando…" : "Importar empresas (CSV)"}
+                    <input
+                      type="file"
+                      accept=".csv,text/csv"
+                      disabled={importing}
+                      onChange={(e) => void importCsvFile(e)}
+                    />
+                  </label>
+                  <button
+                    className={styles.outline}
+                    onClick={exportCsv}
+                    disabled={!filtered.length}
+                  >
+                    Exportar empresas (CSV)
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          {dbError && <p className={styles.alert}>{dbError}</p>}
+          {notice && (
+            <p
+              className={noticeIsError ? styles.alert : styles.notice}
+              role={noticeIsError ? "alert" : "status"}
+            >
+              {notice}
+            </p>
+          )}
+          <section
+            className={styles.providers}
+            aria-label="Estado de proveedores"
+          >
+            <div>
+              <b>Fuente de empresas</b>
+              <span className={styles.good}>
+                OpenStreetMap · Nominatim + Overpass
+              </span>
+            </div>
+            <div>
+              <b>Base de datos</b>
+              <span className={providers.neon ? styles.good : styles.missing}>
+                {providers.neon ? "Neon · conectado" : "Neon · sin configurar"}
+              </span>
+            </div>
+            <div>
+              <b>Análisis comercial IA</b>
+              <span className={providers.ai ? styles.good : styles.optional}>
+                {providers.ai ? "Disponible para fichas" : "IA no conectada"}
+              </span>
+            </div>
+          </section>
+          {tab === "crm" ? (
+            <RadarCrm initialView={crmSection} key={crmSection} />
+          ) : tab === "resumen" ||
+            tab === "prospectos" ||
+            tab === "seguimientos" ? (
+            <RadarWorkspace
+              view={
+                tab === "resumen"
+                  ? "dashboard"
+                  : tab === "prospectos"
+                    ? "clients"
+                    : "followups"
+              }
+              onNavigate={setTab}
+              onOpenCompany={(id) => {
+                const p = saved.find((p) => p.id === id);
+                if (p) void openProspect(p);
+                else
+                  void fetch(
+                    `/api/admin/radar/prospects/${encodeURIComponent(id)}`,
+                  )
+                    .then(async (r) => {
+                      const d = await r.json();
+                      if (!r.ok || !d.prospect)
+                        throw Error(d.error || "No se pudo abrir la ficha.");
+                      setSaved((items) => [d.prospect, ...items]);
+                      await openProspect(d.prospect);
+                    })
+                    .catch((e) => setNotice(e.message));
+              }}
+            />
+          ) : tab === "campanas" ? (
+            <RadarCampaignCenter />
+          ) : tab === "actividad" ? (
+            <RadarActivityView />
+          ) : tab === "buscar" ? (
+            <>
+              <form
+                className={styles.searchForm}
+                autoComplete="off"
+                onSubmit={search}
+              >
+                <label>Define los criterios de búsqueda</label>
+                <div className={styles.filterLine}>
+                  <label htmlFor="radar-region">
+                    Región
+                    <select
+                      id="radar-region"
+                      value={region}
+                      onChange={(e) => {
+                        setRegion(e.target.value);
+                        setCommune("");
+                      }}
+                      required
+                    >
+                      <option value="">Selecciona una región</option>
+                      {regions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label htmlFor="radar-industry">
+                    Rubro
+                    <select
+                      id="radar-industry"
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                    >
+                      {industries.map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label htmlFor="radar-commune">
+                    Comuna (opcional)
+                    <input
+                      id="radar-commune"
+                      value={commune}
+                      onChange={(e) => setCommune(e.target.value)}
+                      maxLength={80}
+                      placeholder="Ej.: Quilicura"
+                    />
+                  </label>
+                </div>
+                {industry === "other" && (
+                  <label htmlFor="radar-other-industry">
+                    Especifica el rubro
+                    <input
+                      id="radar-other-industry"
+                      value={otherIndustry}
+                      onChange={(e) => setOtherIndustry(e.target.value)}
+                      maxLength={80}
+                      placeholder="Ej.: energía solar"
+                      required
+                    />
+                  </label>
+                )}
+                <div className={styles.searchLine}>
+                  <button
+                    type="submit"
+                    value="all"
+                    disabled={
+                      loading ||
+                      !region ||
+                      (industry === "other" && !otherIndustry.trim())
+                    }
+                  >
+                    {loading ? "Buscando…" : "Buscar empresas"}
+                  </button>
+                  <button
+                    type="submit"
+                    value="email-only"
+                    className={styles.outline}
+                    disabled={
+                      loading ||
+                      !region ||
+                      (industry === "other" && !otherIndustry.trim())
+                    }
+                  >
+                    {loading ? "Buscando…" : "Buscar solo empresas con email"}
+                  </button>
+                  {loading && (
+                    <button
+                      type="button"
+                      className={styles.outline}
+                      onClick={() => searchController.current?.abort()}
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+                <small className={styles.criteria}>
+                  La opción «solo con email» busca correos comerciales
+                  publicados en mapas y en hasta tres páginas de cada web
+                  corporativa. Los resultados aparecen mientras avanza la
+                  consulta y conservan fuente y fecha.
+                </small>
+                <small className={styles.criteria}>
+                  No filtramos por trabajadores: guardamos empresas de cualquier
+                  tamaño. La cifra aproximada se conserva con su fuente; sin
+                  estimación queda “Por clasificar”. Con 1 a 4 se marca convenio
+                  de baja escala; con 5 a 20, convenio; con más de 20, ambas
+                  modalidades.
+                </small>
+              </form>
+              {criteria && (
+                <p className={styles.criteria}>Filtros usados: {criteria}</p>
+              )}
+              {searchStats && (
+                <p className={styles.muted}>
+                  Fuente: {searchStats.raw} registros ·{" "}
+                  {searchStats.outsideRegion} fuera de zona ·{" "}
+                  {searchStats.merged} coincidencias consolidadas ·{" "}
+                  {searchStats.cacheHit
+                    ? "consulta en caché"
+                    : "consulta nueva"}
+                  .
+                </p>
+              )}
+              <div className={styles.resultsHead}>
+                <div>
+                  <h2>Empresas encontradas</h2>
+                  <p>
+                    {rows.length
+                      ? rows.length + " resultados reales"
+                      : "Los resultados aparecerán con fuente y fecha de consulta."}
+                  </p>
+                </div>
+                {rows.length > 0 && (
+                  <button
+                    className={styles.saveButton}
+                    disabled={
+                      !providers.neon ||
+                      savingAll ||
+                      rows.every((r) => savedIds.has(r.company.providerId))
+                    }
+                    onClick={() => void saveAll()}
+                  >
+                    {savingAll
+                      ? `Guardando ${saveProgress}…`
+                      : `Guardar todos (${rows.filter((r) => !savedIds.has(r.company.providerId)).length})`}
+                  </button>
+                )}
+                <a
+                  href="https://www.openstreetmap.org/copyright"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  © OpenStreetMap contributors
+                </a>
+              </div>
+              {rows.length > 0 ? (
+                <RadarResults
+                  rows={rows}
+                  savedIds={savedIds}
+                  savingIds={savingIds}
+                  enabled={providers.neon && !savingAll}
+                  onSave={(item) => void save(item)}
+                />
+              ) : (
+                <div className={styles.empty} aria-busy={loading}>
+                  <span
+                    className={`${styles.radarIcon} ${loading ? styles.scanning : ""}`}
+                    aria-hidden="true"
+                  >
+                    ◎
+                  </span>
+                  <h2>
+                    {loading
+                      ? "Buscando lugares etiquetados en OpenStreetMap…"
+                      : notice
+                        ? "No hay resultados para esta búsqueda"
+                        : "Busca empresas reales en Chile"}
+                  </h2>
+                  <p>
+                    {loading
+                      ? `Consultando la fuente · ${elapsed} s. Los resultados parciales se conservarán.`
+                      : notice ||
+                        "Se consultará la cobertura pública disponible en el rubro y la ubicación indicados."}
+                  </p>
+                  {!providers.neon && (
+                    <small>
+                      Configura Neon para guardar prospectos en forma
+                      persistente.
+                    </small>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className={styles.crmToolbar}>
+                <input
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  placeholder="Buscar prospecto por empresa o ubicación"
+                  aria-label="Filtrar prospectos"
+                />
+                <label>
+                  Modalidad
+                  <select
+                    aria-label="Filtrar modalidad"
+                    value={fitFilter}
+                    onChange={(e) => setFitFilter(e.target.value)}
+                  >
+                    <option value="">Todas</option>
+                    <option value="ambas">Convenio y jornada</option>
+                    <option value="convenio">Convenio</option>
+                    <option value="convenio_bajo">Baja escala</option>
+                    <option value="por_clasificar">Por clasificar</option>
+                  </select>
+                </label>
+                <label>
+                  Ordenar
+                  <select
+                    aria-label="Ordenar prospectos"
+                    value={sortProspects}
+                    onChange={(e) => setSortProspects(e.target.value)}
+                  >
+                    <option value="priority">Prioridad · correo primero</option>
+                    <option value="name">Nombre</option>
+                  </select>
+                </label>
+                <button
+                  className={styles.outline}
+                  disabled={
+                    emailScan ||
+                    !filtered.some((p) => p.website && !p.emails?.length)
+                  }
+                  onClick={() => void scanEmails()}
+                >
+                  {emailScan
+                    ? `Buscando correos ${emailScanProgress}…`
+                    : "Buscar correos en webs"}
+                </button>
+                {emailScan && (
+                  <button
+                    className={styles.outline}
+                    onClick={() => emailScanController.current?.abort()}
+                  >
+                    Detener
+                  </button>
+                )}
+                <span>
+                  {filtered.length} prospectos ·{" "}
+                  {filtered.filter((p) => p.emails?.length).length} con correo
+                </span>
+              </div>
+              <div className={styles.board}>
+                {stages.map((stage) => (
+                  <section className={styles.column} key={stage}>
+                    <header>
+                      <h2>{stageNames[stage]}</h2>
+                      <span>
+                        {filtered.filter((p) => p.stage === stage).length}
+                      </span>
+                    </header>
+                    {filtered.filter((p) => p.stage === stage).length > 100 && (
+                      <p className={styles.muted}>
+                        Mostrando los primeros 100. Filtra para encontrar otros
+                        registros; el CSV incluye todos los seleccionados.
+                      </p>
+                    )}
+                    {filtered
+                      .filter((p) => p.stage === stage)
+                      .slice(0, 100)
+                      .map((p) => (
+                        <article className={styles.prospectCard} key={p.id}>
+                          <button
+                            className={styles.cardTitle}
+                            onClick={() => void openProspect(p)}
+                          >
+                            {p.name}
+                          </button>
+                          <p>{p.address || "Dirección no publicada"}</p>
+                          <small>
+                            Prioridad {assessCompany(p).score}/100 ·{" "}
+                            {p.emails?.length
+                              ? "Correo publicado"
+                              : p.phone
+                                ? "Teléfono publicado"
+                                : "Contacto por completar"}
+                          </small>
+                          <small>
+                            {p.employeeEstimate
+                              ? `≈ ${p.employeeEstimate.toLocaleString("es-CL")} trabajadores · `
+                              : "Trabajadores: sin dato · "}
+                            {fitLabel(p.commercialFit)} · {p.source} ·{" "}
+                            {dateLabel(p.fetchedAt)}
+                          </small>
+                          <select
+                            aria-label={`Estado de ${p.name}`}
+                            value={p.stage}
+                            onChange={(e) =>
+                              void changeStage(
+                                p.id,
+                                e.target.value as ProspectStage,
+                              )
+                            }
+                          >
+                            {stages.map((s) => (
+                              <option key={s} value={s}>
+                                {stageNames[s]}
+                              </option>
+                            ))}
+                          </select>
+                        </article>
+                      ))}
+                  </section>
+                ))}
+              </div>
+              {!filtered.length && (
+                <div className={styles.empty}>
+                  <h2>Aún no hay prospectos guardados</h2>
+                  <p>
+                    Busca empresas y guárdalas para organizar su seguimiento.
+                  </p>
+                  <button
+                    className={styles.primary}
+                    onClick={() => setTab("buscar")}
+                  >
+                    Ir a búsqueda
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+          <footer className={styles.attribution}>
+            Nominatim ubica la región; Overpass busca elementos etiquetados en
+            OpenStreetMap (licencia ODbL). No se filtra por tamaño. La fuente
+            solo publica dotación en algunos registros, que se conservan como
+            aproximados con su origen; los demás quedan por clasificar. La
+            cobertura pública puede ser parcial o agotar el tiempo de espera.{" "}
+            <a
+              href="https://operations.osmfoundation.org/policies/nominatim/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Política de Nominatim
+            </a>{" "}
+            ·{" "}
+            <a
+              href="https://wiki.openstreetmap.org/wiki/Overpass_API"
+              target="_blank"
+              rel="noreferrer"
+            >
+              API Overpass
+            </a>
+          </footer>
+        </main>
+      </div>
+      {selected && (
+        <div
+          className={styles.overlay}
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              openVersion.current++;
+              setSelected(null);
+            }
+          }}
+        >
+          <section
+            className={styles.drawer}
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="drawer-title"
+          >
+            <button
+              className={styles.close}
+              onClick={() => {
+                openVersion.current++;
+                setSelected(null);
+              }}
+              aria-label="Cerrar ficha"
+            >
+              ×
+            </button>
+            <p className={styles.kicker}>
+              Ficha de empresa · {selected.source}
+            </p>
+            <h2 id="drawer-title">{selected.name}</h2>
+            {notice && (
+              <p
+                className={noticeIsError ? styles.alert : styles.notice}
+                role={noticeIsError ? "alert" : "status"}
+              >
+                {notice}
+              </p>
+            )}
+            <p className={styles.drawerMeta}>
+              {selected.address || "Dirección no publicada"}
+            </p>
+            <dl className={styles.details}>
+              <div>
+                <dt>Teléfono publicado</dt>
+                <dd>{selected.phone || "No disponible"}</dd>
+              </div>
+              <div>
+                <dt>Sitio web</dt>
+                <dd>
+                  {selected.website ? (
+                    <a href={selected.website} target="_blank" rel="noreferrer">
+                      {selected.website}
+                    </a>
+                  ) : (
+                    "No disponible"
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>Consultado</dt>
+                <dd>{dateLabel(selected.fetchedAt)}</dd>
+              </div>
+              <div>
+                <dt>Potencial comercial</dt>
+                <dd>{fitLabel(selected.commercialFit)}</dd>
+              </div>
+              <div>
+                <dt>RUT</dt>
+                <dd>{selected.rut || "No consultado"}</dd>
+              </div>
+              <div>
+                <dt>Razón social</dt>
+                <dd>{selected.legalName || "No disponible"}</dd>
+              </div>
+              <div>
+                <dt>Giro</dt>
+                <dd>{selected.economicDescription || "No disponible"}</dd>
+              </div>
+              <div>
+                <dt>Actividades</dt>
+                <dd>
+                  {selected.economicActivities?.join(", ") || "No disponibles"}
+                </dd>
+              </div>
+            </dl>
+            <form
+              className={styles.enrichForm}
+              onSubmit={(e) => void enrichRut(e)}
+            >
+              <label>
+                Consultar RUT en SRE/SII
+                <input
+                  value={rutInput}
+                  onChange={(e) => setRutInput(e.target.value)}
+                  placeholder="76.123.456-7"
+                  maxLength={14}
+                  required
+                />
+              </label>
+              <button className={styles.outline}>
+                Consultar datos oficiales
+              </button>
+              <small>
+                El servicio entrega solo información publicada por el SII.
+                Verifica que la razón social corresponda a esta empresa.
+              </small>
+              {selected.officialSource && (
+                <small>
+                  Fuente: {selected.officialSource} ·{" "}
+                  {dateLabel(selected.officialFetchedAt || selected.fetchedAt)}
+                </small>
+              )}
+            </form>
+            <section className={styles.analysis}>
+              <h3>Prioridad comercial: {assessCompany(selected).score}/100</h3>
+              <small>{assessCompany(selected).label}</small>
+              {assessCompany(selected).facts.map((fact) => (
+                <p key={fact}>{fact}</p>
+              ))}
+              <p>
+                <b>Próxima acción:</b> {assessCompany(selected).nextAction}
+              </p>
+              <p>
+                <b>Por completar:</b>{" "}
+                {assessCompany(selected).missing.join(" · ") ||
+                  "Datos básicos disponibles"}
+              </p>
+            </section>
+            <section className={styles.analysis}>
+              <h3>Datos publicados en la web</h3>
+              <p>
+                Consulta hasta tres páginas corporativas accesibles. Conserva
+                solo contactos comerciales y cifras explícitas con su fuente.
+              </p>
+              <button
+                className={styles.outline}
+                disabled={!selected.website || webLoading}
+                onClick={() => void webEnrich()}
+              >
+                {webLoading ? "Consultando web…" : "Completar desde web"}
+              </button>
+              {selected.webCheckedAt && (
+                <p>
+                  {selected.webStatus} · {dateLabel(selected.webCheckedAt)}
+                </p>
+              )}
+              <p>
+                <b>Trabajadores aprox.:</b>{" "}
+                {selected.employeeEstimate
+                  ? `≈ ${selected.employeeEstimate.toLocaleString("es-CL")}`
+                  : "Sin dato publicado"}
+              </p>
+              {selected.emails?.map((email) => (
+                <p key={email}>{email}</p>
+              ))}
+              {selected.socialLinks?.map((link) => (
+                <p key={link}>
+                  <a href={link} target="_blank" rel="noreferrer">
+                    Red corporativa ↗
+                  </a>
+                </p>
+              ))}
+              {selected.evidence?.map((e, i) => (
+                <p key={`${e.field}-${i}`}>
+                  <b>{e.field}:</b> {e.value} ·{" "}
+                  <a href={e.url} target="_blank" rel="noreferrer">
+                    Fuente
+                  </a>{" "}
+                  · {dateLabel(e.fetchedAt)}
+                  {e.excerpt && (
+                    <small className={styles.muted}>
+                      {" "}
+                      · «{e.excerpt}» (declarado por la empresa)
+                    </small>
+                  )}
+                </p>
+              ))}
+            </section>
+            <label className={styles.noteLabel}>
+              Observación comercial
+              <textarea
+                value={selected.notes}
+                maxLength={5000}
+                onChange={(e) =>
+                  setSelected({ ...selected, notes: e.target.value })
+                }
+              />
+            </label>
+            <button className={styles.primary} onClick={() => void saveNotes()}>
+              Guardar observación
+            </button>
+            <section className={styles.analysis}>
+              <div className={styles.analysisHead}>
+                <div>
+                  <h3>Análisis comercial</h3>
+                  <p>
+                    Análisis opcional de IA basado en hechos de la ficha.
+                    Requiere proveedor configurado.
+                  </p>
+                </div>
+                <button
+                  className={styles.outline}
+                  onClick={() => void analyzeProspect()}
+                  disabled={analyzing || !providers.ai}
+                >
+                  {analyzing ? "Analizando…" : "Analizar prospecto"}
+                </button>
+              </div>
+              {analysis && (
+                <>
+                  <span className={styles.score}>
+                    {analysis.score === null ? "—" : analysis.score}
+                    <small>/100 · estimación</small>
+                  </span>
+                  {analysis.reasons.map((reason, i) => (
+                    <p className={styles.reason} key={i}>
+                      {reason}
+                    </p>
+                  ))}
+                  {analysis.strategy && (
+                    <p>
+                      <b>Estrategia sugerida:</b> {analysis.strategy}
+                    </p>
+                  )}
+                  {analysis.nextAction && (
+                    <p>
+                      <b>Próxima acción:</b> {analysis.nextAction}
+                    </p>
+                  )}
+                  {analysis.message && (
+                    <label className={styles.noteLabel}>
+                      Borrador de mensaje
+                      <textarea readOnly value={analysis.message} />
+                    </label>
+                  )}
+                  <small className={styles.muted}>
+                    Solo propuesta. Verifica los hechos antes de contactar.
+                  </small>
+                </>
+              )}
+            </section>
+            <h3>Registrar actividad</h3>
+            <form
+              className={styles.activityForm}
+              onSubmit={(e) => void addActivity(e)}
+            >
+              <select
+                value={activityKind}
+                onChange={(e) =>
+                  setActivityKind(e.target.value as Activity["kind"])
+                }
+                aria-label="Tipo de actividad"
+              >
+                <option value="llamada">Llamada</option>
+                <option value="correo">Correo</option>
+                <option value="reunion">Reunión</option>
+                <option value="nota">Nota</option>
+              </select>
+              <textarea
+                value={activityNote}
+                onChange={(e) => setActivityNote(e.target.value)}
+                maxLength={2000}
+                placeholder="Detalle de la gestión"
+                required
+              />
+              <button className={styles.outline}>Registrar</button>
+            </form>
+            <h3>Historial</h3>
+            <ul className={styles.activityList}>
+              {activities.map((a) => (
+                <li key={a.id}>
+                  <b>{a.kind}</b>
+                  <time>{dateLabel(a.createdAt)}</time>
+                  <p>{a.note}</p>
+                </li>
+              ))}
+              {!activities.length && (
+                <li className={styles.muted}>
+                  No hay actividades registradas.
+                </li>
+              )}
+            </ul>
+          </section>
+        </div>
+      )}
+    </div>
+  );
 }
