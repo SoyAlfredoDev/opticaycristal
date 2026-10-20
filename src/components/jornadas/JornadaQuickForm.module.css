@@ -1,0 +1,2 @@
+.card h2 { font-size: clamp(30px, 6vw, 42px); }
+.note { margin-top: 12px !important; color: var(--muted); font-size: 12px; line-height: 1.6; }

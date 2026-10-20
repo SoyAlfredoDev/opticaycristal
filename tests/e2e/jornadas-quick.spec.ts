@@ -1,0 +1,36 @@
+import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+
+test("jornada breve valida cuatro datos y prepara WhatsApp sin enviar mensajes", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/jornadas");
+  const form = page.getByRole("form", { name: "Solicita tu jornada" });
+  await page.getByRole("link", { name: "Solicitar una jornada", exact: true }).first().click();
+  await expect(page).toHaveURL(/#solicitar-jornada$/);
+  await expect(form.locator("input, select, textarea")).toHaveCount(4);
+  await expect(form.getByRole("button")).toHaveCount(1);
+  await expect(form.getByRole("button")).toHaveText("Continuar por WhatsApp");
+  await form.getByRole("button").click();
+  await expect(form.getByRole("alert")).toHaveCount(4);
+  await expect(form.getByLabel("Nombre de la empresa", { exact: true })).toBeFocused();
+  await form.getByLabel("Nombre de la empresa", { exact: true }).fill("Empresa & Cía. + prueba");
+  await form.getByLabel("Cantidad de personas").fill("0");
+  await form.getByLabel("Fecha estimada").selectOption({ index: 1 });
+  await form.getByLabel("Dirección del operativo").fill("Av. Prueba 123, Santiago");
+  await form.getByRole("button").click();
+  await expect(form.getByRole("alert")).toHaveCount(1);
+  await expect(form.getByLabel("Cantidad de personas")).toBeFocused();
+  await form.getByLabel("Cantidad de personas").fill("25");
+  await expect(form.getByRole("alert")).toHaveCount(0);
+  expect((await new AxeBuilder({ page }).exclude("nextjs-portal").analyze()).violations).toEqual([]);
+  await page.screenshot({ path: `/private/tmp/optica-jornadas-qa/formulario-${page.viewportSize()?.width}.png`, animations: "disabled" });
+  const messageRequest = page.waitForRequest((request) => new URL(request.url()).hostname === "wa.me");
+  await page.route("https://wa.me/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<p>WhatsApp interceptado en prueba; sin mensaje enviado.</p>" }));
+  await form.getByRole("button").click();
+  const url = new URL((await messageRequest).url());
+  expect(url.pathname).toBe("/56922452080");
+  expect(url.searchParams.get("text")).toContain("Empresa: Empresa & Cía. + prueba");
+  expect(url.searchParams.get("text")).toContain("Cantidad de personas: 25");
+  expect(url.searchParams.get("text")).toContain("Fecha estimada:");
+  expect(url.searchParams.get("text")).toContain("Dirección: Av. Prueba 123, Santiago");
+});

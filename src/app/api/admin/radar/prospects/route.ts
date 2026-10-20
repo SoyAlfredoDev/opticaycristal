@@ -6,7 +6,7 @@ import {assessCompany} from "@/lib/radar/assessment";
 import {verifyResult} from "@/lib/radar/integrity";
 import type {Activity,CompanyResult} from "@/lib/radar/types";
 export const runtime="nodejs";
-export async function GET(request?:Request){
+export async function GET(request:Request){
  if(!(await hasRadarAccess(request,"read")))return NextResponse.json({error:"No autorizado."},{status:401});
  try{const params=request?new URL(request.url).searchParams:null;
   if(params?.has("limit")){const limit=Number(params.get("limit")),cursor=params.get("cursor"),stage=params.get("stage");if(!Number.isInteger(limit)||limit<1||limit>500||cursor&&cursor.length>100||stage&&!["nuevo","contactado","oportunidad","ganado","descartado"].includes(stage))throw new RadarApiError("Paginación inválida. Usa limit de 1 a 500 y un estado válido.");const page=await listProspectPage(limit,cursor,stage);return NextResponse.json({...page,prospects:page.prospects.map(p=>({...p,assessment:assessCompany(p)}))})}
