@@ -8,7 +8,7 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
 import { ProcessSteps } from "@/components/site/ProcessSteps";
 import { SectionReveal } from "@/components/site/SectionReveal";
-import { CompanyRequestForm } from "@/components/forms/CompanyRequestForm";
+import ConvenioQuickForm from "@/components/convenios/ConvenioQuickForm";
 import { LinkButton } from "@/components/site/LinkButton";
 import { CONVENIO, convenioFaqs, convenioSteps } from "@/lib/convenios";
 import site from "@/components/site/Site.module.css";
@@ -124,11 +124,11 @@ export default function ConveniosPage() {
           </div>
         </SectionReveal>
       </section>
-      <section className={`${site.container} ${views.formArea}`} aria-label="Registro de empresa y solicitud de convenio">
+      <section className={`${site.container} ${views.formArea}`} aria-label="Consulta de convenio por WhatsApp">
         <aside className={`${views.aside} ${views.plainAside}`}>
           <SectionReveal>
             <h2>Conversemos sobre tu equipo.</h2>
-            <p>Déjanos tus datos y te explicaremos los beneficios, el registro y las condiciones. Solicitar información no firma un contrato.</p>
+            <p>Cuéntanos el nombre de tu empresa y cuántos trabajadores tiene. Seguimos por WhatsApp para resolver tus dudas y explicarte cómo acceder al beneficio.</p>
             <ProcessSteps steps={convenioSteps} vertical />
             <div className={views.crossLink}>
               <p>¿También quieres una jornada en tu empresa?</p>
@@ -136,7 +136,7 @@ export default function ConveniosPage() {
             </div>
           </SectionReveal>
         </aside>
-        <CompanyRequestForm kind="convenio" />
+        <ConvenioQuickForm />
       </section>
     </SiteShell>
   );

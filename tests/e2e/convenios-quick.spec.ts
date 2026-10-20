@@ -1,0 +1,32 @@
+import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+
+test("convenio breve valida dos datos y prepara WhatsApp sin enviar mensajes", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/convenios");
+  const form = page.getByRole("form", { name: "Consulta por tu convenio" });
+  await page.getByRole("link", { name: "Quiero información del convenio", exact: true }).first().click();
+  await expect(page).toHaveURL(/#solicitar-convenio$/);
+  await expect(form.locator("input, select, textarea")).toHaveCount(2);
+  await expect(form.getByRole("button")).toHaveCount(1);
+  await expect(form.getByRole("button")).toHaveText("Continuar por WhatsApp");
+  await form.getByRole("button").click();
+  await expect(form.getByRole("alert")).toHaveCount(2);
+  await expect(form.getByLabel("Nombre de la empresa", { exact: true })).toBeFocused();
+  await form.getByLabel("Nombre de la empresa", { exact: true }).fill("Empresa & Cía. + prueba");
+  await form.getByLabel("Cantidad de trabajadores").fill("4");
+  await form.getByRole("button").click();
+  await expect(form.getByRole("alert")).toHaveCount(1);
+  await expect(form.getByLabel("Cantidad de trabajadores")).toBeFocused();
+  await form.getByLabel("Cantidad de trabajadores").fill("25");
+  await expect(form.getByRole("alert")).toHaveCount(0);
+  expect((await new AxeBuilder({ page }).exclude("nextjs-portal").analyze()).violations).toEqual([]);
+  await page.screenshot({ path: `/private/tmp/optica-jornadas-qa/convenio-${page.viewportSize()?.width}.png`, animations: "disabled" });
+  const messageRequest = page.waitForRequest((request) => new URL(request.url()).hostname === "wa.me");
+  await page.route("https://wa.me/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<p>WhatsApp interceptado en prueba; sin mensaje enviado.</p>" }));
+  await form.getByRole("button").click();
+  const url = new URL((await messageRequest).url());
+  expect(url.pathname).toBe("/56922452080");
+  expect(url.searchParams.get("text")).toContain("Empresa: Empresa & Cía. + prueba");
+  expect(url.searchParams.get("text")).toContain("Cantidad de trabajadores: 25");
+});

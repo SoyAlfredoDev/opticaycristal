@@ -13,7 +13,7 @@ export function isConvenioInterest(value: unknown): value is ConvenioInterest {
 }
 
 export const convenioSteps = [
-  { title: "Cuéntanos sobre tu equipo", description: "Completa el formulario con tus datos y los de tu empresa. Los convenios son para equipos de 5 o más trabajadores." },
+  { title: "Cuéntanos sobre tu equipo", description: "Indica el nombre de tu empresa y cuántos trabajadores tiene. Continuamos por WhatsApp." },
   { title: "Te explicamos las condiciones", description: "Resolvemos tus dudas y coordinamos el registro para que trabajadores y familiares puedan utilizar el beneficio." },
   { title: "Elige si sumas financiamiento", description: "Las cuotas por nómina son opcionales. Requieren un acuerdo y un contrato con las condiciones de pago." },
 ] as const;
@@ -26,5 +26,5 @@ export const convenioFaqs = [
   { question: "¿El convenio incluye consulta visual?", answer: "Sí. La consulta visual gratuita es parte del beneficio para trabajadores y familiares. La coordinamos con tu empresa." },
   { question: "¿Es necesario contratar financiamiento para obtener el descuento?", answer: "Puedes registrar tu empresa para el descuento y la consulta visual sin sumar financiamiento. Las cuotas por nómina son opcionales y requieren un acuerdo y un contrato entre tu empresa y Óptica & Cristal." },
   { question: "¿Quién paga a Óptica & Cristal cuando se usa financiamiento?", answer: "Tu empresa paga a Óptica & Cristal, según el contrato. El trabajador paga su compra en hasta tres cuotas, que la empresa descuenta de su nómina." },
-  { question: "¿Qué ocurre después de enviar el formulario?", answer: "Recibimos la solicitud y contactamos a la persona de tu empresa. Enviar el formulario no firma un contrato ni activa las cuotas por nómina." },
+  { question: "¿Qué ocurre al continuar por WhatsApp?", answer: "Se abre WhatsApp con los datos de tu empresa en un mensaje preparado. Tú decides cuándo enviarlo. Luego resolvemos tus dudas y coordinamos el registro; consultar no firma un contrato ni activa cuotas por nómina." },
 ] as const;
