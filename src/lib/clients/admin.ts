@@ -13,3 +13,9 @@ export function canManageProductCosts(user: string) {
  const owners=(process.env.CLIENT_COST_ADMIN_USERS || process.env.ADMIN_USER || process.env.ADMIN_USER_2 || "").split(",").map(v=>v.trim().toLowerCase()).filter(Boolean);
  return owners.includes(user.trim().toLowerCase());
 }
+
+export function canManageCustomerCategories(user:string) {
+ const configured=process.env.CLIENT_CATEGORY_ADMIN_USERS?.trim();
+ if(!configured)return canManageProductCosts(user);
+ return configured.split(",").map(v=>v.trim().toLowerCase()).filter(Boolean).includes(user.trim().toLowerCase());
+}

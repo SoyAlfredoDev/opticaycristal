@@ -97,3 +97,12 @@ escritorio. En móvil se mantienen cinco accesos: Inicio, Cuotas, Compras,
 La óptica y Perfil. La salida sigue únicamente al final de Perfil.
 El usuario pidió preparar la galería para fotos reales; mientras no hay fotos
 confirmadas, se ofrece el enlace al contenido de Instagram.
+
+## Categorías manuales — 2026-10-30
+
+La ficha administrativa permite al responsable elegir Start, VIP, Premium o
+Elite y guardar el cambio. Cada modificación registra nivel anterior, nuevo,
+responsable y fecha. El cliente ve su categoría y cupo actuales al consultar el
+portal. Las compras, cuotas, pagos y saldos existentes conservan sus condiciones.
+No hay ascensos ni descensos automáticos por compras o pagos. El siguiente nivel
+presentado en Inicio es informativo; todas las cuentas nuevas comienzan en Start.

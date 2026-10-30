@@ -1,0 +1,2 @@
+.form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}.form label{flex:1;min-width:180px}.form button{white-space:nowrap}.history{padding-left:20px}.history li{margin-top:12px}.history time{color:#536574}
+@media(max-width:650px){.form{display:grid;grid-template-columns:minmax(0,1fr)}.form label{min-width:0}.form button{width:100%}}

@@ -203,3 +203,29 @@ correos de prueba autorizados.
   las fotos reales. Con la lista vacía se muestra una invitación a ver Instagram.
 - El botón flotante de ayuda se omite en esta vista; están disponibles los
   contactos de la propia página y el acceso habitual de Ayuda en la cabecera.
+
+## Cambio de categorías — 2026-10-30
+
+- Migración aditiva `006-categories.sql`; ejecutor específico
+  `scripts/migrate-categories.mjs`. Crea únicamente el registro de cambios.
+- Control en la ficha `/admin/clientes/[id]` y API administrativa
+  `/api/admin/clientes/[id]/categoria`. Se exige sesión del personal y origen
+  propio para escribir. El cliente público no puede modificar su categoría.
+- Permiso: `CLIENT_CATEGORY_ADMIN_USERS` es una lista opcional de usuarios del
+  personal, separados por coma. Si está vacía, se reutilizan los responsables de
+  costos existentes. La pertenencia a esta lista requiere además acceso al
+  módulo administrativo de clientes; el correo público no concede permisos.
+- Se cambia solo la categoría del cliente. Los límites se toman de los niveles
+  configurados en la base; el navegador no puede definir cupos, porcentajes ni
+  plazos. Las ventas conservan sus condiciones guardadas. Un cambio con deuda
+  pendiente no habilita una segunda compra a crédito; la capacidad se limita a
+  cero cuando el saldo supera el máximo del nuevo nivel.
+- Actualización e historial en una transacción con bloqueo del cliente, compartido
+  con el flujo de ventas. Categoría esperada para evitar sobrescribir una edición
+  simultánea; clave de envío para reintentar sin duplicar el cambio.
+- La ficha muestra los cinco últimos cambios; el historial completo queda en
+  `oc_client_category_changes`. No se envían correos de cambio de categoría.
+- Auditoría: registro Start, siguiente nivel informativo, sin automatización de
+  categorías en ventas/pagos, sin pg_cron y un único disparador de clientes para
+  inicializar saldo. Se probaron rechazos de cambios públicos, perfiles que
+  conservan su categoría, pagos sin ascenso y conservación de ventas previas.

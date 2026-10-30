@@ -40,6 +40,15 @@ describe.sequential("Autenticación real contra PostgreSQL local aislado", () =>
   }, 20_000);
   it("impide cuentas duplicadas por RUT aun usando otro correo", async () => { await expect(auth.api.signUpEmail({ body: { name: "Duplicado", email: "otro@example.com", password, ...extra } as never })).rejects.toThrow();expect((await database.query("SELECT count(*)::int AS count FROM oc_client_user")).rows[0]).toEqual({ count: 1 }); });
   it("permite entrar antes de verificar y emite cookie HttpOnly SameSite", async () => { const r = await post("sign-in/email", { email: "cliente@example.com", password });expect(r.status).toBe(200);const set = r.headers.get("set-cookie") || "";expect(set.toLowerCase()).toContain("httponly");expect(set.toLowerCase()).toContain("samesite=lax");cookie = set.split(";")[0];const s = await auth.api.getSession({ headers: new Headers({ Cookie: cookie }) });expect(s?.user.id).toBe(id);expect(s?.user.emailVerified).toBe(false); });
+  it("el cliente no puede cambiar ni restablecer su categoría al actualizar su perfil", async () => {
+    await database.query("UPDATE oc_client_user SET category='vip' WHERE id=$1",[id]);
+    try {
+      expect((await post("update-user",{name:"Cliente Prueba",category:"elite"},cookie)).status).toBe(400);
+      expect((await database.query("SELECT category FROM oc_client_user WHERE id=$1",[id])).rows[0]).toEqual({category:"vip"});
+      expect((await post("update-user",{name:"Cliente Prueba"},cookie)).status).toBe(200);
+      expect((await database.query("SELECT category FROM oc_client_user WHERE id=$1",[id])).rows[0]).toEqual({category:"vip"});
+    } finally { await database.query("UPDATE oc_client_user SET category='start' WHERE id=$1",[id]); }
+  });
   it("rechaza origen externo y contraseña equivocada", async () => { expect((await post("sign-in/email", { email: "cliente@example.com", password: "otra contraseña" })).status).toBe(401);const request = new Request(base+"/api/clientes/auth/sign-out", { method: "POST", headers: { Origin: "https://ajeno.example", "Content-Type": "application/json", Cookie: cookie }, body: "{}" });expect(sameClientOrigin(request)).toBe(false); });
   it("verifica el correo con su enlace sin dar permisos administrativos", async () => { const url = mails.find(x => x.kind === "verify")!.url;const r = await auth.handler(new Request(url));expect(r.status).toBeLessThan(400);const u = (await database.query<{ emailVerified: boolean; category: string; whatsappVerified: boolean }>('SELECT "emailVerified",category,"whatsappVerified" FROM oc_client_user WHERE id=$1', [id])).rows[0];expect(u).toEqual({ emailVerified: true, category: "start", whatsappVerified: false }); });
   it("restablece una sola vez e invalida las sesiones previas", async () => {
