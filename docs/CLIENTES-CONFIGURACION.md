@@ -242,5 +242,5 @@ correos de prueba autorizados.
   El envío y la verificación de correo siguen activos; los requisitos para usar
   crédito y la vista de verificaciones en Perfil mantienen su comportamiento.
 - `AuthBenefits` se muestra como columna lateral en registro y acceso. Se utiliza
-  «Tu óptica con crédito directo en Chile», sin afirmar exclusividad nacional.
+  «La única óptica con crédito directo en Chile», según el texto solicitado expresamente por el propietario.
 - Revisión con nombre y datos simulados: sin registros ni correos de prueba reales.

@@ -6,7 +6,7 @@ import {AuthForm} from './AuthForm';
 afterEach(()=>vi.unstubAllGlobals());
 describe('Mensajes de acceso y bienvenida',()=>{
  it.each(['login','register'] as const)('explica el crédito directo en %s con beneficios confirmados',mode=>{
-  render(<AuthForm mode={mode}/>);expect(screen.getByRole('heading',{name:'Tu óptica con crédito directo en Chile.'})).toBeVisible();for(const text of ['No consultamos DICOM.','No pedimos liquidaciones de sueldo.','No cobramos intereses.','Porque confiamos en nuestros clientes.'])expect(screen.getByText(text)).toBeVisible();expect(screen.queryByText(/Una mirada nueva/)).not.toBeInTheDocument();expect(screen.queryByText(/única óptica/i)).not.toBeInTheDocument();
+  render(<AuthForm mode={mode}/>);expect(screen.getByRole('heading',{name:'La única óptica con crédito directo en Chile.'})).toBeVisible();for(const text of ['No consultamos DICOM.','No pedimos liquidaciones de sueldo.','No cobramos intereses.','Porque confiamos en nuestros clientes.'])expect(screen.getByText(text)).toBeVisible();expect(screen.queryByText(/Una mirada nueva/)).not.toBeInTheDocument();
  });
  it('usa el nombre ingresado y el cupo recibido sin cambiar la respuesta neutral ni enviar pruebas reales',async()=>{
   const fetcher=vi.fn(async()=>({ok:true,json:async()=>({message:'Registro procesado',welcome:{tierName:'Start',maxAmount:40000,maxPercent:30,maxInstallments:1}})}));vi.stubGlobal('fetch',fetcher);
