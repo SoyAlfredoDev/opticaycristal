@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const m = vi.hoisted(() => ({ signup: vi.fn(), exists:vi.fn(async()=>false), limit: vi.fn(async () => true) }));
 vi.mock("@/lib/clients/auth", () => ({ clientAuth: () => ({ api: { signUpEmail: m.signup } }) }));
-vi.mock("@/lib/clients/registration",()=>({registrationExists:m.exists}));
+vi.mock("@/lib/clients/registration",()=>({registrationExists:m.exists,registrationWelcome:async()=>({tierName:"Start",maxAmount:40000,maxPercent:30,maxInstallments:1})}));
 vi.mock("@/lib/clients/db", () => ({ clientPool: vi.fn() }));
 vi.mock("@/lib/clients/http", async original => ({ ...await original<typeof import("@/lib/clients/http")>(), allowClientRegistration: m.limit }));
 import { POST } from "./route";

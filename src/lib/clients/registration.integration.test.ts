@@ -22,6 +22,6 @@ function register(email:string){return POST(new Request(base+"/api/clientes/regi
 it("responde igual a RUT nuevo y duplicado sin crear dos cuentas",async()=>{
  const fresh=await register("audit-new@example.com");
  const duplicate=await register("audit-other@example.com");
- expect(fresh.status).toBe(200);expect(duplicate.status).toBe(200);expect(await fresh.json()).toEqual(await duplicate.json());
+ expect(fresh.status).toBe(200);expect(duplicate.status).toBe(200);const freshBody=await fresh.json();expect(freshBody).toEqual(await duplicate.json());expect(freshBody.welcome).toEqual({tierName:"Start",maxAmount:40000,maxPercent:30,maxInstallments:1});
  expect((await db.query("SELECT count(*)::int AS count FROM oc_client_user")).rows[0]).toEqual({count:1});
 },20000);
