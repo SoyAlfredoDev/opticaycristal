@@ -1,7 +1,7 @@
 import "server-only";
 import { enviarConResend } from "@/lib/mail/resend";
 import { CONTACTO_EMAIL } from "@/lib/solicitudes/types";
-import { LOGO_CID } from "@/lib/mail/templates";
+import { emailLogoHtml } from "@/lib/mail/templates";
 export type ClientMail = { to: string; url: string; kind: "verify" | "reset" };
 export const CLIENT_MAIL_COMPANY={name:"Óptica y Cristal Limitada",rut:"77.068.257-6",address:"Huérfanos 713, local 18, Santiago Centro",phone:"+56 9 2245 2080",website:"https://opticaycristal.cl"};
 function escape(value: string) { return value.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!); }
@@ -27,7 +27,7 @@ export function corporateEmailHtml({title,heading,purpose,action,url,eyebrow,sec
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf7f2"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;border:1px solid #e9d8c8;border-radius:12px;background:#fff">
 <tr><td style="height:5px;border-radius:12px 12px 0 0;background:#6b1f3a;font-size:0">&nbsp;</td></tr>
-<tr><td style="padding:30px 28px 20px"><img src="cid:${LOGO_CID}" alt="Óptica &amp; Cristal" width="156" style="display:block;width:156px;max-width:100%;height:auto;border:0"></td></tr>
+<tr><td style="padding:30px 28px 20px">${emailLogoHtml()}</td></tr>
 <tr><td style="padding:0 28px"><p style="margin:0 0 12px;font-size:10px;font-weight:bold;letter-spacing:1.8px;color:#007f5f;text-transform:uppercase">${escape(eyebrow)}</p><h1 style="margin:0 0 20px;font-family:Georgia,'Times New Roman',serif;font-size:30px;font-weight:normal;line-height:1.2;color:#6b1f3a">${escape(heading)}</h1><p style="margin:0;font-size:15px;line-height:1.8">${escape(purpose)}</p></td></tr>
 <tr><td align="left" style="padding:28px"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="#c9ff73" style="border-radius:8px;background:#c9ff73"><a href="${escape(url)}" style="display:inline-block;min-height:20px;padding:15px 24px;border:1px solid #b9eb62;border-radius:8px;font-size:14px;line-height:20px;font-weight:bold;text-decoration:none;color:#183e29">${escape(action)}</a></td></tr></table><p style="margin:16px 0 0;font-size:12px;line-height:1.7;color:#6e6264">${expiry ? `El enlace es válido durante <strong>${escape(expiry)}</strong>.` : escape(note || "Consulte y responda desde el portal de la óptica.")}</p></td></tr>
 <tr><td style="padding:0 28px 28px"><p style="margin:0;padding:16px;border:1px solid #e5ece8;border-radius:8px;background:#f8faf9;font-size:12px;line-height:1.8;color:#566b62">${escape(security)}</p></td></tr>

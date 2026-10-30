@@ -31,6 +31,11 @@ export function logoAttachment() {
   };
 }
 
+/** Keep the logo on a light plate, including readers that recolor solid backgrounds. */
+export function emailLogoHtml(width = 156) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#ffffff" style="padding:12px;border:1px solid #e9d8c8;border-radius:10px;background-color:#ffffff;background-image:linear-gradient(#ffffff,#ffffff)"><img src="cid:${LOGO_CID}" alt="Óptica &amp; Cristal" width="${width}" style="display:block;width:${width}px;max-width:100%;height:auto;border:0"></td></tr></table>`;
+}
+
 function shell(title: string, bodyHtml: string) {
   return `<!doctype html>
 <html lang="es">
@@ -45,7 +50,7 @@ function shell(title: string, bodyHtml: string) {
             </tr>
             <tr>
               <td style="padding:28px 24px 12px;">
-                <img src="cid:${LOGO_CID}" width="160" alt="Óptica &amp; Cristal" style="display:block;width:160px;max-width:100%;height:auto;border:0;" />
+                ${emailLogoHtml(160)}
               </td>
             </tr>
             <tr>
