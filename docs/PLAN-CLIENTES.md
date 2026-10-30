@@ -73,3 +73,13 @@ Se retiran «MI ESPACIO», el subtítulo, el párrafo de verificación y el bot�
 Migración aditiva `003-audit.sql`, solo en `oc_customers_preview_20261028` durante revisión.
 No publica cambios ni cambia los requisitos vigentes de correo/WhatsApp. A8–A9 del
 reporte no forman parte del compromiso principal de esta iteración.
+
+## Soporte implementado — 2026-10-30
+
+Perfil ofrece «Mis tickets de ayuda». El cliente crea una solicitud con asunto
+y mensaje, consulta su historial, responde y marca como resuelta. El personal
+dispone de una bandeja en Clientes / Tickets de ayuda con filtros por estado,
+búsqueda por folio, nombre o correo y conversación con enlace a la ficha.
+Las respuestas permanecen en el portal. Cada cliente solo accede a sus tickets;
+el personal utiliza la autorización administrativa existente. Los textos se
+cifran en reposo. Ver límites y migración 004 en CLIENTES-CONFIGURACION.md.

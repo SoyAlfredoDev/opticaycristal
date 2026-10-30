@@ -132,3 +132,28 @@ productos, ventas y pagos. La prueba de saldo inicial y rechazo de saldo negativ
 se revirtió por completo. Ver PREPARACION-PRODUCCION-2026-10-29.md y los registros
 JSON asociados. Quedan pendientes catálogo real, publicación y recepción real de
 correos de prueba autorizados.
+
+## Soporte por tickets — 2026-10-30
+
+- Perfil enlaza a `/mi-cuenta/soporte`; administración atiende en
+  `/admin/clientes/soporte`. Se reutilizan las sesiones y el control de personal.
+- Ejecutar la migración aditiva `sql/clients/004-support.sql` con la conexión
+  directa y el esquema de clientes existente. `scripts/migrate-support.mjs`
+  ejecuta únicamente esta migración; cargar las variables desde el entorno
+  seguro antes de invocarlo. El preparador completo también incluye 004.
+- No requiere nuevas variables. Asunto y mensajes utilizan `CLIENT_DATA_KEY`
+  con propósitos distintos de los datos personales. Conservar esta llave.
+- El cliente puede pedir ayuda aunque no haya verificado el correo. Cada
+  consulta y escritura exige sesión; el propietario se obtiene del servidor.
+- Estados: pendiente al crear o responder el cliente, respondido al contestar
+  el personal, resuelto al cerrar. Una respuesta reabre el ticket. El cierre
+  exige haber visto el último mensaje y deja registro en la conversación.
+- Asunto de hasta 100 caracteres; mensajes de hasta 2.000. Texto plano, sin
+  adjuntos. Las respuestas se consultan dentro del portal, sin correos automáticos.
+- Límites: 5 tickets nuevos/hora, 10 activos por cliente, 20 mensajes/hora del
+  cliente y 120 del personal; 100 mensajes por conversación, con cierre permitido
+  al alcanzar el límite. Las claves de envío evitan duplicados al reintentar.
+- Pruebas aisladas: creación, respuesta, cierre, reapertura, límites, cifrado,
+  permisos por propietario, sesiones/origen y reintentos. La migración se probó
+  dos veces en un esquema temporal de Neon, eliminado al terminar; sin escribir
+  solicitudes en cuentas reales.

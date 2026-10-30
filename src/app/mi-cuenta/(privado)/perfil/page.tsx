@@ -1,4 +1,5 @@
-import { ChevronDown, UserRound } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, UserRound, LifeBuoy } from "lucide-react";
 import { currentCustomer } from "@/lib/clients/current";
 import { ProfileVerification } from "@/components/clients/ProfileVerification";
 import styles from "@/components/clients/ClientSpace.module.css";
@@ -15,5 +16,10 @@ export default async function CustomerProfilePage() {
       </div>
       <p className={`${styles.small} ${styles.muted} ${styles.section}`}>Para corregir tus datos, contacta a la óptica. La cédula se revisa presencialmente, sin guardar copia.</p>
     </details>
+    <section className={`${styles.panel} ${styles.section}`}>
+      <h2 className={styles.iconLabel}><LifeBuoy size={22} aria-hidden="true" />Soporte</h2>
+      <p className={`${styles.small} ${styles.muted}`}>¿Necesitas ayuda? Envía un ticket y sigue nuestras respuestas aquí.</p>
+      <Link href="/mi-cuenta/soporte" className={`${styles.button} ${styles.primary} ${styles.section}`}>Mis tickets de ayuda</Link>
+    </section>
   </>;
 }

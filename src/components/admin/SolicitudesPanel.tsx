@@ -102,7 +102,7 @@ export default function SolicitudesPanel({
           </div>
           <nav aria-label="Administración" className="flex items-center gap-4 text-sm font-semibold">
             <Link href="/admin" aria-current="page" className="text-primary">Solicitudes</Link>
-            <Link href="/admin/clientes" className="text-text-secondary hover:text-brand-dark">Clientes</Link><Link href="/admin/pedidos" className="text-text-secondary hover:text-brand-dark">Pedidos</Link><Link href="/admin/radar" className="text-text-secondary hover:text-brand-dark">Radar B2B</Link>
+            <Link href="/admin/clientes" className="text-text-secondary hover:text-brand-dark">Clientes</Link><Link href="/admin/clientes/soporte" className="text-text-secondary hover:text-brand-dark">Soporte</Link><Link href="/admin/pedidos" className="text-text-secondary hover:text-brand-dark">Pedidos</Link><Link href="/admin/radar" className="text-text-secondary hover:text-brand-dark">Radar B2B</Link>
           </nav>
           <form action={logoutAction}>
             <button
