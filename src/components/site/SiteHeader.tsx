@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, UserRound, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { brand, siteNavigation, whatsappUrl } from "./content";
 import { LinkButton } from "./LinkButton";
@@ -90,7 +90,11 @@ export function SiteHeader({ active = "Inicio" }: { active?: string }) {
           ))}
         </nav>
         <div className={styles.navActions}>
-          <LinkButton href={whatsappUrl()} variant="outline" target="_blank" rel="noopener noreferrer">
+          <Link href="/mi-cuenta" className={styles.accountLink}>
+            <UserRound aria-hidden="true" size={17} />
+            <span>Mi cuenta</span>
+          </Link>
+          <LinkButton href={whatsappUrl()} className={styles.contactAction} variant="outline" target="_blank" rel="noopener noreferrer">
             Hablemos
           </LinkButton>
           <button ref={toggleRef} type="button" className={styles.menuToggle}

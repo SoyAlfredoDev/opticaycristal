@@ -59,6 +59,9 @@
 }
 .desktopNav { display: none; }
 .navActions { display: flex; gap: 13px; align-items: center; }
+.accountLink { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 9px 12px; border: 1px solid #b9eb62; border-radius: 6px; background: #c9ff73; color: #183425; font-size: 13px; font-weight: 600; white-space: nowrap; transition: background 250ms var(--ease); }
+.accountLink:hover { background: #b9ee60; }
+.navActions .contactAction { display: none; }
 .navActions .button { min-height: 40px; padding: 9px 15px; font-size: 12px; }
 .menuToggle { width: 44px; height: 44px; display: grid; place-items: center; color: var(--wine); background: none; border: none; }
 .mobileNav { position: absolute; top: 100%; left: 0; right: 0; background: var(--ivory); padding: 16px 20px 24px; box-shadow: 0 12px 20px rgb(66 19 38 / .08); border-top: 1px solid var(--line); }
@@ -187,6 +190,7 @@
   .dialogInfo, .dialogBottom { padding-inline: 32px; }
 }
 @media (min-width: 900px) {
+  .navActions .contactAction { display: inline-flex; }
   .container { width: min(100% - 96px, 1280px); }
   .header { top: -32px; }
   .utility { height: 32px; font-size: 11px; }
