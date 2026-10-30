@@ -15,7 +15,9 @@ export function canManageProductCosts(user: string) {
 }
 
 export function canManageCustomerCategories(user:string) {
+ // Call only after customerAdminSession: the default is the existing client-admin role.
+ if(!user.trim())return false;
  const configured=process.env.CLIENT_CATEGORY_ADMIN_USERS?.trim();
- if(!configured)return canManageProductCosts(user);
+ if(!configured)return true;
  return configured.split(",").map(v=>v.trim().toLowerCase()).filter(Boolean).includes(user.trim().toLowerCase());
 }

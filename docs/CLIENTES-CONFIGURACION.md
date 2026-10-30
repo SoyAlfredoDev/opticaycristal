@@ -212,9 +212,10 @@ correos de prueba autorizados.
   `/api/admin/clientes/[id]/categoria`. Se exige sesión del personal y origen
   propio para escribir. El cliente público no puede modificar su categoría.
 - Permiso: `CLIENT_CATEGORY_ADMIN_USERS` es una lista opcional de usuarios del
-  personal, separados por coma. Si está vacía, se reutilizan los responsables de
-  costos existentes. La pertenencia a esta lista requiere además acceso al
-  módulo administrativo de clientes; el correo público no concede permisos.
+  personal, separados por coma. Si está vacía, pueden editar los administradores
+  ya autorizados en el módulo de clientes. Una lista específica restringe ese
+  permiso; siempre se exige la sesión administrativa y el acceso al módulo.
+  El correo público no concede permisos y la edición de costos sigue separada.
 - Se cambia solo la categoría del cliente. Los límites se toman de los niveles
   configurados en la base; el navegador no puede definir cupos, porcentajes ni
   plazos. Las ventas conservan sus condiciones guardadas. Un cambio con deuda
