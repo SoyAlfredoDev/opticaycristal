@@ -21,10 +21,10 @@ export function VisitSection({
         <SectionReveal>
           {financing && (
             <div className={styles.faqs}>
-              <div><p className={styles.kicker}>Financiamiento, sin dudas</p><h2 id="financing-faq-title">¿Tienes dudas?</h2></div>
+              <div><p className={styles.kicker}>Crédito, sin dudas</p><h2 id="financing-faq-title">¿Tienes dudas?</h2></div>
               <div className={styles.questions} aria-labelledby="financing-faq-title">
                 <details><summary>¿Qué documentos necesito?</summary><p>Revisamos tu cédula en la óptica. No pedimos liquidaciones de sueldo ni comprobantes de ingresos.</p></details>
-                <details><summary>¿Debo pagar un pie?</summary><p>Sí. Siempre hay pie; el financiamiento depende de tu nivel y de la compra.</p></details>
+                <details><summary>¿Debo pagar un pie?</summary><p>Sí. Siempre hay pie; el crédito depende de tu nivel y de la compra.</p></details>
                 <details><summary>¿Puedo comprar por internet?</summary><p>Por ahora, la compra y la contratación son presenciales.</p></details>
               </div>
             </div>
@@ -42,7 +42,7 @@ export function VisitSection({
                   <span>Cómo llegar</span>
                   <ArrowUpRight aria-hidden="true" size={18} strokeWidth={1.6} />
                 </a>
-                <a className={`${site.button} ${site.outline} ${styles.whatsapp}`} href={whatsappUrl(financing ? "Hola, quiero conocer el financiamiento para mis lentes" : visitMessage)} target="_blank" rel="noopener noreferrer">
+                <a className={`${site.button} ${site.outline} ${styles.whatsapp}`} href={whatsappUrl(financing ? "Hola, quiero conocer el crédito para mis lentes" : visitMessage)} target="_blank" rel="noopener noreferrer">
                   <span>{financing ? "Consultar por WhatsApp" : "Avisar por WhatsApp"}</span>
                 </a>
               </div>
