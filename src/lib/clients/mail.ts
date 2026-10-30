@@ -32,7 +32,7 @@ export function clientEmailContent({ url, kind }: ClientMail) {
 }
 export async function sendClientMail(message: ClientMail) {
  const {title,html,text}=clientEmailContent(message);
- // Keep security messages in text until domain-wide tracking is disabled with approval.
- const result=await enviarConResend({to:message.to,subject:title,html,text,textOnly:true,replyTo:CONTACTO_EMAIL});
+ // Domain open/click tracking is disabled so security links remain direct.
+ const result=await enviarConResend({to:message.to,subject:title,html,text,replyTo:CONTACTO_EMAIL});
  if(!result.ok)throw new Error("No se pudo confirmar el envío del correo de seguridad.");
 }
