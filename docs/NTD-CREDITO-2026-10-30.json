@@ -1,0 +1,58 @@
+{
+  "product": "NTD — ficticio",
+  "protectedCost": 20000,
+  "saleTotal": 45000,
+  "environment": "PostgreSQL aislado en memoria",
+  "productionDataChanged": false,
+  "tiers": [
+    {
+      "tier": "start",
+      "total": 45000,
+      "credit": 13500,
+      "deposit": 31500
+    },
+    {
+      "tier": "vip",
+      "total": 45000,
+      "credit": 18000,
+      "deposit": 27000
+    },
+    {
+      "tier": "premium",
+      "total": 45000,
+      "credit": 25000,
+      "deposit": 20000
+    },
+    {
+      "tier": "elite",
+      "total": 45000,
+      "credit": 25000,
+      "deposit": 20000
+    }
+  ],
+  "costGuard": true,
+  "startSale": {
+    "total": 45000,
+    "deposit": 31500,
+    "credit": 13500,
+    "remaining": 13500,
+    "oneMonthlyInstallment": true,
+    "duplicatePrevented": true,
+    "customerPrivacy": true
+  },
+  "payments": {
+    "first": 10000,
+    "remainingAfterFirst": 3500,
+    "last": 3500,
+    "finalRemaining": 0,
+    "restoredCapacity": 40000,
+    "duplicatePrevented": true,
+    "overpaymentRejected": true
+  },
+  "monthly": {
+    "first": "2030-01-31",
+    "second": "2030-02-28",
+    "each": 12500,
+    "reversalAndCancellation": true
+  }
+}

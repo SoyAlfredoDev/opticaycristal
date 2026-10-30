@@ -5,6 +5,7 @@ afterEach(() => vi.unstubAllEnvs());
 describe("seguridad de acceso administrativo", () => {
   it("firma la sesión y rechaza una firma alterada", () => {
     vi.stubEnv("SESSION_SECRET", "s".repeat(48));
+    vi.stubEnv("ADMIN_USER", "equipo");vi.stubEnv("ADMIN_PASSWORD", "synthetic-test-password");
     const token = createSessionToken("equipo");
     expect(readSessionToken(token)).toMatchObject({ u: "equipo" });
     expect(readSessionToken(`${token?.slice(0, -1)}x`)).toBeNull();
@@ -23,4 +24,14 @@ describe("seguridad de acceso administrativo", () => {
     vi.stubEnv("NODE_ENV", "production");
     expect(adminCookieOptions(100)).toMatchObject({ httpOnly: true, secure: true, sameSite: "lax", path: "/" });
   });
+});
+
+describe("revocación de sesiones del personal",()=>{
+ it("invalida al retirar cuenta, cambiar contraseña o versión",()=>{
+  vi.stubEnv("SESSION_SECRET","s".repeat(48));vi.stubEnv("ADMIN_USER","seller");vi.stubEnv("ADMIN_PASSWORD","old-synthetic-password");
+  const token=createSessionToken("seller");expect(readSessionToken(token)).not.toBeNull();
+  vi.stubEnv("ADMIN_USER","");expect(readSessionToken(token)).toBeNull();
+  vi.stubEnv("ADMIN_USER","seller");vi.stubEnv("ADMIN_PASSWORD","new-synthetic-password");expect(readSessionToken(token)).toBeNull();
+  const fresh=createSessionToken("seller");vi.stubEnv("ADMIN_SESSION_VERSION","2");expect(readSessionToken(fresh)).toBeNull();
+ });
 });

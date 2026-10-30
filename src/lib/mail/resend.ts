@@ -6,6 +6,8 @@ export type EnvioCorreo = {
   html: string;
   text: string;
   replyTo: string;
+  /** Security links can be sent as plain text, without HTML click/open tracking. */
+  textOnly?: boolean;
   idempotencyKey?: string;
   tags?: Array<{ name: string; value: string }>;
 };
@@ -39,9 +41,8 @@ async function enviar(message: EnvioCorreo): Promise<ResultadoEnvio> {
       to: [message.to],
       reply_to: message.replyTo,
       subject: message.subject,
-      html: message.html,
+      ...(!message.textOnly ? { html: message.html, attachments: [logoAttachment()] } : {}),
       text: message.text,
-      attachments: [logoAttachment()],
       ...(message.tags ? { tags: message.tags } : {}),
     }),
   });

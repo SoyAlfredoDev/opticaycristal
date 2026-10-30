@@ -13,6 +13,7 @@ vi.mock("next/image", () => ({
   },
 }));
 
+if (typeof window !== "undefined") {
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
@@ -30,3 +31,5 @@ Object.defineProperty(HTMLDialogElement.prototype, "close", {
   configurable: true,
   value() { this.open = false; this.dispatchEvent(new Event("close")); },
 });
+
+}

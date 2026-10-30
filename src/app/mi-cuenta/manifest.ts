@@ -1,0 +1,2 @@
+import type { MetadataRoute } from "next";
+export default function manifest(): MetadataRoute.Manifest {return {name:"Mi espacio · Óptica & Cristal",short_name:"Mi Óptica",description:"Tu cuenta de cliente de Óptica y Cristal",start_url:"/mi-cuenta",scope:"/mi-cuenta",display:"standalone",background_color:"#ffffff",theme_color:"#007f5f",lang:"es-CL",icons:[{src:"/images/clientes/icon-192.png",sizes:"192x192",type:"image/png"},{src:"/images/clientes/icon-512.png",sizes:"512x512",type:"image/png"}]};}

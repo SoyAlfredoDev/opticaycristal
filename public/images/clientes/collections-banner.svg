@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+<title id="title">Una nueva mirada. Más tú.</title><desc id="desc">Colecciones de lentes ópticos, lentes de sol y accesorios de Óptica y Cristal.</desc>
+<defs><clipPath id="frame"><rect width="1200" height="300" rx="24"/></clipPath><linearGradient id="background" x2="1" y2="1"><stop stop-color="#073c33"/><stop offset="1" stop-color="#005d45"/></linearGradient></defs>
+<g clip-path="url(#frame)"><rect width="1200" height="300" fill="url(#background)"/><circle cx="1075" cy="90" r="230" fill="#bbff54"/><circle cx="1090" cy="95" r="185" fill="none" stroke="#e4ffb5" stroke-width="2" opacity=".7"/><circle cx="1070" cy="90" r="275" fill="none" stroke="#86df9b" opacity=".22"/>
+<text x="52" y="57" fill="#c9efd7" font-family="Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="3">ÓPTICA &amp; CRISTAL</text>
+<text x="48" y="139" fill="#ffffff" font-family="Arial,sans-serif" font-size="64" font-weight="700" letter-spacing="-2">Una nueva mirada.</text>
+<text x="50" y="202" fill="#bdff52" font-family="Arial,sans-serif" font-size="47" font-weight="700" letter-spacing="-1">Más tú.</text>
+<text x="52" y="258" fill="#e1f6e9" font-family="Arial,sans-serif" font-size="19">Lentes ópticos · Sol · Accesorios</text>
+<g transform="translate(827 116) rotate(-10 165 50)" fill="none" stroke="#104735" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><rect x="0" y="0" width="121" height="89" rx="30"/><rect x="164" y="0" width="121" height="89" rx="30"/><path d="M121 23 Q142 9 164 23 M-22 5 L3 15 M282 15 L308 2"/><path d="M20 28 L42 12 M184 28 L206 12" stroke="#fff" stroke-width="5" opacity=".65"/></g>
+<path d="M790 59 L798 75 L816 79 L801 87 L797 105 L788 90 L771 86 L786 77Z" fill="#bdff52"/>
+</g></svg>

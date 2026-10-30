@@ -6,6 +6,12 @@ const message = { to: "test@example.invalid", subject: "Prueba aislada", html: "
 beforeEach(() => { vi.stubEnv("RESEND_API_KEY", "test-key"); vi.stubGlobal("fetch", send); send.mockReset(); });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 describe("transporte Resend sin llamadas externas", () => {
+  it("envía enlaces de seguridad como texto, sin HTML ni adjuntos", async () => {
+    send.mockResolvedValueOnce(Response.json({ id: "provider-id" }));
+    expect(await enviarConResend({ ...message, textOnly: true })).toMatchObject({ ok: true });
+    const body = JSON.parse(send.mock.calls[0][1].body);
+    expect(body.text).toBe(message.text);expect(body).not.toHaveProperty("html");expect(body).not.toHaveProperty("attachments");
+  });
   it("envía la clave de idempotencia en la cabecera HTTP", async () => {
     send.mockResolvedValueOnce(Response.json({ id: "provider-id" }));
     expect(await enviarConResend(message)).toMatchObject({ ok: true, id: "provider-id" });

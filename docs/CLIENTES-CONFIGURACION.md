@@ -1,0 +1,134 @@
+# Programa de clientes: revisión previa a publicación
+
+## Rutas
+- `/mi-cuenta/registro`, `/mi-cuenta/ingresar`, `/mi-cuenta/recuperar`, `/mi-cuenta/restablecer`.
+- Portal privado `/mi-cuenta`, `/mi-cuenta/perfil`, `/mi-cuenta/compras`, `/mi-cuenta/cuotas`, `/mi-cuenta/ayuda`.
+- Personal existente: `/admin/clientes` y `/admin/clientes/[id]`. Un cliente no puede convertirse en administrador al registrarse.
+
+## Configuración del servidor
+- `CLIENT_AUTH_SECRET`: mínimo32caracteres aleatorios. Independiente del secreto del personal.
+- `CLIENT_DATA_KEY`:32bytes aleatorios en base64. Protege RUT y WhatsApp; pérdida o cambio sin migración impide leer los datos. Custodiar fuera del repositorio y respaldar mediante el gestor de secretos.
+- `CLIENT_APP_URL`: origen exacto de esta instalación. HTTPS en producción; localhost con puerto en desarrollo. No derivar enlaces de recuperación desde cabeceras Host o URLs aportadas por terceros.
+- `CLIENT_DATABASE_URL`: opcional, reutiliza DATABASE_URL si no se especifica. `CLIENT_DATABASE_URL_UNPOOLED` permite conexión directa para migrar.
+- `CLIENT_DATABASE_SCHEMA`: espacio propio para clientes. En revisión usar un esquema aislado como `oc_customers_preview_20261028`; producción requerirá la configuración de su esquema antes de publicar. Consultas calificadas por esquema, sin depender del estado de sesión de un pooler.
+- `CLIENT_ADMIN_USERS`: opcional, restringe aún más las cuentas internas actuales por usuario, separadas por comas. Nunca basta con que un correo se registre públicamente.
+- Reutiliza RESEND_API_KEY y remitente existente contacto@opticaycristal.cl. El dominio está verified y con envío habilitado, comprobado mediante el conector el28/10/2026. La clave existente solo tiene permisos de envío: no usar sus fallos de lectura para concluir que no puede enviar. El dominio tiene tracking de marketing activo; los correos de seguridad se envían como texto sin HTML, píxeles ni enlaces HTML reescritos. No se modificaron las campañas ni la configuración del dominio. Las funciones de correo no inventan entregas exitosas: si el proveedor falla se informa un error genérico. La recepción real de un correo no se ha probado; las pruebas usan un receptor aislado sin envíos a terceros.
+
+## Migración
+`npm run db:clients:prepare` crea únicamente tablas con prefijo oc_client dentro del esquema explícito y registra las cuatro categorías. No importa clientes ni modifica solicitudes, pedidos, CRM o datos previsionales. Se prueba contra PostgreSQL aislado antes de aplicarla. No ejecutar contra public.
+
+El esquema tiene unicidad de correo y HMAC del RUT, restricciones de categoría y creación de saldo cero en la misma transacción del usuario. La migración 002 agrega productos, ventas, cuotas y pagos. Nunca inferir compras a partir de registros anteriores sin una asociación autorizada.
+
+## Reglas vigentes
+Start desde inscripción, hasta30%/40000CLP/1cuota. VIP40%/60000/1, Premium60%/80000/2, Elite70%/150000/2. No se implementan ascensos automáticos aún.
+
+La cuenta es accesible aunque el correo esté pendiente. El máximo se asigna al registrar. Para utilizar financiamiento, se requiere correo verificado. WhatsApp es opcional por decisión del usuario del 29/10/2026; su verificación no está implementada. Por eso puede existir un máximo de40000 y un disponible para uso de0. No implementar un bypass que marque WhatsApp verificado por un checkbox del cliente o del navegador. La revisión presencial de cédula no sustituye estas verificaciones.
+
+## Protección y pruebas
+- Better Auth1.7 gestiona hash scrypt, sesiones HttpOnly/SameSite, tokens de recuperación de30minutos, correo de24horas, identificadores de tokens hash y revocación de sesiones al cambiar contraseña. Inicio sin auto-login después de reset.
+- Registro validado en servidor, campos cifrados AES-256-GCM con contexto y unicidad RUT con HMAC; sin RUT/teléfono en respuestas genéricas de sesión. Nombre y correo permanecen necesarios para operar la cuenta.
+- Registro, login, recuperación y reenvío limitados por base de datos; nunca solo memoria de una instancia. Origin exacto en mutaciones y lista cerrada de rutas públicas Better Auth.
+- Reenvío de verificación requiere sesión y solo se dirige al correo de esa sesión. No se implementa cambio de correo ni modificación pública de categoría/flags.
+- Datos privados no se guardan en localStorage ni se almacenan en caché offline; respuestas privadas no-store y noindex. El manifiesto brinda presentación standalone, sin service worker para cachear datos personales.
+- Probar cuentas distintas y personal no autenticado; no enviar correos de prueba a clientes reales. Los tests integrales usan PostgreSQL local PGlite y un receptor de correo en memoria.
+- Los registros y reclamaciones de privacidad se atienden mediante contacto oficial. Revisar antes del lanzamiento la política, proveedores, retención, eliminación de cuentas y futuras condiciones legales del financiamiento; no presentar estos textos como asesoría legal ni contrato de crédito.
+
+## Fuera de alcance
+No publicado. Sin verificación real de WhatsApp, pago online, descuentos por nivel ni documento jurídico revisado. Hay registro administrativo de ventas y pagos y compromiso operativo imprimible. No se muestran transacciones ficticias a usuarios reales. Las cuentas individuales del personal se planificarán después manteniendo el acceso interno actual.
+
+Referencias: https://better-auth.com/docs/integrations/next · https://better-auth.com/docs/authentication/email-password · https://better-auth.com/docs/concepts/rate-limit
+
+Referencia sobre seguimiento de HTML y separación de correos sensibles: https://github.com/resend/resend-skills/blob/main/skills/resend/references/sending/overview.md
+
+## Ventas y pagos — etapa del 29/10/2026
+- Administración: `/admin/clientes/ventas`; acceso desde Clientes. Primero configurar
+  productos o paquetes y costo protegido interno por unidad, sin inventar costos.
+- Buscar cliente existente por RUT. Se usa HMAC normalizado, nunca RUT en URL.
+- Una venta corresponde a un producto/paquete con cantidad y precio total final.
+  Desglose: neto = redondeo(total / 1,19); IVA = total − neto. No emite boleta/factura.
+- Crédito máximo: mínimo entre porcentaje del nivel, cupo por saldo y total menos
+  costo configurado multiplicado por cantidad. Siempre pie. Un financiamiento activo
+  por cliente; puede registrar ventas al contado mientras exista deuda.
+- Requiere correo verificado, revisión presencial de cédula confirmada por vendedor
+  y confirmación de pie recibido. WhatsApp opcional en esta etapa.
+- Vendedor elige primer vencimiento futuro. Siguientes cuotas siempre mensuales;
+  conservar el día original o usar fin de mes. Pesos enteros, diferencia en última cuota.
+- El compromiso contiene las condiciones originales y espacios para firma; generarlo
+  no acredita firma ni aceptación. Contratación presencial. No se envía por correo.
+- Pagos manuales: monto recibido, fecha no futura ni anterior a la venta y referencia;
+  se aplican a cuotas antiguas, admiten pagos parciales y anticipados, impiden sobrepago.
+- Venta/cuotas/saldo se guardan juntos; pagos/cuotas/saldo también. Bloqueo por cliente,
+  restricción única de crédito activo y UUID de idempotencia contra doble envío.
+- Costos internos y usuario del vendedor no se incluyen en respuestas al cliente.
+- Anulaciones y reversos operativos disponibles en la iteración A1–A7; no editar directamente saldos.
+
+## Seguridad y correcciones de auditoría A1–A7
+
+`ADMIN_SESSION_VERSION` (opcional, por defecto `1`) permite invalidar las sesiones del
+personal al cambiar su valor. Las sesiones también se invalidan si cambia la contraseña
+o se retira la cuenta configurada. No hay nuevas cuentas del personal en esta etapa.
+El límite de acceso administrativo usa `oc_client_admin_login_limits`, con IP protegida
+por HMAC; requiere la migración `003-audit.sql` para iniciar sesión.
+
+`CLIENT_COST_ADMIN_USERS` restringe quién puede crear y modificar productos/costos.
+Acepta usuarios internos existentes separados por comas. Si se omite, solo la cuenta
+principal (`ADMIN_USER`, o `ADMIN_USER_2` si es la única configurada) administra costos.
+Las modificaciones guardan valores anteriores/nuevos, fecha y autor en
+`oc_client_product_changes`; no modifica las condiciones históricas de ventas.
+
+Recuperación: el navegador guarda solo el identificador de operación, nunca el RUT,
+correo o datos de pago. El servidor guarda la solicitud y permite recuperarla únicamente
+al vendedor autenticado que la registró. Sesión expirada o error de conexión conservan el identificador;
+no comenzar otro registro hasta resolver el pendiente. La recuperación se mantiene en la
+misma pestaña después de recargar; no promete sincronización entre dispositivos.
+
+Correcciones: revierte pagos antes de anular una venta. Un reverso redistribuye los pagos
+vigentes en orden de cuota y actualiza el capital en la misma transacción. No permite
+reabrir crédito si hay otro activo. Anulación/reverso son registros operativos, no
+transferencias bancarias ni devoluciones automáticas. La devolución de un pie se coordina
+presencialmente. No se borran ventas ni pagos al corregirlos.
+
+La confirmación de firma guarda fecha y responsable después de revisar la firma física;
+no digitaliza firmas ni sustituye revisión jurídica del compromiso.
+
+## Variables productivas configuradas — 29/10/2026
+
+Con autorización explícita del usuario se crearon en Vercel, proyecto
+`opticaycristal`, equipo `optica-y-cristal`, exclusivamente para **Production**:
+
+| Variable | Tipo | Configuración |
+| --- | --- | --- |
+| CLIENT_AUTH_SECRET | Secret | Nueva clave aleatoria independiente de desarrollo y del personal |
+| CLIENT_DATA_KEY | Secret | Nueva clave aleatoria de 32 bytes en base64 |
+| CLIENT_APP_URL | Config | https://opticaycristal.cl |
+| CLIENT_DATABASE_SCHEMA | Config | oc_customers |
+
+Se verificaron las cuatro filas y el alcance Production en el panel. Las claves
+no se imprimieron ni se incluyeron en documentación. El respaldo local de las
+cuatro variables está en `.env.clients-production.local`, excluido de Git y con
+permisos solo para su propietario. Custodiar especialmente CLIENT_DATA_KEY: no
+regenerarla después de registrar clientes sin una migración de los datos cifrados.
+La copia local no sustituye el respaldo en un gestor de secretos.
+
+Se conserva DATABASE_URL como conexión existente por el fallback del módulo;
+RESEND_API_KEY y los accesos internos existentes no se modificaron. No se comparten
+estas claves con Preview ni Development. La configuración entra en vigor en un
+nuevo despliegue: esta operación no desplegó código ni ejecutó migraciones.
+Siguen pendientes verificar/aplicar 001–003 en el esquema productivo, configurar
+productos/costos reales y probar los flujos del nuevo despliegue.
+
+### Conexión explícita y migraciones completadas
+
+Durante la preparación autorizada del 29/10 se añadió también
+`CLIENT_DATABASE_URL` como **Secret solo en Production**, apuntando a la base
+existente `optica_web_db` de Neon usada por este proyecto. Su valor está en el
+mismo respaldo local ignorado. El módulo ya no depende del fallback DATABASE_URL;
+la conexión general de la web no se cambió. Las claves de producción permanecen
+separadas de las de revisión.
+
+Las migraciones 001–003 se aplicaron por conexión directa TLS al esquema nuevo
+`oc_customers`; se verificaron 15 tablas, cuatro niveles y cero clientes,
+productos, ventas y pagos. La prueba de saldo inicial y rechazo de saldo negativo
+se revirtió por completo. Ver PREPARACION-PRODUCCION-2026-10-29.md y los registros
+JSON asociados. Quedan pendientes catálogo real, publicación y recepción real de
+correos de prueba autorizados.

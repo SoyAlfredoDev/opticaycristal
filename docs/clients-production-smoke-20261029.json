@@ -1,0 +1,130 @@
+{
+  "at": "2026-10-29T17:22:35.551Z",
+  "environment": "local production build",
+  "requests": 18,
+  "passed": true,
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/convenios",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/jornadas",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/mi-cuenta/ingresar",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/mi-cuenta/registro",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/mi-cuenta/recuperar",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/mi-cuenta/privacidad",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/mi-cuenta/manifest.webmanifest",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/mi-cuenta",
+      "status": 307,
+      "expected": 307,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/mi-cuenta/compras",
+      "status": 307,
+      "expected": 307,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/mi-cuenta/cuotas",
+      "status": 307,
+      "expected": 307,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/admin/clientes",
+      "status": 307,
+      "expected": 307,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/admin/clientes/ventas",
+      "status": 307,
+      "expected": 307,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/api/clientes/perfil",
+      "status": 401,
+      "expected": 401,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/api/admin/clientes",
+      "status": 401,
+      "expected": 401,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/api/admin/clientes/ventas",
+      "status": 401,
+      "expected": 401,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "/api/clientes/auth/get-session",
+      "status": 200,
+      "expected": 200,
+      "passed": true,
+      "privateHeaders": true
+    },
+    {
+      "path": "POST registro / foreign Origin",
+      "status": 403,
+      "expected": 403,
+      "passed": true
+    }
+  ]
+}

@@ -1,9 +1,9 @@
+import { allowStaffLogin } from "@/lib/clients/staff-access";
 import { NextResponse } from "next/server";
 import {
   ADMIN_COOKIE,
   adminCredentialsConfigured,
   adminCookieOptions,
-  allowAttempt,
   clientIp,
   createSessionToken,
   credentialsMatch,
@@ -12,7 +12,9 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  if (!allowAttempt(`login:${clientIp(request)}`, 8, 15 * 60 * 1000)) {
+  let allowed=false;
+  try { allowed=await allowStaffLogin(clientIp(request)); } catch { return NextResponse.json({error:"Acceso temporalmente no disponible."},{status:503}); }
+  if (!allowed) {
     return NextResponse.json(
       { error: "Demasiados intentos. Espera unos minutos." },
       { status: 429 }

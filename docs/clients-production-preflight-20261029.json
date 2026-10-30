@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-29T17:18:10.639Z",
+  "database": "optica_web_db",
+  "schemas": [
+    {
+      "schema_name": "oc_customers_preview_20261028"
+    }
+  ],
+  "tables": []
+}

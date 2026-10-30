@@ -9,6 +9,7 @@ const SESSION_MS = 1000 * 60 * 60 * 12;
 type SessionPayload = {
   u: string;
   exp: number;
+  v: string;
 };
 
 const attempts = new Map<string, { count: number; reset: number }>();
@@ -83,11 +84,19 @@ export function clientIp(request: Request) {
   return request.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
+function credentialVersion(usuario: string) {
+ const accounts = [[process.env.ADMIN_USER,process.env.ADMIN_PASSWORD],[process.env.ADMIN_USER_2,process.env.ADMIN_PASSWORD_2]];
+ const account = accounts.filter(([name,password]) => name?.trim().toLowerCase() === usuario.trim().toLowerCase() && password).map(([name,password])=>[name?.trim().toLowerCase(),password]);
+ const secret=sessionSecret();
+ return account.length && secret ? createHmac("sha256",secret).update(JSON.stringify([account,process.env.ADMIN_SESSION_VERSION || "1"])).digest("hex") : null;
+}
 export function createSessionToken(usuario: string) {
   const secret = sessionSecret();
   if (!secret) return null;
+  const version=credentialVersion(usuario);
+  if (!version) return null;
   const body = Buffer.from(
-    JSON.stringify({ u: usuario, exp: Date.now() + SESSION_MS } satisfies SessionPayload)
+    JSON.stringify({ u: usuario.trim().toLowerCase(), exp: Date.now() + SESSION_MS, v: version } satisfies SessionPayload)
   ).toString("base64url");
   const signature = createHmac("sha256", secret).update(body).digest("base64url");
   return `${body}.${signature}`;
@@ -107,6 +116,8 @@ export function readSessionToken(token: string | undefined | null) {
   try {
     const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as SessionPayload;
     if (!payload.u || typeof payload.exp !== "number" || payload.exp < Date.now()) return null;
+    const current=credentialVersion(payload.u);
+    if (!current || typeof payload.v !== "string" || !safeEqual(current,payload.v)) return null;
     return payload;
   } catch {
     return null;

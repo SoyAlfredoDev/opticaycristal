@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-30T12:40:49.054Z",
+  "recipient": "opticaycristal.cl@gmail.com",
+  "isolatedAccount": true,
+  "productionDataChanged": false,
+  "checks": {
+    "verification": true,
+    "passwordReset": true,
+    "resetSingleUse": true,
+    "priorSessionRevoked": true
+  },
+  "sent": [
+    {
+      "id": "01a18cd3-ba27-7bbd-a55f-f399c8cbebb3",
+      "subject": "[Prueba NTD 20261030] Verifica tu correo en Óptica & Cristal"
+    },
+    {
+      "id": "01a18cd3-bb80-7a9a-a524-aecc769f9ade",
+      "subject": "[Prueba NTD 20261030] Restablece tu contraseña de Óptica & Cristal"
+    }
+  ],
+  "receipt": {
+    "confirmedInGmail": true,
+    "bothInInbox": true,
+    "spam": false,
+    "authentication": {
+      "spf": "pass",
+      "dkim": "pass",
+      "dmarc": "pass"
+    },
+    "messageIds": [
+      "1a18cd3c1f9c65c8",
+      "1a18cd3c14fb7cee"
+    ]
+  }
+}

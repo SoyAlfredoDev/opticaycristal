@@ -1,0 +1,3 @@
+import { brand, store, whatsappUrl } from "@/components/site/content";
+import styles from "@/components/clients/ClientSpace.module.css";
+export default function CustomerHelp(){return <><h1>Estamos para ayudarte</h1><p className={styles.muted}>Consultas, correcciones de datos y reclamos.</p><section className={`${styles.panel} ${styles.section} ${styles.support}`}><h2>{brand.name}</h2><p>{store.fullAddress}</p><a className={`${styles.button} ${styles.primary}`} href={whatsappUrl("Hola, necesito ayuda con mi cuenta de cliente.")} target="_blank" rel="noopener noreferrer">Hablar con la óptica · {brand.phone}</a><a href="mailto:contacto@opticaycristal.cl" className={styles.textLink}>contacto@opticaycristal.cl</a></section></>;}

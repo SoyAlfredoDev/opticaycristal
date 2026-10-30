@@ -1,0 +1,71 @@
+{
+  "at": "2026-10-29T17:19:50.996Z",
+  "database": "optica_web_db",
+  "schema": "oc_customers",
+  "tableCount": 15,
+  "tables": [
+    "oc_client_account",
+    "oc_client_admin_login_limits",
+    "oc_client_auth_rate_limit",
+    "oc_client_credit_balances",
+    "oc_client_installments",
+    "oc_client_operations",
+    "oc_client_payments",
+    "oc_client_product_changes",
+    "oc_client_products",
+    "oc_client_registration_limit",
+    "oc_client_sales",
+    "oc_client_session",
+    "oc_client_tiers",
+    "oc_client_user",
+    "oc_client_verification"
+  ],
+  "counts": {
+    "oc_client_user": 0,
+    "oc_client_products": 0,
+    "oc_client_sales": 0,
+    "oc_client_payments": 0
+  },
+  "tiers": [
+    {
+      "code": "start",
+      "max_percent": 30,
+      "max_amount": 40000,
+      "max_installments": 1
+    },
+    {
+      "code": "vip",
+      "max_percent": 40,
+      "max_amount": 60000,
+      "max_installments": 1
+    },
+    {
+      "code": "premium",
+      "max_percent": 60,
+      "max_amount": 80000,
+      "max_installments": 2
+    },
+    {
+      "code": "elite",
+      "max_percent": 70,
+      "max_amount": 150000,
+      "max_installments": 2
+    }
+  ],
+  "auditColumns": [
+    {
+      "column_name": "cancelled_at"
+    },
+    {
+      "column_name": "signed_at"
+    },
+    {
+      "column_name": "status"
+    }
+  ],
+  "checks": {
+    "initialCreditBalance": true,
+    "negativeBalanceRejected": true,
+    "testTransactionRolledBack": true
+  }
+}
