@@ -42,7 +42,7 @@ export function storeMapUrl(mode: "embed" | "directions" | "search"): string {
 export const siteNavigation = [
   { label: "Inicio", footerLabel: "Inicio", href: "/" },
   { label: "Óptica", footerLabel: "Vistas de la óptica", href: "/optica" },
-  { label: "Crédito directo", footerLabel: "Crédito directo", href: "/#financiamiento" },
+  { label: "Crédito directo", footerLabel: "Crédito directo", href: "/credito-directo" },
   { label: "Convenios", footerLabel: "Convenio con empresas", href: "/convenios" },
   { label: "Jornadas", footerLabel: "Jornadas oftalmológicas", href: "/jornadas" },
 ] as const;

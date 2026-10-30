@@ -66,6 +66,14 @@ export const seoPages = {
     image: "/images/home/hero-optical-store-v2.webp",
     imageAlt: "Muro de monturas en la óptica de Huérfanos 713, Santiago Centro",
   },
+  creditoDirecto: {
+    title: "Crédito directo",
+    description: "Conoce el crédito directo de Óptica & Cristal: condiciones Start, pasos para crear tu cuenta y compra presencial en Huérfanos 713, local 18.",
+    path: "/credito-directo",
+    keywords: ["crédito directo óptica", "crédito para lentes", "Óptica & Cristal"],
+    image: "/images/home/oc-lentes-opticos-v01.png",
+    imageAlt: "Lentes ópticos de tono vino, imagen referencial de producto",
+  },
   jornadas: {
     title: "Jornadas oftalmológicas",
     description: "Jornadas oftalmológicas para empresas en Chile. Coordinamos la atención visual en tus instalaciones y la fecha con tu equipo.",

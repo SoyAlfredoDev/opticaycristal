@@ -2,7 +2,6 @@ import { displayFont as display, bodyFont as body } from "@/components/site/font
 import { JsonLd } from "@/components/site/JsonLd";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { HomeHero } from "@/components/home/HomeHero";
-import { FinancingIntroduction, FinancingProcess } from "@/components/home/FinancingSections";
 import { ServiceRibbon } from "@/components/home/ServiceRibbon";
 import { CollectionsSection } from "@/components/home/CollectionsSection";
 import { PhotoGallery } from "@/components/home/PhotoGallery";
@@ -23,11 +22,9 @@ export default function Home() {
       <main id="contenido-principal">
         <HomeHero />
         <ServiceRibbon />
-        <FinancingIntroduction />
-        <FinancingProcess />
         <CollectionsSection />
         <PhotoGallery />
-        <VisitSection financing />
+        <VisitSection />
         <BusinessSection />
       </main>
       <HomeFooter />

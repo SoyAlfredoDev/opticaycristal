@@ -30,6 +30,7 @@ describe("seo y respuestas para buscadores", () => {
     expect(urls).toEqual([
       "https://opticaycristal.cl",
       "https://opticaycristal.cl/optica",
+      "https://opticaycristal.cl/credito-directo",
       "https://opticaycristal.cl/jornadas",
       "https://opticaycristal.cl/convenios",
       "https://opticaycristal.cl/privacidad",

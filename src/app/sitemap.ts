@@ -18,6 +18,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       images: [absoluteUrl(seoPages.home.image), absoluteUrl(seoPages.optica.image)],
     },
     {
+      url: absoluteUrl(seoPages.creditoDirecto.path),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
       url: absoluteUrl(seoPages.jornadas.path),
       changeFrequency: "monthly",
       priority: 0.8,

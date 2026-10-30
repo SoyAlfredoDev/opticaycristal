@@ -13,7 +13,7 @@ export function FinancingIntroduction() {
       <div className={`${site.container} ${styles.introGrid}`}>
         <div className={styles.copy}>
           <p className={styles.eyebrow}><span aria-hidden="true" />Nuevo · Crédito directo</p>
-          <h2 id="financing-title">Confiamos en<br />nuestros clientes.</h2>
+          <h1 id="financing-title">Confiamos en<br />nuestros clientes.</h1>
           <p className={styles.description}>Tus próximos lentes, con crédito directo de tu óptica.</p>
           <p className={styles.benefit}><Check size={20} aria-hidden="true" />Sin liquidaciones de sueldo ni comprobantes de ingresos.</p>
           <div className={styles.actions}>
@@ -29,7 +29,7 @@ export function FinancingIntroduction() {
         </div>
         <figure className={styles.visual}>
           <div className={styles.photo}>
-            <Image src="/images/home/oc-lentes-opticos-v01.png" alt="Montura de lentes ópticos en tono vino con patillas doradas" fill sizes="(max-width: 899px) calc(100vw - 40px), (max-width: 1360px) 44vw, 600px" />
+            <Image src="/images/home/oc-lentes-opticos-v01.png" alt="Montura de lentes ópticos en tono vino con patillas doradas" loading="eager" fill sizes="(max-width: 899px) calc(100vw - 40px), (max-width: 1360px) 44vw, 600px" />
           </div>
           <figcaption>Imagen referencial de producto.</figcaption>
         </figure>
