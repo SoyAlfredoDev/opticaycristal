@@ -54,3 +54,17 @@ a.whatsapp:hover {
 @media (prefers-reduced-motion: reduce) {
   .canvas iframe { scroll-behavior: auto; }
 }
+
+/* Home financing FAQs share the existing visit block and its single map. */
+.faqs { display: grid; gap: 24px; padding-bottom: 36px; margin-bottom: 36px; border-bottom: 1px solid #aa788b; }
+section.band .faqs h2 { font-size: clamp(40px, 7vw, 56px); line-height: 1.05; }
+.questions { min-width: 0; }
+.questions details { border-bottom: 1px solid #aa788b; }
+.questions summary { cursor: pointer; padding-block: 16px; min-height: 48px; font-size: 16px; font-weight: 500; }
+.questions summary::marker { color: #c9ff73; }
+.questions summary:focus-visible { outline: 2px solid #c9ff73; outline-offset: 4px; }
+.questions details p { padding: 0 0 18px; color: #f7efe9; font-size: 15px; max-width: 64ch; }
+p.hours { margin-top: 20px; font-size: 15px; line-height: 1.8; }
+@media (min-width: 900px) {
+  .faqs { grid-template-columns: minmax(280px, .84fr) minmax(0, 1.16fr); gap: 56px; padding-bottom: 44px; margin-bottom: 44px; }
+}
