@@ -42,3 +42,9 @@ describe("Cuotas mensuales", () => {
     expect(() => monthlyInstallments(1, 2, "2026-11-01")).toThrow();
   });
 });
+
+ it("rechaza más de cuatro cuotas y conserva el día original tras febrero",()=>{
+  expect(monthlyInstallments(30001,4,"2030-01-31").map(i=>[i.dueDate,i.amount])).toEqual([["2030-01-31",7500],["2030-02-28",7500],["2030-03-31",7500],["2030-04-30",7501]]);
+  expect(()=>monthlyInstallments(30001,5,"2030-01-31")).toThrow();
+  expect(()=>calculateFinancing({total:119000,protectedCost:20000,outstanding:0,tier:{...tier,maxInstallments:5}})).toThrow();
+ });

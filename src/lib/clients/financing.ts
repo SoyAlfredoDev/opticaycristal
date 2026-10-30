@@ -17,7 +17,7 @@ export function calculateFinancing(input: {
   const { maxPercent, maxAmount, maxInstallments } = input.tier;
   pesos(maxAmount, "Tope del nivel", 1);
   if (!Number.isInteger(maxPercent) || maxPercent < 1 || maxPercent > 100 ||
-      !Number.isInteger(maxInstallments) || maxInstallments < 1 || maxInstallments > 2) {
+      !Number.isInteger(maxInstallments) || maxInstallments < 1 || maxInstallments > 4) {
     throw new Error("Las condiciones del nivel no son válidas.");
   }
   const capacity = Math.max(0, maxAmount - outstanding);
@@ -31,7 +31,7 @@ export function calculateFinancing(input: {
 /** Anchor every due date to the original day, including after a short February. */
 export function monthlyInstallments(credit: number, count: number, firstDueDate: string) {
   pesos(credit, "Crédito", 1);
-  if (!Number.isInteger(count) || count < 1 || count > 2 || count > credit) {
+  if (!Number.isInteger(count) || count < 1 || count > 4 || count > credit) {
     throw new Error("Cantidad de cuotas no válida.");
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(firstDueDate)) throw new Error("Fecha de pago no válida.");

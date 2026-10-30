@@ -33,3 +33,8 @@ export async function getNextCustomerTier(currentCode: string): Promise<Customer
   const row = result.rows[0];
   return row ? { code: String(row.code), name: String(row.name), maxPercent: Number(row.max_percent), maxAmount: Number(row.max_amount), maxInstallments: Number(row.max_installments) } : null;
 }
+
+export async function getCustomerTiers(): Promise<CustomerProfile["tier"][]> {
+ const result = await clientPool().query(`SELECT code,name,max_percent,max_amount,max_installments FROM ${clientTable("oc_client_tiers")} ORDER BY position`);
+ return result.rows.map(row => ({code:String(row.code),name:String(row.name),maxPercent:Number(row.max_percent),maxAmount:Number(row.max_amount),maxInstallments:Number(row.max_installments)}));
+}

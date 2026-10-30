@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CustomerPromotions } from "@/components/clients/CustomerPromotions";
-import { ArrowRight, BadgeCheck, Clock3, ShoppingBag, Wallet } from "lucide-react";
+import { ArrowRight, BadgeCheck, Clock3, ChevronRight, ShoppingBag, Wallet } from "lucide-react";
 import { currentCustomer } from "@/lib/clients/current";
 import { getNextCustomerTier } from "@/lib/clients/store";
 import { clp } from "@/lib/clients/types";
@@ -19,7 +19,7 @@ export default async function CustomerHome() {
       <section className={`${styles.panel} ${styles.finance}`} aria-labelledby="finance-title">
         <div className={styles.line}>
           <div className={styles.iconLabel}><span className={styles.iconTile}><Wallet size={20} aria-hidden="true" /></span><h2 id="finance-title">Tu crédito</h2></div>
-          <span className={`${styles.pill} ${styles.tierBadge}`}>Nivel {c.tier.name}</span>
+          <Link href="/mi-cuenta/categorias" className={`${styles.pill} ${styles.tierBadge}`} style={{textDecoration:"none"}} title="Ver categorías y beneficios" aria-label={`Ver categorías de crédito: tu categoría es ${c.tier.name}`}>{c.tier.name}<ChevronRight size={14} aria-hidden="true"/></Link>
         </div>
         <p className={styles.balanceLabel}>Cupo disponible</p>
         <div className={styles.money}>{clp(c.credit.capacity)}</div>
@@ -28,7 +28,7 @@ export default async function CustomerHome() {
           {c.credit.principalOutstanding > 0 ? "Crédito activo" : c.credit.enabled ? "Crédito habilitado" : "Verificaciones pendientes"}
         </span>
         <div className={styles.financeMetrics}>
-          <div><span>{nextTier ? `Siguiente nivel · ${nextTier.name}` : `Nivel más alto · ${c.tier.name}`}</span><strong>{clp(nextTier?.maxAmount ?? c.tier.maxAmount)}</strong><span>Crédito máximo</span></div>
+          <div><Link className={styles.textLink} href={`/mi-cuenta/categorias#${nextTier?.code ?? c.tier.code}`}>{nextTier ? `Siguiente nivel · ${nextTier.name}` : `Nivel más alto · ${c.tier.name}`}</Link><strong>{clp(nextTier?.maxAmount ?? c.tier.maxAmount)}</strong><span>Crédito máximo</span></div>
           <div><span>Saldo utilizado</span><strong>{clp(c.credit.principalOutstanding)}</strong></div>
         </div>
         <p className={styles.financeTerms}>Hasta el {c.tier.maxPercent}% de tu compra · {c.tier.maxInstallments} cuota{c.tier.maxInstallments > 1 ? "s" : ""} · Siempre con pie.</p>

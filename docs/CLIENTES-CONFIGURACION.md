@@ -244,3 +244,6 @@ correos de prueba autorizados.
 - `AuthBenefits` se muestra como columna lateral en registro y acceso. Se utiliza
   «La única óptica con crédito directo en Chile», según el texto solicitado expresamente por el propietario.
 - Revisión con nombre y datos simulados: sin registros ni correos de prueba reales.
+
+### Cuotas por categoría · migración 007
+Después de publicar el código que acepta hasta cuatro cuotas, ejecutar `scripts/migrate-installments.mjs` con la conexión directa y el esquema de clientes existente. La transacción amplía las tres restricciones de cuotas y actualiza exclusivamente `oc_client_tiers.max_installments`: Start 1, VIP 2, Premium 3, Elite 4. Es repetible, con espera de bloqueo limitada a cinco segundos. No toca ventas, pagos, vencimientos ni asignaciones de clientes. La comparación del portal consulta los niveles desde la misma tabla usada por administración.

@@ -118,3 +118,6 @@ a DICOM, sin liquidaciones y sin intereses, con el mensaje de confianza.
 
 ## Avisos del panel · 30 de octubre
 Cinta amarilla compartida en las vistas privadas: créditos presenciales y futura compra web con asesor de IA. Desplazamiento continuo, pausa manual y versión estática para movimiento reducido. Inicio conserva consulta gratuita y visita; añade un tercer anuncio del futuro asesor en estilo y estética, sin botón de compra ni servicio de IA operativo.
+
+## Categorías y cuotas · 30 de octubre
+Actualización expresa del usuario: Start 1 cuota, VIP 2, Premium 3 y Élite 4, siempre mensuales. Se mantienen máximos de $40.000/$60.000/$80.000/$150.000 y porcentajes 30/40/60/70. No se reasignan clientes ni se recalculan ventas existentes. La migración 007 amplía restricciones e introduce estos máximos; el servidor controla el máximo de la categoría al registrar cada venta. La nueva vista privada `/mi-cuenta/categorias` compara las cuatro categorías desde los enlaces del nivel actual y siguiente en Inicio. No ofrece autoascenso.

@@ -32,7 +32,7 @@ export function parseSale(raw: unknown): SaleInput {
  const b = raw as Record<string, unknown>;
  return { customerId: textValue(b.customerId, "Cliente"), productId: textValue(b.productId, "Producto"),
  quantity: whole(b.quantity, "Cantidad", 1, 100), total: whole(b.total, "Total", 1), credit: whole(b.credit, "Crédito"),
- installmentCount: whole(b.installmentCount, "Cuotas", 0, 2), firstDueDate: typeof b.firstDueDate === "string" ? b.firstDueDate : "",
+ installmentCount: whole(b.installmentCount, "Cuotas", 0, 4), firstDueDate: typeof b.firstDueDate === "string" ? b.firstDueDate : "",
  identityChecked: b.identityChecked === true, depositReceived: b.depositReceived === true, requestKey: requestKey(b.requestKey) };
 }
 export async function findCustomerByRut(rut: unknown) {
