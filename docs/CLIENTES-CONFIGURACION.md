@@ -189,3 +189,17 @@ correos de prueba autorizados.
 - Se probaron dos envíos reales, marcados PRUEBA SOPORTE, únicamente a la casilla
   autorizada; Resend confirmó ambos como `delivered`. Los tickets de prueba se
   crearon en un esquema aislado de Neon, eliminado al terminar.
+
+## Vista La óptica — 2026-10-30
+
+- Ruta privada `/mi-cuenta/la-optica`, protegida por el layout de clientes.
+- Reutiliza `brand`, `store`, `storeMapUrl`, `whatsappUrl` y `storePhotos` de
+  `src/components/site/content.ts`. El mapa no requiere una llave nueva.
+- Iframe con carga diferida y `referrerPolicy="no-referrer"` para preservar la
+  ruta privada. Los accesos a Maps, Instagram y WhatsApp abren con noreferrer.
+- La galería acepta fotos reales confirmadas: guardar los archivos en
+  `public/images/local/` y añadir cada `{ src, alt }` a `storePhotos`. La vista
+  genera las miniaturas y su acceso para ampliar. El usuario decidió esperar
+  las fotos reales. Con la lista vacía se muestra una invitación a ver Instagram.
+- El botón flotante de ayuda se omite en esta vista; están disponibles los
+  contactos de la propia página y el acceso habitual de Ayuda en la cabecera.

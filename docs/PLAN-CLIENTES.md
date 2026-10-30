@@ -88,3 +88,12 @@ Los tickets nuevos avisan al equipo por correo y las respuestas del personal
 avisan al cliente con dirección verificada. Se utiliza el diseño corporativo
 existente y un enlace directo a la conversación, disponible tras iniciar sesión.
 El envío es posterior al guardado y cuenta con registro cifrado e idempotencia.
+
+## La óptica en el panel del cliente — 2026-10-30
+
+Nueva vista privada `/mi-cuenta/la-optica`, con dirección, mapa, cómo llegar,
+Instagram, WhatsApp, correo y galería de fotos. Aparece en los menús de móvil y
+escritorio. En móvil se mantienen cinco accesos: Inicio, Cuotas, Compras,
+La óptica y Perfil. La salida sigue únicamente al final de Perfil.
+El usuario pidió preparar la galería para fotos reales; mientras no hay fotos
+confirmadas, se ofrece el enlace al contenido de Instagram.
