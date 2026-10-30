@@ -106,3 +106,12 @@ responsable y fecha. El cliente ve su categoría y cupo actuales al consultar el
 portal. Las compras, cuotas, pagos y saldos existentes conservan sus condiciones.
 No hay ascensos ni descensos automáticos por compras o pagos. El siguiente nivel
 presentado en Inicio es informativo; todas las cuentas nuevas comienzan en Start.
+
+## Mensajes de registro y acceso — 2026-10-30
+
+Bienvenida con nombre ingresado: «¡Gracias, [nombre], por sumarte!». Marca en
+negrita y vino tinto; rótulo «Tu categoría es Start», máximo y condiciones desde
+el servidor. Se retiran el aviso de verificación y la nota secundaria de esta
+pantalla, conservando únicamente «Ir a mi cuenta» como acción.
+El lateral de registro/login presenta crédito directo en Chile, sin consulta
+a DICOM, sin liquidaciones y sin intereses, con el mensaje de confianza.

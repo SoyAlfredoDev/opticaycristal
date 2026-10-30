@@ -230,3 +230,17 @@ correos de prueba autorizados.
   categorías en ventas/pagos, sin pg_cron y un único disparador de clientes para
   inicializar saldo. Se probaron rechazos de cambios públicos, perfiles que
   conservan su categoría, pagos sin ascenso y conservación de ventas previas.
+
+## Bienvenida personalizada — 2026-10-30
+
+- `AuthForm` pasa a `RegistrationWelcome` el nombre ya ingresado en el formulario.
+  No se consulta ni expone el nombre de una cuenta existente. La respuesta neutral
+  para registros duplicados y los controles de registro se conservan.
+- El máximo, porcentaje y cuotas de Start siguen viniendo del servidor. Cambia
+  únicamente la presentación a «Tu categoría es…»; no se calcula crédito adicional.
+- Se elimina el recordatorio de correo de la bienvenida por petición del usuario.
+  El envío y la verificación de correo siguen activos; los requisitos para usar
+  crédito y la vista de verificaciones en Perfil mantienen su comportamiento.
+- `AuthBenefits` se muestra como columna lateral en registro y acceso. Se utiliza
+  «Tu óptica con crédito directo en Chile», sin afirmar exclusividad nacional.
+- Revisión con nombre y datos simulados: sin registros ni correos de prueba reales.
