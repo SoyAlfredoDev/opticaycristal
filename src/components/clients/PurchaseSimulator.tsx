@@ -18,14 +18,14 @@ function AnimatedAmount({value}:{value:number}){
  },[value,reduce]);
  return <><span aria-hidden="true">{clp(reduce?value:shown)}</span><span className={styles.srOnly}>{clp(value)}</span></>;
 }
-export function PurchaseSimulator(conditions:SimulationConditions){
+export function PurchaseSimulator({embedded=false,...conditions}:SimulationConditions&{embedded?:boolean}){
  const [price,setPrice]=useState(""),[count,setCount]=useState(conditions.tier.maxInstallments),[result,setResult]=useState<PurchaseSimulation|null>(null),[error,setError]=useState(""),[run,setRun]=useState(0);
  const resultRef=useRef<HTMLDivElement>(null);
  useEffect(()=>{if(result)resultRef.current?.scrollIntoView({behavior:window.matchMedia(motionQuery).matches?"auto":"smooth",block:"nearest"});},[result,run]);
  function consult(event:FormEvent<HTMLFormElement>){event.preventDefault();setError("");try{setResult(simulatePurchase(parsePurchasePrice(price),count,conditions));setRun(value=>value+1);}catch(e){setResult(null);setError(e instanceof Error?e.message:"Revisa el precio ingresado.");}}
  const reason=!conditions.emailVerified?"email":conditions.outstanding>0?"active":null;
- return <section className={styles.simulator} aria-labelledby="purchase-simulator-title">
-  <div className={styles.heading}><span className={styles.icon}><Calculator size={22} aria-hidden="true"/></span><div><h2 id="purchase-simulator-title">Simula tu compra</h2><p>Ingresa el precio total de tus lentes, con IVA incluido.</p></div></div>
+ return <section className={`${styles.simulator} ${embedded?styles.embedded:""}`} aria-labelledby={embedded?"purchase-simulator-modal-title":"purchase-simulator-title"}>
+  {!embedded&&<div className={styles.heading}><span className={styles.icon}><Calculator size={22} aria-hidden="true"/></span><div><h2 id="purchase-simulator-title">Simula tu compra</h2><p>Ingresa el precio total de tus lentes, con IVA incluido.</p></div></div>}
   {reason&&<p className={styles.notice}>{reason==="email"?<>Para usar tu crédito, <Link href="/mi-cuenta/perfil">verifica tu correo</Link>. Mientras tanto, verás el pago al contado.</>:<>Tienes un crédito activo. Podrás usar uno nuevo al <Link href="/mi-cuenta/cuotas">pagar tu saldo pendiente</Link>.</>}</p>}
   <form className={styles.form} onSubmit={consult}>
    <label>Precio total con IVA<div className={styles.priceField}><span aria-hidden="true">$</span><input name="purchaseTotal" aria-label="Precio total con IVA" inputMode="numeric" autoComplete="off" placeholder="Ej.: 100.000" value={price} maxLength={18} onChange={event=>{setPrice(event.target.value);setResult(null);setError("");}} required aria-invalid={Boolean(error)} aria-describedby={error?"purchase-simulator-error":undefined}/></div></label>

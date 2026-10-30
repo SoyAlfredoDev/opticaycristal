@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PurchaseSimulator } from "@/components/clients/PurchaseSimulator";
+import { PurchaseSimulatorModal } from "@/components/clients/PurchaseSimulatorModal";
 import { CategoryModalProvider, CategoryTrigger } from "@/components/clients/CategoryModal";
 import { CustomerPromotions } from "@/components/clients/CustomerPromotions";
 import { ArrowRight, BadgeCheck, Clock3, ChevronRight, ShoppingBag, Wallet } from "lucide-react";
@@ -47,7 +47,7 @@ export default async function CustomerHome() {
         <p className={styles.activityNote}>Compra a crédito sin intereses y sin consulta a DICOM. Siempre con pie y según las condiciones de tu nivel.</p>
       </section>
     </div>
-    <PurchaseSimulator key={`${c.tier.code}:${c.tier.maxAmount}:${c.tier.maxPercent}:${c.tier.maxInstallments}:${c.credit.principalOutstanding}:${c.emailVerified}`} tier={c.tier} outstanding={c.credit.principalOutstanding} emailVerified={c.emailVerified}/>
+    <PurchaseSimulatorModal key={`${c.tier.code}:${c.tier.maxAmount}:${c.tier.maxPercent}:${c.tier.maxInstallments}:${c.credit.principalOutstanding}:${c.emailVerified}`} tier={c.tier} outstanding={c.credit.principalOutstanding} emailVerified={c.emailVerified}/>
     <CustomerPromotions />
   </CategoryModalProvider>;
 }
