@@ -6,13 +6,19 @@ function motion(reduce = false) {
 }
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 describe("Anuncios del cliente", () => {
-  it("empieza con la consulta gratuita y rota al anuncio de visita", () => {
+  it("rota entre consulta, visita y el próximo asistente, y vuelve al inicio", () => {
     motion(); vi.useFakeTimers(); render(<CustomerPromotions />);
     expect(screen.getByRole("heading", { name: /Consulta visual.*Totalmente gratuita/ })).toBeVisible();
     expect(new URL(screen.getByRole("link", { name: "Coordinar mi consulta" }).getAttribute("href")!).searchParams.get("text")).toContain("consulta visual gratuita");
     act(() => { vi.advanceTimersByTime(8000); });
     expect(screen.getByText("Imagen referencial")).toBeVisible();
     expect(screen.getByRole("link", { name: "Cómo llegar" })).toHaveAttribute("href", expect.stringContaining("maps/dir/"));
+    act(() => { vi.advanceTimersByTime(8000); });
+    expect(screen.getByRole("heading", { name: /Tu asesor con IA.*Próximamente/ })).toBeVisible();
+    expect(screen.getByText(/Estamos preparando un asistente/)).toBeVisible();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    act(() => { vi.advanceTimersByTime(8000); });
+    expect(screen.getByRole("heading", { name: /Consulta visual.*Totalmente gratuita/ })).toBeVisible();
   });
   it("permite pausar y seleccionar un anuncio sin que cambie solo", () => {
     motion(); vi.useFakeTimers(); render(<CustomerPromotions />);

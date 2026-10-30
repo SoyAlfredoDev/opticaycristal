@@ -22,3 +22,7 @@ p.address{font-size:14px;margin:0 0 5px;color:#e1f6e9}
 .reference{position:absolute;z-index:3;bottom:12px;right:14px;padding:4px 7px;border-radius:4px;background:#073c33;color:#fff;font-size:11px}
 @media(max-width:650px){.carousel{margin-top:20px;border-radius:18px}.slide{min-height:254px}.copy{padding:24px 22px;max-width:86%}p.brand{font-size:11px;margin-bottom:16px}.carousel h2.title{font-size:30px;max-width:260px}.decoration{right:-25%;width:53%;opacity:.9}.decoration svg{width:76%;margin-left:-14%}.visit .copy{max-width:100%;padding-bottom:38px}.reference{bottom:8px;right:10px;font-size:10px}}
 @media(max-width:359px){.carousel h2.title{font-size:26px}.copy{padding-inline:18px;max-width:92%}.decoration{right:-34%}}
+
+.carousel p.description{font-size:15px;line-height:1.6;color:#e1f6e9;margin:0;max-width:560px}
+
+.upcoming .decoration{opacity:.16}

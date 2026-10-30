@@ -115,3 +115,6 @@ el servidor. Se retiran el aviso de verificación y la nota secundaria de esta
 pantalla, conservando únicamente «Ir a mi cuenta» como acción.
 El lateral de registro/login presenta crédito directo en Chile, sin consulta
 a DICOM, sin liquidaciones y sin intereses, con el mensaje de confianza.
+
+## Avisos del panel · 30 de octubre
+Cinta amarilla compartida en las vistas privadas: créditos presenciales y futura compra web con asesor de IA. Desplazamiento continuo, pausa manual y versión estática para movimiento reducido. Inicio conserva consulta gratuita y visita; añade un tercer anuncio del futuro asesor en estilo y estética, sin botón de compra ni servicio de IA operativo.
