@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
+import { queueSupportMail } from "./support-mail";
 import { clientPool, clientTable } from "./db";
 import { protectClientValue, revealClientValue } from "./privacy";
 import type { TicketDetail, TicketList, TicketStatus, TicketSummary } from "./support-types";
@@ -56,7 +57,8 @@ export async function getSupportTicket(actor: SupportActor, id: string): Promise
       Object.assign(row,person.rows[0]);
     }
     const thread = await db.query<{id:string;actor_kind:"customer"|"admin";body_cipher:string;created_at:Date|string}>(`SELECT id,actor_kind,body_cipher,created_at FROM ${messages()} WHERE ticket_id=$1 ORDER BY position`, [id]);
-    return { ...summary(row,actor), messages: thread.rows.map(item => ({ id:item.id, role:item.actor_kind, body:revealClientValue(item.body_cipher,"support-message"), createdAt:iso(item.created_at) })) };
+    const notification=actor.kind==="admin"?await db.query<{kind:"ticket_created"|"staff_reply";state:"pending"|"processing"|"sent"|"failed"|"unverified"}>(`SELECT n.kind,n.state FROM ${clientTable("oc_client_support_mail")} n JOIN ${messages()} m ON m.id=n.message_id WHERE n.ticket_id=$1 ORDER BY m.position DESC LIMIT 1`,[id]):null;
+    return { ...summary(row,actor), ...(notification?.rows[0]?{notification:notification.rows[0]}:{}), messages: thread.rows.map(item => ({ id:item.id, role:item.actor_kind, body:revealClientValue(item.body_cipher,"support-message"), createdAt:iso(item.created_at) })) };
   });
 }
 async function messageRate(db: PoolClient, actor: SupportActor) {
@@ -81,7 +83,9 @@ export async function createSupportTicket(actor: SupportActor, raw: unknown) {
     await messageRate(db,actor);
     const ticketId=randomUUID();
     await db.query(`INSERT INTO ${tickets()}(id,customer_id,subject_cipher,request_key) VALUES($1,$2,$3,$4)`,[ticketId,actor.id,protectClientValue(subject,"support-subject"),key]);
-    await db.query(`INSERT INTO ${messages()}(id,ticket_id,actor_kind,author_id,body_cipher,request_key) VALUES($1,$2,'customer',$3,$4,$5)`,[randomUUID(),ticketId,actor.id,protectClientValue(body,"support-message"),key]);
+    const messageId=randomUUID();
+    await db.query(`INSERT INTO ${messages()}(id,ticket_id,actor_kind,author_id,body_cipher,request_key) VALUES($1,$2,'customer',$3,$4,$5)`,[messageId,ticketId,actor.id,protectClientValue(body,"support-message"),key]);
+    await queueSupportMail(db,{ticketId,messageId,kind:"ticket_created"});
     return ticketId;
   });
   return getSupportTicket(actor,id);
@@ -107,7 +111,9 @@ export async function updateSupportTicket(actor: SupportActor, id: string, raw: 
     const count=await db.query<{count:string}>(`SELECT count(*)::text AS count FROM ${messages()} WHERE ticket_id=$1`,[id]);
     if (input.action === "reply" && Number(count.rows[0].count)>=100) throw new SupportError("Este ticket alcanzó el límite de mensajes. Crea uno nuevo para continuar.",429);
     await messageRate(db,actor);
-    await db.query(`INSERT INTO ${messages()}(id,ticket_id,actor_kind,author_id,body_cipher,request_key,event) VALUES($1,$2,$3,$4,$5,$6,$7)`,[randomUUID(),id,actor.kind,actor.id,protectClientValue(body,"support-message"),key,input.action==="resolve"?"resolved":"message"]);
+    const messageId=randomUUID();
+    await db.query(`INSERT INTO ${messages()}(id,ticket_id,actor_kind,author_id,body_cipher,request_key,event) VALUES($1,$2,$3,$4,$5,$6,$7)`,[messageId,id,actor.kind,actor.id,protectClientValue(body,"support-message"),key,input.action==="resolve"?"resolved":"message"]);
+    if(actor.kind==="admin"&&input.action==="reply")await queueSupportMail(db,{ticketId:id,messageId,kind:"staff_reply"});
     const status=input.action==="resolve" ? "resuelto" : actor.kind==="admin" ? "respondido" : "abierto";
     await db.query(`UPDATE ${tickets()} SET status=$2,updated_at=clock_timestamp() WHERE id=$1`,[id,status]);
   });

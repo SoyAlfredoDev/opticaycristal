@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["mysql2"],
   outputFileTracingIncludes: {
     "/api/clientes/*": ["./public/images/home/oc-logo-oficial.png"],
+    "/api/clientes/soporte/**": ["./public/images/home/oc-logo-oficial.png"],
+    "/api/admin/clientes/soporte": ["./public/images/home/oc-logo-oficial.png"],
+    "/api/admin/clientes/soporte/**": ["./public/images/home/oc-logo-oficial.png"],
     "/api/solicitudes": ["./public/logo-email.png", "./public/images/home/oc-logo-oficial.png"],
     "/admin": ["./public/logo-email.png", "./public/images/home/oc-logo-oficial.png"],
   },

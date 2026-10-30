@@ -47,4 +47,9 @@ describe("Tickets: interfaz cliente y administración",()=>{
   render(<SupportDesk/>);const list=await screen.findByRole("region",{name:"Lista de tickets"});await within(list).findByRole("button",{name:/AYU-00001/});fireEvent.click(screen.getByRole("button",{name:"Ver más tickets"}));
   await waitFor(()=>expect(within(list).getByRole("button",{name:/AYU-00002/})).toBeVisible());expect(within(list).getByRole("button",{name:/AYU-00001/})).toBeVisible();
  });
+ it("abre el ticket indicado por el enlace del correo y muestra el estado del aviso al personal",async()=>{
+  vi.stubGlobal("fetch",vi.fn((url:string)=>url.includes(ticket.id)?response({ticket:{...ticket,notification:{kind:"staff_reply",state:"sent"}}}):response({tickets:[],hasMore:false})));
+  render(<SupportDesk admin initialTicketId={ticket.id}/>);expect(await screen.findByRole("heading",{name:ticket.subject})).toBeVisible();expect(screen.getByText("Aviso al cliente: enviado.")).toBeVisible();
+ });
+
 });

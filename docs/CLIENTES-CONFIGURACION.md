@@ -149,7 +149,7 @@ correos de prueba autorizados.
   el personal, resuelto al cerrar. Una respuesta reabre el ticket. El cierre
   exige haber visto el último mensaje y deja registro en la conversación.
 - Asunto de hasta 100 caracteres; mensajes de hasta 2.000. Texto plano, sin
-  adjuntos. Las respuestas se consultan dentro del portal, sin correos automáticos.
+  adjuntos. Las respuestas se consultan dentro del portal; los avisos por correo se describen a continuación.
 - Límites: 5 tickets nuevos/hora, 10 activos por cliente, 20 mensajes/hora del
   cliente y 120 del personal; 100 mensajes por conversación, con cierre permitido
   al alcanzar el límite. Las claves de envío evitan duplicados al reintentar.
@@ -157,3 +157,35 @@ correos de prueba autorizados.
   permisos por propietario, sesiones/origen y reintentos. La migración se probó
   dos veces en un esquema temporal de Neon, eliminado al terminar; sin escribir
   solicitudes en cuentas reales.
+
+
+## Avisos de soporte — 2026-10-30
+
+- Migración aditiva `005-support-mail.sql`; ejecutor específico
+  `scripts/migrate-support-mail.mjs`. Reutiliza Neon, Resend y `CLIENT_DATA_KEY`.
+- Al crear un ticket se avisa al equipo en `opticaycristal.cl@gmail.com`.
+  Se puede cambiar únicamente desde el servidor con `CLIENT_SUPPORT_EMAIL`.
+- Cada respuesta del personal genera un aviso al correo verificado del cliente.
+  Si falta verificarlo, queda en espera. Al volver a consultar Soporte se revisan
+  los pendientes; nunca se envía a una dirección que haya cambiado desde el evento.
+- Remitente y respuesta: `contacto@opticaycristal.cl`. Mismo logo CID/PNG,
+  colores, razón social, RUT y domicilio de los correos de acceso. HTML y texto.
+  El seguimiento de aperturas y clics permanece desactivado en Resend.
+- El correo contiene folio y acceso directo al ticket, sin asunto privado ni
+  contenido de la conversación. Los enlaces exigen la sesión correspondiente.
+- Ticket/respuesta y aviso cifrado se registran en una transacción. El envío
+  ocurre después de la respuesta HTTP mediante `after`; una falla del proveedor
+  no revierte el ticket. Se conserva una clave idempotente por aviso.
+- Hasta tres intentos inmediatos. Ante fallas transitorias, el aviso sigue
+  pendiente y es elegible tras cinco minutos; las consultas autenticadas a
+  Soporte recuperan un aviso por solicitud. No depende de un cron ni del módulo
+  de marketing. Si no hay nuevas consultas, no hay reintentos posteriores a los
+  iniciales. Pasadas 22 horas desde el primer intento, una entrega incierta se
+  marca para revisión en lugar de arriesgar duplicados fuera de la ventana del
+  proveedor. Rechazos definitivos requieren revisar configuración/proveedor.
+- En la conversación administrativa se muestra si el aviso está pendiente,
+  enviado, sin confirmar o en espera de verificar el correo. «Enviado» significa
+  aceptado por el proveedor; no equivale a lectura del destinatario.
+- Se probaron dos envíos reales, marcados PRUEBA SOPORTE, únicamente a la casilla
+  autorizada; Resend confirmó ambos como `delivered`. Los tickets de prueba se
+  crearon en un esquema aislado de Neon, eliminado al terminar.

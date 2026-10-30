@@ -1,11 +1,12 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { requestedSupportTicket } from "@/lib/clients/support-types";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
-export default function LoginForm() {
+export default function LoginForm({supportTicketId}:{supportTicketId?:string}={}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -32,7 +33,7 @@ export default function LoginForm() {
         setError(body?.error ?? "No se pudo iniciar sesión.");
         return;
       }
-      router.push("/admin");
+      router.push(requestedSupportTicket(supportTicketId)?`/admin/clientes/soporte?ticket=${requestedSupportTicket(supportTicketId)}`:"/admin");
       router.refresh();
     } catch {
       setError("No hay conexión con el servidor. Inténtalo de nuevo.");

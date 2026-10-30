@@ -7,8 +7,10 @@ const state=vi.hoisted(()=>({pool:null as unknown,customer:"alice" as string|nul
 vi.mock("./db",()=>({clientPool:()=>state.pool,clientTable:(name:string)=>`"${name}"`}));
 vi.mock("./auth",()=>({customerSession:async()=>state.customer?{user:{id:state.customer}}:null}));
 vi.mock("./admin",()=>({customerAdminSession:async()=>state.admin?{u:"staff"}:null}));
+vi.mock("./support-mail-dispatch",()=>({scheduleSupportMail:vi.fn()}));
 import { createSupportTicket, getSupportTicket, listSupportTickets, updateSupportTicket, type SupportActor } from "./support";
 import { protectClientValue } from "./privacy";
+import { scheduleSupportMail } from "./support-mail-dispatch";
 import { supportCollection, supportConversation } from "./support-http";
 const db=new PGlite();
 const conn={query:async(sql:string,values?:unknown[])=>{const result=await db.query(sql,values);return {...result,rowCount:result.affectedRows??result.rows.length};},release(){}};
@@ -21,6 +23,8 @@ beforeAll(async()=>{
  await db.exec(await readFile("sql/clients/001-customers.sql","utf8"));
  await db.exec(await readFile("sql/clients/004-support.sql","utf8"));
  await db.exec(await readFile("sql/clients/004-support.sql","utf8"));
+ await db.exec(await readFile("sql/clients/005-support-mail.sql","utf8"));
+ await db.exec(await readFile("sql/clients/005-support-mail.sql","utf8"));
  for(const id of ["alice","bob","unverified","limited"]){await db.query(`INSERT INTO oc_client_user(id,name,email,"firstName","lastName","rutCipher","rutHash","whatsappCipher","emailVerified",category) VALUES($1,$1,$2,'Cliente','Prueba','encrypted',$1,'encrypted',false,'start')`,[id,`${id}@example.com`]);}
 },30000);
 afterAll(async()=>{await db.close();vi.unstubAllEnvs();});
@@ -79,7 +83,7 @@ describe.sequential("Soporte: PostgreSQL y API sin datos reales",()=>{
   state.customer="bob";expect((await collection.POST(request(input(),"https://example.com"))).status).toBe(403);
   expect((await supportCollection(true).GET(new Request("https://opticaycristal.cl/api/admin/clientes/soporte"))).status).toBe(401);
   const created=await collection.POST(request({...input(),customerId:"alice",actor_kind:"admin"}));expect(created.status).toBe(201);expect(created.headers.get("cache-control")).toContain("no-store");
-  const {ticket}=await created.json();expect((await listSupportTickets(bob)).tickets.some(t=>t.id===ticket.id)).toBe(true);expect(ticket.messages[0].role).toBe("customer");
+  const {ticket}=await created.json();expect(scheduleSupportMail).toHaveBeenCalledWith(expect.objectContaining({ticketId:ticket.id}));expect((await listSupportTickets(bob)).tickets.some(t=>t.id===ticket.id)).toBe(true);expect(ticket.messages[0].role).toBe("customer");
   state.customer="alice";expect((await supportConversation(false).GET(new Request("https://opticaycristal.cl"),{params:Promise.resolve({id:ticket.id})})).status).toBe(404);
   state.admin=true;const reply=await supportConversation(true).POST(request({action:"reply",message:"Respuesta administrativa",requestKey:randomUUID()}),{params:Promise.resolve({id:ticket.id})});expect(reply.status).toBe(200);expect((await reply.json()).ticket.status).toBe("respondido");
  });

@@ -16,6 +16,7 @@ export type ResultadoEnvio = {
   ok: boolean;
   id: string | null;
   error: string | null;
+  httpStatus?: number;
 };
 
 export function resendConfigured() {
@@ -52,6 +53,7 @@ async function enviar(message: EnvioCorreo): Promise<ResultadoEnvio> {
     return {
       ok: false,
       id: null,
+      httpStatus: response.status,
       error: (body?.message || "No se pudo enviar el correo.").slice(0, 500),
     };
   }

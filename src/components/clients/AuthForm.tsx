@@ -1,13 +1,14 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { requestedSupportTicket } from "@/lib/clients/support-types";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ArrowRight, ShieldCheck } from "lucide-react";
 import styles from "./ClientSpace.module.css";
 import { RegistrationWelcome } from "./RegistrationWelcome";
 import type { RegistrationWelcome as WelcomeDetails } from "@/lib/clients/types";
 export type AuthMode = "register" | "login" | "forgot" | "reset";
-export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
+export function AuthForm({ mode, token, supportTicketId }: { mode: AuthMode; token?: string; supportTicketId?:string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false), [showPassword, setShowPassword] = useState(false), [error, setError] = useState(""), [message, setMessage] = useState("");
   const registration = mode === "register";
@@ -24,7 +25,7 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
       const response = await fetch(endpoint, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const data = await response.json().catch(() => null);
       if (!response.ok) { setError(response.status === 429 ? "Demasiados intentos. Espera antes de volver a intentar." : mode === "login" ? "Correo o contraseña incorrectos. Si lo necesitas, recupera tu acceso." : registration ? data?.error || "No pudimos completar el registro." : mode === "reset" ? "Este enlace no es válido o ya venció. Solicita otro." : "No pudimos procesar la solicitud. Inténtalo más tarde."); return; }
-      if (mode === "login") { router.replace("/mi-cuenta");router.refresh(); }
+      if (mode === "login") { router.replace(requestedSupportTicket(supportTicketId)?`/mi-cuenta/soporte?ticket=${requestedSupportTicket(supportTicketId)}`:"/mi-cuenta");router.refresh(); }
       else if (registration) { setWelcome(data.welcome || null);setMessage(data.message); }
       else if (mode === "forgot") setMessage("Si existe una cuenta con ese correo, recibirás un enlace para recuperar tu contraseña. Revisa también spam.");
       else { window.history.replaceState(null, "", "/mi-cuenta/restablecer");setMessage("Tu contraseña se actualizó. Inicia sesión con la nueva contraseña."); }

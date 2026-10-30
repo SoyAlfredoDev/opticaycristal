@@ -83,3 +83,8 @@ búsqueda por folio, nombre o correo y conversación con enlace a la ficha.
 Las respuestas permanecen en el portal. Cada cliente solo accede a sus tickets;
 el personal utiliza la autorización administrativa existente. Los textos se
 cifran en reposo. Ver límites y migración 004 en CLIENTES-CONFIGURACION.md.
+
+Los tickets nuevos avisan al equipo por correo y las respuestas del personal
+avisan al cliente con dirección verificada. Se utiliza el diseño corporativo
+existente y un enlace directo a la conversación, disponible tras iniciar sesión.
+El envío es posterior al guardado y cuenta con registro cifrado e idempotencia.
