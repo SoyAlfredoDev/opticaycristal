@@ -51,7 +51,7 @@ export function SupportDesk({admin=false}:{admin?:boolean}){
   function search(event:FormEvent<HTMLFormElement>){event.preventDefault();const data=new FormData(event.currentTarget);setLoading(true);setOffset(0);setQuery(String(data.get("search")||"").trim());setRefresh(value=>value+1);}
   return <div className={styles.desk}>
     <div className={styles.toolbar}>
-      {!admin&&<button type="button" className={`${ui.button} ${ui.primary}`} onClick={begin} disabled={busy}>Nuevo ticket</button>}
+      {!admin&&!creating&&<button type="button" className={`${ui.button} ${ui.primary}`} onClick={begin} disabled={busy}>Nuevo ticket</button>}
       <label className={ui.field}><span>Estado</span><select className={ui.input} value={status} disabled={busy} onChange={event=>{setLoading(true);setTickets([]);setError("");setOffset(0);setStatus(event.target.value);}}><option value="todos">Todos</option><option value="abierto">Pendientes</option><option value="respondido">Respondidos</option><option value="resuelto">Resueltos</option></select></label>
       {admin&&<form className={styles.adminSearch} onSubmit={search}><label className={ui.field}><span>Buscar tickets</span><input className={ui.input} name="search" maxLength={100} placeholder="Folio, nombre o correo"/></label><button className={ui.button} disabled={busy}>Buscar</button></form>}
       <button type="button" className={ui.button} disabled={loading||busy} onClick={()=>{setError("");reload();if(selectedId){setLoadingThread(true);setThreadRefresh(value=>value+1);resolveKey.current="";}}}>Actualizar</button>
