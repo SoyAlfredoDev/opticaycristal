@@ -1,0 +1,24 @@
+.carousel{margin-top:24px;overflow:hidden;border-radius:20px;border:1px solid #dbe9e4;background:#073c33;color:#fff}
+.slide{position:relative;isolation:isolate;overflow:hidden;min-height:280px;display:flex;align-items:center;background:linear-gradient(120deg,#073c33,#005d45)}
+.copy{position:relative;z-index:2;padding:30px 34px;max-width:76%}
+p.brand{margin:0 0 18px;color:#c9efd7;font-size:12px;letter-spacing:.1em;font-weight:700}
+.carousel h2.title{font-family:inherit;color:#fff;font-size:clamp(30px,3.5vw,44px);line-height:1.08;letter-spacing:-.04em;font-weight:700;margin:0 0 18px}
+.title span{color:#bdff52}
+.link{display:inline-flex;align-items:center;gap:8px;min-height:44px;color:#fff;font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:5px}
+.decoration{position:absolute;z-index:0;width:46%;height:170%;border-radius:50%;background:#bdff52;right:-13%;top:-35%;display:flex;align-items:center;justify-content:flex-start;padding-left:4%}
+.decoration::after{content:"";position:absolute;inset:10%;border:1px solid #e7ffb9;border-radius:50%}
+.decoration svg{position:relative;width:60%;height:auto;transform:rotate(-12deg);color:#104735}
+.controls{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 14px;border-top:1px solid #407768;background:#073c33}
+.selectors{display:flex;gap:2px}
+.controls button{min-width:44px;min-height:44px;cursor:pointer;border:0;background:transparent;color:#e1f6e9;font:inherit}
+.selectors button{display:grid;place-items:center}
+.selectors span{display:block;width:9px;height:9px;border-radius:50%;background:#89b7a8}
+.selectors button[aria-pressed="true"] span{width:22px;border-radius:8px;background:#bdff52}
+.controls .playback{display:flex;align-items:center;gap:6px;font-size:12px;padding:8px}
+.carousel :is(a,button):focus-visible{outline:3px solid #bdff52;outline-offset:-3px;border-radius:6px}
+.visit::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#073c33 0%,rgb(7 60 51 / .92) 30%,rgb(7 60 51 / .25) 100%)}
+.photo{object-fit:cover;object-position:center 68%;z-index:0}
+p.address{font-size:14px;margin:0 0 5px;color:#e1f6e9}
+.reference{position:absolute;z-index:3;bottom:12px;right:14px;padding:4px 7px;border-radius:4px;background:#073c33;color:#fff;font-size:11px}
+@media(max-width:650px){.carousel{margin-top:20px;border-radius:18px}.slide{min-height:254px}.copy{padding:24px 22px;max-width:86%}p.brand{font-size:11px;margin-bottom:16px}.carousel h2.title{font-size:30px;max-width:260px}.decoration{right:-25%;width:53%;opacity:.9}.decoration svg{width:76%;margin-left:-14%}.visit .copy{max-width:100%;padding-bottom:38px}.reference{bottom:8px;right:10px;font-size:10px}}
+@media(max-width:359px){.carousel h2.title{font-size:26px}.copy{padding-inline:18px;max-width:92%}.decoration{right:-34%}}

@@ -190,3 +190,12 @@
 .space .primary:hover{background:#a6ef26;color:#18361d}
 .space .panel h3{font-size:15px;font-weight:600;margin:18px 0 12px}
 @media(max-width:650px){.reviewBox{padding:16px}.space .line{flex-wrap:wrap}.space .line h2{max-width:100%;overflow-wrap:anywhere}}
+
+.creditInvitation{border-color:#c8e8dc;background:linear-gradient(135deg,#f1fbf6,#fff);display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.creditInvitation .invitationIcon{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;color:#007f5f;background:#dcf5e9}
+.creditInvitation h2{font-size:23px;line-height:1.2;margin:0}
+.creditInvitation p{margin:0}
+.creditInvitation .balanceLabel{margin-top:8px;font-size:14px}
+.creditInvitation .money{font-size:clamp(36px,7vw,52px);line-height:1.05;margin:0}
+.invitationTerms{font-size:13px;color:#006c50}
+.creditInvitation .button{margin-top:4px}
