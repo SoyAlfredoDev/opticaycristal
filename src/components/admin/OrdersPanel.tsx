@@ -1,9 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { logoutAction } from "@/app/admin/actions";
 import { ORDER_STATUSES, type OrderStatus, type PurchaseOrder } from "@/lib/orders/types";
 
 const labels: Record<OrderStatus, string> = { nuevo: "Nuevo", contactado: "Contactado", cotizado: "Cotizado", cerrado: "Cerrado" };
@@ -29,14 +27,10 @@ export function OrdersPanel({ orders, errorCarga, mysqlConfigured }: { orders: P
     finally { setPending(null); }
   }
 
-  return <div className="min-h-dvh bg-warm text-text-primary">
-    <header className="border-b border-border bg-white"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
-      <div><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">Panel interno</p><p className="mt-1 text-sm font-semibold text-brand-dark">Óptica &amp; Cristal</p></div>
-      <nav aria-label="Administración" className="flex items-center gap-4 text-sm font-semibold"><Link href="/admin" className="text-text-secondary hover:text-brand-dark">Solicitudes</Link><Link href="/admin/pedidos" aria-current="page" className="text-primary">Pedidos</Link><Link href="/admin/radar" className="text-text-secondary hover:text-brand-dark">Radar B2B</Link></nav>
-      <form action={logoutAction}><button type="submit" className="min-h-11 px-3 text-sm font-semibold text-text-secondary">Cerrar sesión</button></form>
-    </div></header>
+  return <div className="min-h-full bg-white text-text-primary">
+
     <main id="contenido-principal" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="text-3xl font-semibold tracking-tight text-brand-dark">Pedidos y ventas</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-text-secondary">Solicitudes de compra del catálogo. Confirma precio y disponibilidad con cada cliente.</p></div><p className="text-sm font-semibold text-brand-dark">{localOrders.length} {localOrders.length === 1 ? "pedido" : "pedidos"}</p></div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="text-3xl font-semibold tracking-tight text-brand-dark">Pedidos web</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-text-secondary">Solicitudes de compra del catálogo. Confirma precio y disponibilidad con cada cliente.</p></div><p className="text-sm font-semibold text-brand-dark">{localOrders.length} {localOrders.length === 1 ? "pedido" : "pedidos"}</p></div>
       <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-950">El catálogo aún no tiene precios ni inventario conectado. Estos registros son solicitudes para cotizar; no son ventas cobradas.</p>
       {!mysqlConfigured && <p className="mt-3 rounded-2xl border border-border bg-white px-4 py-3 text-sm leading-relaxed text-text-secondary">El registro está en un archivo local. Configura MySQL del hosting antes de recibir pedidos reales para conservarlos de forma duradera.</p>}
       {errorCarga && <p role="alert" className="mt-4 rounded-xl bg-primary-soft px-4 py-3 text-sm text-primary">{errorCarga}</p>}

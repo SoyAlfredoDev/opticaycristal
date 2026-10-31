@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SupportDesk } from "./SupportDesk";
+vi.mock("@/lib/clients/admin",()=>({customerAdminSession:async()=>({u:"qa-admin"})}));
+import AdminSupportPage from "@/app/admin/(panel)/clientes/soporte/page";
 import type { TicketDetail } from "@/lib/clients/support-types";
 const ticket:TicketDetail={id:"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",folio:"AYU-00001",subject:"Consulta de prueba",status:"abierto",createdAt:"2026-10-30T15:00:00Z",updatedAt:"2026-10-30T15:00:00Z",messages:[{id:"m1",role:"customer",body:"<script>window.bad = true</script>",createdAt:"2026-10-30T15:00:00Z"}]};
 const response=(body:unknown,status=200)=>Promise.resolve({ok:status<400,status,json:async()=>body});
@@ -52,4 +54,11 @@ describe("Tickets: interfaz cliente y administración",()=>{
   render(<SupportDesk admin initialTicketId={ticket.id}/>);expect(await screen.findByRole("heading",{name:ticket.subject})).toBeVisible();expect(screen.getByText("Aviso al cliente: enviado.")).toBeVisible();
  });
 
+});
+
+it("abre el ticket de otra notificación sin abandonar la vista de soporte",async()=>{
+ const second={...ticket,id:"cccccccc-cccc-4ccc-8ccc-cccccccccccc",folio:"AYU-00002",subject:"Segunda consulta"};
+ vi.stubGlobal("fetch",vi.fn((url:string)=>url.includes(second.id)?response({ticket:second}):url.includes(ticket.id)?response({ticket}):response({tickets:[ticket,second],hasMore:false})));
+ const view=render(await AdminSupportPage({searchParams:Promise.resolve({ticket:ticket.id})}));await screen.findByRole("heading",{name:ticket.subject});
+ view.rerender(await AdminSupportPage({searchParams:Promise.resolve({ticket:second.id})}));expect(await screen.findByRole("heading",{name:second.subject})).toBeVisible();expect(screen.queryByRole("heading",{name:ticket.subject})).not.toBeInTheDocument();
 });

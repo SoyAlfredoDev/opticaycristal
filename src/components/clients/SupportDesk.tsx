@@ -1,4 +1,5 @@
 "use client";
+import {useAdminMemory} from "@/components/admin/AdminMemory";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { TicketDetail, TicketList, TicketSummary } from "@/lib/clients/support-types";
@@ -15,12 +16,14 @@ async function api<T>(url:string,init:RequestInit={}):Promise<T>{
 const date=(value:string)=>new Intl.DateTimeFormat("es-CL",{timeZone:"America/Santiago",dateStyle:"short",timeStyle:"short"}).format(new Date(value));
 export function SupportDesk({admin=false,initialTicketId=""}:{admin?:boolean;initialTicketId?:string}){
   const base=admin?"/api/admin/clientes/soporte":"/api/clientes/soporte";
-  const [tickets,setTickets]=useState<TicketSummary[]>([]),[status,setStatus]=useState(admin?"abierto":"todos"),[query,setQuery]=useState(""),[offset,setOffset]=useState(0),[hasMore,setHasMore]=useState(false),[refresh,setRefresh]=useState(0);
-  const [selectedId,setSelectedId]=useState(initialTicketId),[selected,setSelected]=useState<TicketDetail|null>(null),[loading,setLoading]=useState(true),[loadingThread,setLoadingThread]=useState(Boolean(initialTicketId)),[threadRefresh,setThreadRefresh]=useState(0);
+  const memory=useAdminMemory(),remember=admin?memory?.rememberSupport:undefined;
+  const [tickets,setTickets]=useState<TicketSummary[]>([]),[status,setStatus]=useState(admin?(memory?.support.status??"abierto"):"todos"),[query,setQuery]=useState(admin?(memory?.support.query??""):""),[offset,setOffset]=useState(0),[hasMore,setHasMore]=useState(false),[refresh,setRefresh]=useState(0);
+  const [selectedId,setSelectedId]=useState(initialTicketId||(admin?memory?.support.selectedId:"")||""),[selected,setSelected]=useState<TicketDetail|null>(null),[loading,setLoading]=useState(true),[loadingThread,setLoadingThread]=useState(Boolean(initialTicketId||(admin?memory?.support.selectedId:null))),[threadRefresh,setThreadRefresh]=useState(0);
   const [creating,setCreating]=useState(false),[subject,setSubject]=useState(""),[message,setMessage]=useState(""),[reply,setReply]=useState("");
   const [busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[login,setLogin]=useState(false);
   const createKey=useRef(""),replyKey=useRef(""),resolveKey=useRef(""),inFlight=useRef(false);
   const formRef=useRef<HTMLInputElement>(null),threadRef=useRef<HTMLHeadingElement>(null),threadPanelRef=useRef<HTMLElement>(null);
+  useEffect(()=>{remember?.({status,query,selectedId:selectedId||null});},[status,query,selectedId,remember]);
   function showError(value:unknown){if(value instanceof RequestError&&value.status===401)setLogin(true);setError(value instanceof Error?value.message:"No pudimos conectar. Inténtalo nuevamente.");}
   useEffect(()=>{
     const controller=new AbortController();
@@ -53,7 +56,7 @@ export function SupportDesk({admin=false,initialTicketId=""}:{admin?:boolean;ini
     <div className={styles.toolbar}>
       {!admin&&!creating&&<button type="button" className={`${ui.button} ${ui.primary}`} onClick={begin} disabled={busy}>Nuevo ticket</button>}
       <label className={ui.field}><span>Estado</span><select className={ui.input} value={status} disabled={busy} onChange={event=>{setLoading(true);setTickets([]);setError("");setOffset(0);setStatus(event.target.value);}}><option value="todos">Todos</option><option value="abierto">Pendientes</option><option value="respondido">Respondidos</option><option value="resuelto">Resueltos</option></select></label>
-      {admin&&<form className={styles.adminSearch} onSubmit={search}><label className={ui.field}><span>Buscar tickets</span><input className={ui.input} name="search" maxLength={100} placeholder="Folio, nombre o correo"/></label><button className={ui.button} disabled={busy}>Buscar</button></form>}
+      {admin&&<form className={styles.adminSearch} onSubmit={search}><label className={ui.field}><span>Buscar tickets</span><input className={ui.input} name="search" defaultValue={query} maxLength={100} placeholder="Folio, nombre o correo"/></label><button className={ui.button} disabled={busy}>Buscar</button></form>}
       <button type="button" className={ui.button} disabled={loading||busy} onClick={()=>{setError("");reload();if(selectedId){setLoadingThread(true);setThreadRefresh(value=>value+1);resolveKey.current="";}}}>Actualizar</button>
     </div>
     {error&&<p role="alert" className={ui.error}>{error}</p>}{login&&<Link href={admin?"/admin/login":"/mi-cuenta/ingresar"} className={ui.textLink}>Volver a ingresar</Link>}

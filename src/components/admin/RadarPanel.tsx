@@ -1,7 +1,5 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { logoutAction } from "@/app/admin/actions";
 import {
   Activity,
   CompanyResult,
@@ -759,20 +757,13 @@ export function RadarPanel({
   ]);
   return (
     <div className={styles.shell}>
-      <aside className={styles.sidebar}>
-        <div className={styles.brand}>
-          <span className={styles.mark}>◉</span>
-          <span>
-            <strong>Radar Comercial B2B</strong>
-            <small>Óptica &amp; Cristal</small>
-          </span>
-        </div>
-        <nav className={styles.nav} aria-label="Secciones comerciales">
+      <div className={styles.content}>
+        <nav className={styles.moduleNav} aria-label="Secciones comerciales">
           {(
             [
               ["resumen", "Dashboard", LayoutDashboard],
               ["buscar", "Radar", Search],
-              ["prospectos", "Clientes", Users],
+              ["prospectos", "Empresas y contactos", Users],
               ["campanas", "Campañas", Mail],
               ["seguimientos", "Seguimientos", MessageSquare],
             ] as const
@@ -788,28 +779,14 @@ export function RadarPanel({
             </button>
           ))}
         </nav>
-        <div className={styles.sideFoot}>
-          Impulsando conexiones
-          <br />
-          que hacen crecer Chile.
-        </div>
-      </aside>
-      <div className={styles.content}>
-        <header className={styles.topbar}>
-          <Link href="/admin">Panel administrativo</Link>
-          <span>Radar Comercial B2B</span>
-          <form action={logoutAction}>
-            <button type="submit">Cerrar sesión</button>
-          </form>
-        </header>
-        <main className={styles.main}>
+        <main className={styles.main} id="contenido-principal">
           <div className={styles.titleRow}>
             <div>
               <h1>
                 {
                   {
                     buscar: "Radar de empresas",
-                    prospectos: "Clientes y contactos",
+                    prospectos: "Empresas y contactos",
                     resumen: "Dashboard comercial",
                     oportunidades: "Oportunidades",
                     actividad: "Actividad",

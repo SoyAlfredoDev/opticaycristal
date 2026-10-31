@@ -1046,3 +1046,5 @@
   flex-wrap: wrap;
   gap: 16px;
 }
+
+.shell{min-height:0;background:#fff}.moduleNav{display:flex;flex-wrap:wrap;gap:8px;padding:20px 24px 0}.moduleNav button{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:10px 14px;border:1px solid #dbe9e1;border-radius:12px;background:#fff;color:#536574;font:inherit;cursor:pointer}.moduleNav button[aria-current]{background:#e5f8ec;color:#006c50;border-color:#a9d9bd}.content{min-width:0;width:100%}

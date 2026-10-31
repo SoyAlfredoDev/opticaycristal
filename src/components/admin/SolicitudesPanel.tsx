@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Link from "next/link";
-import { ArrowClockwise, MagnifyingGlass, SignOut } from "@phosphor-icons/react";
-import { reenviarAvisoAction, logoutAction } from "@/app/admin/actions";
+import { ArrowClockwise, MagnifyingGlass } from "@phosphor-icons/react";
+import { reenviarAvisoAction } from "@/app/admin/actions";
 import { getMesLabel } from "@/lib/jornada-form";
 import { convenioInterests } from "@/lib/convenios";
 import { ORIGEN_LABEL, type CorreoEstado, type Solicitud } from "@/lib/solicitudes/types";
@@ -91,30 +90,8 @@ export default function SolicitudesPanel({
   }
 
   return (
-    <div className="min-h-dvh bg-warm text-text-primary">
-      <header className="border-b border-border bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
-              Panel interno
-            </p>
-            <p className="mt-1 text-sm font-semibold text-brand-dark">Óptica y Cristal</p>
-          </div>
-          <nav aria-label="Administración" className="flex items-center gap-4 text-sm font-semibold">
-            <Link href="/admin" aria-current="page" className="text-primary">Solicitudes</Link>
-            <Link href="/admin/clientes" className="text-text-secondary hover:text-brand-dark">Clientes</Link><Link href="/admin/clientes/soporte" className="text-text-secondary hover:text-brand-dark">Soporte</Link><Link href="/admin/pedidos" className="text-text-secondary hover:text-brand-dark">Pedidos</Link><Link href="/admin/radar" className="text-text-secondary hover:text-brand-dark">Radar B2B</Link>
-          </nav>
-          <form action={logoutAction}>
-            <button
-              type="submit"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-semibold text-text-secondary transition-colors hover:text-brand-dark"
-            >
-              <SignOut size={16} />
-              Cerrar sesión
-            </button>
-          </form>
-        </div>
-      </header>
+    <div className="min-h-full bg-white text-text-primary">
+
 
       <main id="contenido-principal" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

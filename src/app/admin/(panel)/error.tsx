@@ -1,0 +1,3 @@
+"use client";
+import Link from 'next/link';
+export default function AdminError({retry}:{retry:()=>void}){return <main id="contenido-principal" style={{padding:32}}><h1 style={{fontSize:26,fontWeight:650}}>No pudimos cargar esta sección</h1><p style={{margin:'16px 0'}}>El menú sigue disponible. Reintenta o vuelve a Solicitudes.</p><div style={{display:'flex',gap:16,flexWrap:'wrap'}}><button type="button" style={{minHeight:44,padding:'10px 18px',border:'1px solid #cde4d8',borderRadius:12,background:'#eff9f3',color:'#006c50',cursor:'pointer'}} onClick={retry}>Reintentar</button><Link href="/admin" style={{color:'#007452',padding:12}}>Ir a Solicitudes</Link></div></main>;}

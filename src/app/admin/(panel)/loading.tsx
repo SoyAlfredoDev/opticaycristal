@@ -1,0 +1,1 @@
+export default function AdminLoading(){return <main id="contenido-principal" style={{padding:32}}><h1 style={{fontSize:24,fontWeight:650}}>Cargando sección</h1><p role="status" style={{marginTop:14,color:'#536574'}}>El menú sigue disponible mientras se consulta la información.</p></main>;}

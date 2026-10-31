@@ -1,0 +1,2 @@
+import Link from "next/link";
+export function AdminAccessDenied(){return <main id="contenido-principal" style={{padding:32}}><h1 style={{fontSize:26,fontWeight:650}}>Acceso restringido</h1><p style={{margin:'16px 0'}}>Tu sesión está activa, pero no tienes permiso para este módulo. Contacta al responsable de la óptica si necesitas acceso.</p><Link href="/admin" style={{color:'#007452',textDecoration:'underline'}}>Volver a Solicitudes</Link></main>;}
