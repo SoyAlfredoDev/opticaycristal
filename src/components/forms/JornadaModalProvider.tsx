@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import JornadaRequestModal from "@/components/forms/JornadaRequestModal";
 
@@ -12,6 +13,8 @@ interface JornadaModalContextValue {
 const JornadaModalContext = createContext<JornadaModalContextValue | null>(null);
 
 export function JornadaModalProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const publicView = ["/", "/optica", "/credito-directo", "/convenios", "/jornadas", "/privacidad"].includes(pathname ?? "");
   const [isOpen, setIsOpen] = useState(false);
 
   const open = useCallback(() => setIsOpen(true), []);
@@ -25,7 +28,7 @@ export function JornadaModalProvider({ children }: { children: React.ReactNode }
   return (
     <JornadaModalContext.Provider value={value}>
       {children}
-      <JornadaRequestModal open={isOpen} onClose={close} />
+      <JornadaRequestModal open={isOpen} onClose={close} publicStyle={publicView} />
     </JornadaModalContext.Provider>
   );
 }

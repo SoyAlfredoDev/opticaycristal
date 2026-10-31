@@ -1,7 +1,7 @@
 .hero h1 { font-size: clamp(40px, 8vw, 64px); max-width: 620px; text-wrap: balance; }
 .highlights { display: grid; gap: 12px; list-style: none; padding: 0; margin: 23px 0 0; }
 .highlights li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
-.highlights svg { flex-shrink: 0; color: var(--cta); margin-top: 1px; }
+.highlights svg { flex-shrink: 0; color: var(--oc-link); margin-top: 1px; }
 .hero p.heroNote { margin-top: 16px; font-size: 12px; line-height: 1.6; color: var(--muted); }
 .process { padding-bottom: 28px; }
 .scopeGrid { display: grid; gap: 24px; margin-top: 26px; }
@@ -12,7 +12,7 @@
 .scopeGrid h3 { font-size: clamp(27px, 4vw, 34px); line-height: 1.15; }
 .scopeGrid ul { display: grid; gap: 14px; list-style: none; margin: 22px 0 0; padding: 0; }
 .scopeGrid li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.6; }
-.included svg { flex-shrink: 0; color: var(--cta); margin-top: 3px; }
+.included svg { flex-shrink: 0; color: var(--oc-link); margin-top: 3px; }
 .products li::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--wine); flex-shrink: 0; margin-top: 10px; }
 .products p { margin-top: 22px; font-size: 14px; line-height: 1.6; color: var(--wine); }
 .financing { margin-top: 22px !important; color: var(--muted); font-size: 13px; line-height: 1.7; max-width: 760px; }

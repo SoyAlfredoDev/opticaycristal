@@ -3,16 +3,41 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, UserRound, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { brand, siteNavigation, whatsappUrl } from "./content";
 import { LinkButton } from "./LinkButton";
 import styles from "./Site.module.css";
 
-export function SiteHeader({ active = "Inicio" }: { active?: string }) {
+const headerNavigation = siteNavigation.filter(item => item.href !== "/mi-cuenta");
+
+export function SiteHeader({ active = "Inicio", announcement, className = "", fitViewport = false }: { active?: string; announcement?: ReactNode; className?: string; fitViewport?: boolean }) {
   const [open, setOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!fitViewport) return;
+    const header = headerRef.current;
+    const scope = header?.parentElement;
+    if (!header || !scope) return;
+    const property = "--oc-home-header-height";
+    const previous = scope.style.getPropertyValue(property);
+    const measure = () => {
+      const height = header.getBoundingClientRect().height;
+      if (height > 0) scope.style.setProperty(property, `${height}px`);
+    };
+    measure();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    observer?.observe(header);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+      if (previous) scope.style.setProperty(property, previous);
+      else scope.style.removeProperty(property);
+    };
+  }, [fitViewport]);
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -66,8 +91,8 @@ export function SiteHeader({ active = "Inicio" }: { active?: string }) {
   }, [open]);
 
   return (
-    <header ref={headerRef} className={`${styles.header}${hidden ? ` ${styles.headerHidden}` : ""}`}>
-      <div className={styles.utility}>
+    <header ref={headerRef} className={`${styles.header}${hidden ? ` ${styles.headerHidden}` : ""} ${className}`}>
+      {announcement ?? <div className={styles.utility}>
         <div className={styles.container}>
           <span>Tu mirada, nuestra prioridad</span>
           <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer">
@@ -77,13 +102,13 @@ export function SiteHeader({ active = "Inicio" }: { active?: string }) {
             <span>WhatsApp {brand.phone}</span>
           </a>
         </div>
-      </div>
+      </div>}
       <div className={`${styles.container} ${styles.navbar}`}>
         <Link href="/" aria-label={`${brand.name}, inicio`} className={styles.logo}>
           <Image src={brand.logo} alt={brand.name} width={186} height={94} loading="eager" />
         </Link>
         <nav className={styles.desktopNav} aria-label="Navegación principal">
-          {siteNavigation.map((item) => (
+          {headerNavigation.map((item) => (
             <Link key={item.label} href={item.href} aria-current={item.label === active ? "page" : undefined}>
               {item.label}
             </Link>
@@ -105,7 +130,7 @@ export function SiteHeader({ active = "Inicio" }: { active?: string }) {
         </div>
       </div>
       <nav id="home-mobile-nav" aria-label="Navegación móvil" hidden={!open} className={styles.mobileNav}>
-        {siteNavigation.map((item) => (
+        {headerNavigation.map((item) => (
           <Link key={item.label} href={item.href} onClick={() => setOpen(false)}
             aria-current={item.label === active ? "page" : undefined}>{item.label}</Link>
         ))}

@@ -2,35 +2,35 @@
   margin-top: 52px;
   padding-block: 48px 42px;
   background: var(--wine);
-  color: #fbf7f2;
+  color: var(--oc-ivory);
 }
 .layout { display: grid; gap: 28px; }
 .copy { min-width: 0; }
 .kicker {
   display: flex; align-items: center; gap: 14px; margin: 0 0 12px;
-  color: #e9d8c8; font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--oc-ivory); font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
 }
-.kicker::after { content: ""; width: 36px; height: 1px; background: #e9d8c8; }
-section.band h2 { color: #fbf7f2; font-size: clamp(44px, 12vw, 68px); line-height: .92; }
-.address { margin: 12px 0 0; color: #fbf7f2; font-style: normal; font-size: 15px; letter-spacing: .01em; }
-.lead { max-width: 36ch; margin-top: 16px; color: #f7efe9; font-size: 15px; line-height: 1.6; }
+.kicker::after { content: ""; width: 36px; height: 1px; background: var(--oc-ivory); }
+section.band h2 { color: var(--oc-ivory); font-size: clamp(44px, 12vw, 68px); line-height: .92; }
+.address { margin: 12px 0 0; color: var(--oc-ivory); font-style: normal; font-size: 15px; letter-spacing: .01em; }
+.lead { max-width: 36ch; margin-top: 16px; color: var(--oc-ivory); font-size: 15px; line-height: 1.6; }
 .actions { display: grid; gap: 10px; margin-top: 24px; }
 .actions a:last-child,
 a.whatsapp {
-  background: #fbf7f2;
+  background: var(--oc-ivory);
   color: var(--wine);
-  border-color: #fbf7f2;
+  border-color: var(--oc-ivory);
 }
 .actions a:last-child:hover,
 a.whatsapp:hover {
-  background: #e9d8c8;
+  background: var(--oc-ivory);
   color: var(--wine-deep);
-  border-color: #e9d8c8;
+  border-color: var(--oc-ivory);
 }
-.band a.button:focus-visible { outline-color: #fbf7f2; }
+.band a.button:focus-visible { outline-color: var(--oc-ivory); }
 .map {
   display: flex; flex-direction: column; min-width: 0; min-height: 300px;
-  margin: 0; background: #efe4d8; border-radius: 4px; overflow: hidden;
+  margin: 0; background: var(--oc-ivory); border-radius: 4px; overflow: hidden;
 }
 .canvas { position: relative; flex: 1; min-height: 248px; }
 .canvas iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
@@ -56,14 +56,14 @@ a.whatsapp:hover {
 }
 
 /* Home financing FAQs share the existing visit block and its single map. */
-.faqs { display: grid; gap: 24px; padding-bottom: 36px; margin-bottom: 36px; border-bottom: 1px solid #aa788b; }
+.faqs { display: grid; gap: 24px; padding-bottom: 36px; margin-bottom: 36px; border-bottom: 1px solid var(--oc-border-soft); }
 section.band .faqs h2 { font-size: clamp(40px, 7vw, 56px); line-height: 1.05; }
 .questions { min-width: 0; }
-.questions details { border-bottom: 1px solid #aa788b; }
+.questions details { border-bottom: 1px solid var(--oc-border-soft); }
 .questions summary { cursor: pointer; padding-block: 16px; min-height: 48px; font-size: 16px; font-weight: 500; }
-.questions summary::marker { color: #c9ff73; }
-.questions summary:focus-visible { outline: 2px solid #c9ff73; outline-offset: 4px; }
-.questions details p { padding: 0 0 18px; color: #f7efe9; font-size: 15px; max-width: 64ch; }
+.questions summary::marker { color: var(--oc-green); }
+.questions summary:focus-visible { outline: 2px solid var(--oc-green); outline-offset: 4px; }
+.questions details p { padding: 0 0 18px; color: var(--oc-ivory); font-size: 15px; max-width: 64ch; }
 p.hours { margin-top: 20px; font-size: 15px; line-height: 1.8; }
 @media (min-width: 900px) {
   .faqs { grid-template-columns: minmax(280px, .84fr) minmax(0, 1.16fr); gap: 56px; padding-bottom: 44px; margin-bottom: 44px; }

@@ -15,7 +15,7 @@ function subscribeMotion(callback: () => void) {
 const readMotion = () => window.matchMedia(motionQuery).matches;
 const serverMotion = () => true;
 
-export function HeroPortraits() {
+export function HeroPortraits({ controls = true }: { controls?: boolean }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -64,7 +64,7 @@ export function HeroPortraits() {
           </div>
         ))}
       </div>
-      <div className={styles.portraitControls}>
+      {controls && <div className={styles.portraitControls}>
         {heroPortraits.map((portrait, index) => (
           <button key={portrait.id} type="button" aria-label={`Mostrar ${portrait.label.toLowerCase()}`}
             aria-pressed={active === index} disabled={!ready[index]}
@@ -74,7 +74,7 @@ export function HeroPortraits() {
           disabled={reducedMotion} onClick={() => setPaused(value => !value)}>
           {stopped ? <Play size={14} aria-hidden="true" /> : <Pause size={14} aria-hidden="true" />}
         </button>
-      </div>
+      </div>}
     </div>
   );
 }

@@ -1,0 +1,67 @@
+/* Opt-in wrappers used only by Inicio. No tokens on the page or gallery. */
+.scope {
+  --wine: var(--oc-wine);
+  --wine-deep: var(--oc-deep);
+  --ivory: var(--oc-ivory);
+  --cta: var(--oc-green);
+  --cta-hover: var(--oc-green-hover);
+  --ink: var(--oc-deep);
+  --muted: var(--oc-muted);
+  --line: var(--oc-border);
+  --oc-font-display: var(--oc-font-editorial);
+}
+.scope :is(a, button):focus-visible { outline: 2px solid var(--oc-wine); outline-offset: 4px; }
+.collections { padding-block: 52px 44px; background: var(--oc-ivory); }
+.sectionHeading { display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; margin-bottom: 30px; }
+.scope .sectionHeading h2 { font-family: var(--oc-font-editorial), Georgia, serif; font-size: clamp(36px, 5vw, 58px); line-height: 1.08; font-weight: 500; color: var(--oc-wine); }
+.scope .sectionHeading > span { display: flex; align-items: center; gap: 12px; order: -1; white-space: normal; color: var(--oc-wine); font-size: 10px; line-height: 1.6; letter-spacing: .18em; }
+.sectionHeading > span::after { width: 32px; margin: 0; background: var(--oc-gold); }
+.collections article { padding-bottom: 2px; }
+.collections button[aria-label^="Ampliar imagen"] { aspect-ratio: 1.2; border-radius: 2px; }
+.collections article > button { gap: 12px; padding-block: 18px 6px; align-items: start; }
+.scope.collections h3 { font-family: var(--oc-font-editorial), Georgia, serif; color: var(--oc-wine); font-size: clamp(25px, 2.6vw, 34px); line-height: 1.15; font-weight: 500; }
+.collections article > button > svg { box-sizing: content-box; padding: 12px; width: 17px; height: 17px; flex-shrink: 0; border-radius: 50%; background: var(--oc-green); color: var(--oc-deep); }
+.collections article > p { color: var(--oc-muted); font-size: 14px; line-height: 1.6; max-width: 26ch; }
+.collections > div > div > p { text-align: right; font-size: 11px; color: var(--oc-muted); }
+.scope.visit > section { margin-top: 0; padding-block: 48px; background: radial-gradient(ellipse at 75% 10%, color-mix(in srgb, var(--oc-ivory) 10%, transparent), transparent 60%), var(--oc-wine); }
+.scope.visit h2 { font-family: var(--oc-font-editorial), Georgia, serif; font-size: clamp(46px, 5.8vw, 78px); font-weight: 500; line-height: 1.04; letter-spacing: -.05em; color: var(--oc-ivory); }
+.scope.visit p, .scope.visit address { color: var(--oc-ivory); }
+.scope.visit a[href*="/maps/dir/"] { background: var(--oc-green); border-color: var(--oc-green); color: var(--oc-deep); font-weight: 600; border-radius: 6px; }
+.scope.visit a[href*="wa.me"] { background: transparent; color: var(--oc-ivory); border-color: color-mix(in srgb, var(--oc-ivory) 60.00%, transparent); border-radius: 6px; }
+.scope.visit a:focus-visible { outline-color: var(--oc-ivory); }
+.scope.visit figure { background: var(--oc-ivory); border-radius: 4px; border: 1px solid var(--oc-ivory); }
+.scope.visit figcaption a { color: var(--oc-wine); }
+.scope.visit figure a:focus-visible { outline-color: var(--oc-wine); }
+.scope.footer > section { width: 100%; margin: 0; padding: 48px 24px; background: radial-gradient(ellipse at 20% 10%, color-mix(in srgb, var(--oc-ivory) 8%, transparent), transparent 60%), var(--oc-wine); color: var(--oc-ivory); }
+.scope.footer > section > div { width: 100%; max-width: 1280px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; text-align: center; }
+.scope.footer > section > div > div:first-child { display: none; }
+.scope.footer > section > div > div:nth-child(2) { border: 0; padding: 0; }
+.scope.footer section h2 { font-family: var(--oc-font-editorial), Georgia, serif; font-size: clamp(34px, 4.6vw, 58px); font-weight: 500; line-height: 1.15; color: var(--oc-ivory); }
+.scope.footer > section a { background: var(--oc-green); border-color: var(--oc-green); color: var(--oc-deep); border-radius: 6px; font-weight: 600; }
+.scope.footer > section a:focus-visible { outline-color: var(--oc-ivory); }
+.scope.footer footer { padding-top: 38px; border-top: 0; background: var(--oc-ivory); color: var(--oc-deep); }
+.scope.footer footer p { color: var(--oc-wine); line-height: 1.1; white-space: normal; }
+.scope.footer footer nav a { min-height: 32px; display: inline-flex; align-items: center; }
+@media (min-width: 900px) {
+  .collections { padding-block: 68px 54px; }
+  .sectionHeading { margin-bottom: 38px; }
+  .collections button[aria-label^="Ampliar imagen"] { aspect-ratio: 1.25; }
+  .scope.visit > section { padding-block: 60px; }
+  .scope.footer > section { padding-block: 56px; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .scope.visit a[href*="/maps/dir/"]:hover, .scope.footer > section a:hover { background: var(--oc-green-hover); border-color: var(--oc-green-hover); color: var(--oc-deep); }
+  .scope.visit a[href*="wa.me"]:hover { background: color-mix(in srgb, var(--oc-ivory) 7.06%, transparent); border-color: var(--oc-ivory); color: var(--oc-ivory); }
+}
+
+/* Empresas: same editorial palette, existing content and actions. */
+.business { padding-block: 54px; background: var(--oc-ivory); }
+.scope.business h3 { font-family: var(--oc-font-editorial), Georgia, serif; font-size: clamp(32px, 3vw, 40px); font-weight: 500; line-height: 1.08; color: var(--oc-wine); }
+.business article { background: var(--oc-ivory); border: 1px solid var(--oc-border); border-radius: 6px; }
+.business article > div:first-of-type { display: flex; flex-direction: column; align-items: flex-start; padding: 28px; }
+.business article p { margin-bottom: 18px; color: var(--oc-muted); font-size: 14px; line-height: 1.65; }
+.business article > div > span { margin-block: 0 22px; font-size: 11px; color: var(--oc-muted); }
+.scope.business article > div > :is(a, button) { min-height: 48px; margin-top: auto; padding: 12px 18px; background: var(--oc-green); color: var(--oc-deep); border: 1px solid var(--oc-green); border-radius: 6px; font-size: 13px; font-weight: 600; gap: 10px; }
+.business article > div > :is(a, button) > span { font-size: inherit; color: inherit; border: 0; }
+@media (min-width: 900px) { .business { padding-block: 68px; } .business article { min-height: 390px; } .business article > div:first-of-type { padding: 28px 22px; } }
+@media (hover: hover) and (pointer: fine) { .scope.business article > div > :is(a, button):hover { background: var(--oc-green-hover); border-color: var(--oc-green-hover); color: var(--oc-deep); } }

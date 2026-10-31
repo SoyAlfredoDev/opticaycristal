@@ -45,4 +45,5 @@ export const siteNavigation = [
   { label: "Crédito directo", footerLabel: "Crédito directo", href: "/credito-directo" },
   { label: "Convenios", footerLabel: "Convenio con empresas", href: "/convenios" },
   { label: "Jornadas", footerLabel: "Jornadas oftalmológicas", href: "/jornadas" },
+  { label: "Mi cuenta", footerLabel: "Mi espacio de cliente", href: "/mi-cuenta" },
 ] as const;

@@ -49,6 +49,14 @@ describe("HeroPortraits", () => {
     expect(screen.getByRole("button", { name: "Mostrar pareja" })).toHaveAttribute("aria-pressed", "true");
   });
 
+  it("rotates without visible controls when Inicio requests automatic images only", () => {
+    render(<HeroPortraits controls={false} />);
+    loadPhotos();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(HERO_INTERVAL_MS));
+    expect(active()).toBe("professional");
+  });
+
   it("skips unavailable photographs and wraps around", () => {
     expect(nextReadyPortrait(0, [true, false, true, false])).toBe(2);
     expect(nextReadyPortrait(3, [true, false, false, true])).toBe(0);

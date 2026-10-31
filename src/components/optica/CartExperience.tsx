@@ -6,13 +6,14 @@ import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { SiteDialog } from "@/components/site/SiteDialog";
 import site from "@/components/site/Site.module.css";
 import styles from "@/components/site/Views.module.css";
-import { products, type Product } from "./catalog";
+import { products, type Product, type Category } from "./catalog";
 import { ProductCatalog } from "./ProductCatalog";
+import editorial from "./CatalogEditorial.module.css";
 
 type CartEntry = { productId: string; quantity: number };
 const STORAGE_KEY = "oc_cart_v1";
 
-export function CartExperience() {
+export function CartExperience({ category, onCategoryChange }: { category: Category; onCategoryChange: (category: Category) => void }) {
   const [cart, setCart] = useState<CartEntry[]>([]);
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
@@ -66,8 +67,8 @@ export function CartExperience() {
   }
 
   return <>
-    <div className={styles.cartBar}><p>¿Te interesa algún modelo? Agrégalo y envíanos tu solicitud de compra.</p><button type="button" className={`${site.button} ${site.primary}`} onClick={() => setOpen(true)} disabled={!ready}><ShoppingBag size={17} aria-hidden="true" /> Carro ({quantity})</button></div>
-    <ProductCatalog onAddToCart={add} cartReady={ready} />
+    <div className={`${styles.cartBar} ${editorial.catalogHeading}`}><div><h2 id="collection-title">Explora nuestra colección</h2><p>Agrega tus favoritos y envíanos tu solicitud de compra.</p></div><button type="button" className={`${site.button} ${site.primary}`} onClick={() => setOpen(true)} disabled={!ready}><ShoppingBag size={17} aria-hidden="true" /> Carro ({quantity})</button></div>
+    <ProductCatalog onAddToCart={add} cartReady={ready} category={category} onCategoryChange={onCategoryChange} />
     <SiteDialog open={open} onClose={() => setOpen(false)} titleId={dialogTitle} className={styles.cartDialog}>
       <div className={styles.cartContent}>
         <p className={styles.cartEyebrow}>Óptica &amp; Cristal</p>

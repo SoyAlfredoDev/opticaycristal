@@ -3,13 +3,13 @@
 import Image from "next/image";
 import { useState, type CSSProperties } from "react";
 import { SectionReveal } from "./SectionReveal";
-import { galleryPhotos, type GalleryPhoto } from "./photo-gallery";
+import { galleryPhotos, GALLERY_SET_WIDTH, type GalleryPhoto } from "./photo-gallery";
 import site from "@/components/site/Site.module.css";
 import styles from "./PhotoGallery.module.css";
 
 function PhotoSet({ photos, hidden = false }: { photos: readonly GalleryPhoto[]; hidden?: boolean }) {
   return (
-    <ul className={styles.set} aria-hidden={hidden || undefined}>
+    <ul className={styles.set} aria-hidden={hidden || undefined} style={{"--gallery-set-width": `${GALLERY_SET_WIDTH}px`} as CSSProperties}>
       {photos.map((photo) => (
         <li
           key={photo.id}
@@ -29,8 +29,8 @@ function PhotoSet({ photos, hidden = false }: { photos: readonly GalleryPhoto[];
               fill
               sizes="(max-width: 700px) 150px, 260px"
               loading="eager"
-              className={photo.fit === "contain" ? styles.contain : styles.cover}
-              style={{ objectPosition: photo.position }}
+              className={`${photo.fit === "contain" ? styles.contain : styles.cover} ${photo.tone ? styles.clientPhoto : ""}`}
+              style={{ objectPosition: photo.position, filter: photo.tone }}
             />
           </div>
         </li>
@@ -60,7 +60,7 @@ export function PhotoGallery() {
               </button>
             </div>
           </div>
-          <p className={styles.lead}>Interior del local en Huérfanos 713, Santiago Centro: vitrinas, muro de monturas y la atención en la óptica.</p>
+          <p className={styles.lead}>Nuestra óptica y las miradas de quienes nos visitan en Huérfanos 713, Santiago Centro.</p>
         </div>
         <div className={styles.stage} role="region" aria-label="Vistas de la óptica y de clientes">
           <div className={styles.track} data-paused={paused ? "true" : "false"}>

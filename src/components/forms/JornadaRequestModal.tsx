@@ -1,5 +1,8 @@
 "use client";
 
+import { bodyFont } from "@/components/site/fonts";
+import { editorialFont } from "@/components/home/editorial-font";
+import theme from "@/components/site/PublicTheme.module.css";
 import { useEffect, useId, useRef } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "@phosphor-icons/react";
@@ -10,9 +13,11 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 export default function JornadaRequestModal({
   open,
   onClose,
+  publicStyle = false,
 }: {
   open: boolean;
   onClose: () => void;
+  publicStyle?: boolean;
 }) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -75,7 +80,7 @@ export default function JornadaRequestModal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[var(--z-modal)] flex items-end justify-center sm:items-center sm:p-6"
+          className={`fixed inset-0 z-[var(--z-modal)] flex items-end justify-center sm:items-center sm:p-6 ${publicStyle ? `${theme.scope} ${theme.legacy} ${theme.modal} ${bodyFont.variable} ${editorialFont.variable}` : ""}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

@@ -1,0 +1,75 @@
+/* Shared public tokens. Never applied to /mi-cuenta or /admin. */
+.scope {
+  --oc-wine: #681c30;
+  --oc-ivory: #f4e7d4;
+  --oc-green: #9bcb5a;
+  --oc-deep: #3d0b1a;
+  --oc-white: #fff;
+  --oc-gold: #c7a36b;
+  --oc-muted: #655256;
+  --oc-border: #987c71;
+  --oc-border-soft: color-mix(in srgb, var(--oc-wine) 22%, var(--oc-ivory));
+  --oc-link: var(--oc-wine);
+  --oc-on-wine-muted: color-mix(in srgb, var(--oc-ivory) 90%, var(--oc-wine));
+  --oc-green-hover: color-mix(in srgb, var(--oc-green) 86%, var(--oc-white));
+  --oc-error: #9c1438;
+  --oc-success: #215c3e;
+  --wine: var(--oc-wine);
+  --wine-deep: var(--oc-deep);
+  --ivory: var(--oc-ivory);
+  --beige: var(--oc-ivory);
+  --cta: var(--oc-link);
+  --cta-hover: var(--oc-deep);
+  --ink: var(--oc-deep);
+  --muted: var(--oc-muted);
+  --line: var(--oc-border-soft);
+  --oc-font-display: var(--oc-font-editorial);
+  font-family: var(--oc-font-body), Arial, sans-serif;
+  color: var(--oc-deep);
+  background: var(--oc-white);
+  color-scheme: light;
+}
+.scope[data-public-site] { --oc-font-display: var(--oc-font-editorial); }
+
+/* Legacy privacy/footer and the root-mounted request modal consume scoped aliases. */
+.legacy {
+  --color-brand-primary: var(--oc-wine);
+  --color-primary: var(--oc-wine);
+  --color-primary-hover: var(--oc-deep);
+  --color-primary-soft: var(--oc-ivory);
+  --color-primary-mist: var(--oc-ivory);
+  --color-brand-dark: var(--oc-deep);
+  --color-brand-dark-elevated: var(--oc-wine);
+  --color-text-primary: var(--oc-deep);
+  --color-text-secondary: var(--oc-muted);
+  --color-text-tertiary: var(--oc-muted);
+  --color-text-on-dark: var(--oc-ivory);
+  --color-text-on-dark-muted: var(--oc-on-wine-muted);
+  --color-background: var(--oc-ivory);
+  --color-bg-base: var(--oc-ivory);
+  --color-surface: var(--oc-white);
+  --color-muted: var(--oc-ivory);
+  --color-border: var(--oc-border);
+  --color-border-dark: var(--oc-border-soft);
+  --font-serif: var(--oc-font-editorial);
+}
+.scope.legacy :is(h1,h2,h3,h4) { font-family: var(--oc-font-editorial), Georgia, serif; font-weight: 500; }
+.scope.legacy :is(button,input,textarea,select) { font-family: var(--oc-font-body), Arial, sans-serif; }
+.scope.legacy :is(a,button,input,textarea,select):focus-visible { outline: 2px solid var(--oc-wine); outline-offset: 4px; }
+.scope.legacy :is(input,select,textarea) { color: var(--oc-deep); border-color: var(--oc-border); }
+.scope.legacy [aria-invalid="true"], .scope.legacy [role="alert"] { color: var(--oc-error); }
+.scope.legacy button[class*="bg-primary"] { background: var(--oc-green); color: var(--oc-deep); }
+.scope.legacy button[class*="bg-primary"]:hover { background: var(--oc-green-hover); }
+.privacy header { background: var(--oc-white); border-color: var(--oc-border-soft); }
+.privacy main { background: var(--oc-ivory); }
+.privacy footer { background: var(--oc-deep); color: var(--oc-ivory); }
+.privacy footer h3, .privacy footer h4 { color: var(--oc-ivory); }
+.privacy footer > div > div:first-child { background: var(--oc-wine); }
+.privacy footer button { background: var(--oc-green); color: var(--oc-deep); }
+.privacy footer button:hover { background: var(--oc-green-hover); }
+.privacy footer :is(a,button):focus-visible { outline-color: var(--oc-ivory); }
+.privacy footer a:hover { color: var(--oc-ivory); text-decoration: underline; }
+.privacy h1 { font-size: clamp(38px,6vw,58px); line-height: 1.12; }
+.privacy h2 { font-size: 27px; line-height: 1.25; }
+
+.scope.legacy.modal { background: transparent; }

@@ -1,59 +1,73 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowDown, ArrowUpRight, Check } from "lucide-react";
+import { ArrowRight, CalendarDays, FileText, Glasses, IdCard, MapPin, MessageCircle, UserRoundPlus } from "lucide-react";
 import { whatsappUrl } from "@/components/site/content";
 import site from "@/components/site/Site.module.css";
+import { editorialFont } from "./editorial-font";
 import styles from "./FinancingSections.module.css";
 
 const financingMessage = "Hola, quiero conocer el crédito para mis lentes";
 
 export function FinancingIntroduction() {
   return (
-    <section id="financiamiento" aria-labelledby="financing-title" className={styles.introduction}>
+    <section id="financiamiento" aria-labelledby="financing-title" className={`${styles.introduction} ${editorialFont.variable}`}>
+      <div className={styles.scene}>
+        <picture className={styles.backdrop}>
+          <source media="(max-width: 759px)" srcSet="/images/home/credito-boutique-movil-v1.webp" />
+          <Image src="/images/home/credito-boutique-v1.webp" alt="" fill priority sizes="100vw" />
+        </picture>
       <div className={`${site.container} ${styles.introGrid}`}>
         <div className={styles.copy}>
-          <p className={styles.eyebrow}><span aria-hidden="true" />Nuevo · Crédito directo</p>
-          <h1 id="financing-title">Confiamos en<br />nuestros clientes.</h1>
-          <p className={styles.description}>Tus próximos lentes, con crédito directo de tu óptica.</p>
-          <p className={styles.benefit}><Check size={20} aria-hidden="true" />Sin liquidaciones de sueldo ni comprobantes de ingresos.</p>
+          <p className={styles.eyebrow}><span aria-hidden="true" />Crédito directo de tu óptica</p>
+          <h1 id="financing-title">Crédito de hasta el <strong>70%</strong><span>de tus lentes.</span></h1>
+          <p className={styles.description}>Tus próximos lentes, con crédito directo<br className={styles.desktopBreak} /> y sin tarjeta de crédito.</p>
           <div className={styles.actions}>
-            <a className={`${site.button} ${site.primary}`} href="#como-financiar">
-              Conocer el crédito<ArrowDown size={17} aria-hidden="true" />
-            </a>
-            <a className={`${site.button} ${site.text}`} href={whatsappUrl(financingMessage)} target="_blank" rel="noopener noreferrer">
-              <span>Consultar por WhatsApp</span><ArrowUpRight size={17} aria-hidden="true" />
-            </a>
+            <Link className={styles.primary} href="/mi-cuenta/registro">Conocer mi cupo<ArrowRight size={20} aria-hidden="true" /></Link>
+            <a className={styles.secondary} href={whatsappUrl(financingMessage)} target="_blank" rel="noopener noreferrer"><MessageCircle size={21} aria-hidden="true" />Consultar por WhatsApp</a>
           </div>
-          <p className={styles.conditions}>Siempre con pie. Condiciones según tu nivel. Revisión presencial de cédula.</p>
-          <p className={styles.location}>Compra presencial en Huérfanos 713 · Local 18</p>
+          <p className={styles.conditions}>Regístrate para conocer tu cupo disponible.<br />El crédito depende de tu categoría. Siempre con pie. Compra presencial.</p>
         </div>
-        <figure className={styles.visual}>
-          <div className={styles.photo}>
-            <Image src="/images/home/oc-lentes-opticos-v01.png" alt="Montura de lentes ópticos en tono vino con patillas doradas" loading="eager" fill sizes="(max-width: 899px) calc(100vw - 40px), (max-width: 1360px) 44vw, 600px" />
-          </div>
-          <figcaption>Imagen referencial de producto.</figcaption>
-        </figure>
+        <div className={styles.visual}>
+          <p className={styles.signature}>Confiamos en<br />nuestros clientes.</p>
+          <p className={styles.caption}>Imagen referencial de producto.</p>
+        </div>
       </div>
+      </div>
+      <ul className={`${site.container} ${styles.benefits}`}>
+        <li><CalendarDays aria-hidden="true" /><span>Hasta 4 cuotas<br />mensuales</span></li>
+        <li><FileText aria-hidden="true" /><span>Sin liquidaciones<br />de sueldo</span></li>
+        <li><IdCard aria-hidden="true" /><span>Revisión presencial<br />de cédula</span></li>
+      </ul>
     </section>
   );
 }
 
+const steps = [
+  { title: "Crea tu cuenta.", text: "Regístrate y verifica tu correo.", Icon: UserRoundPlus },
+  { title: "Visita la óptica.", text: "Elige tus marcos y cristales con nuestra asesoría.", Icon: Glasses },
+  { title: "Define tu compra.", text: "Conoce tu pie, monto del crédito y fechas de pago. Firma tu compromiso de pago antes de confirmar.", Icon: FileText },
+];
+
 export function FinancingProcess() {
   return (
-    <section id="como-financiar" tabIndex={-1} aria-labelledby="financing-process-title" className={styles.process}>
+    <section id="como-financiar" tabIndex={-1} aria-labelledby="financing-process-title" className={`${styles.process} ${editorialFont.variable}`}>
       <div className={site.container}>
         <div className={styles.processHeading}>
           <p className={styles.eyebrow}>Simple, cercano y presencial</p>
-          <h2 id="financing-process-title">Así comienzas</h2>
+          <h2 id="financing-process-title">Así funciona tu crédito directo</h2>
+          <p>Crea tu cuenta y conoce las condiciones antes de comprar.</p>
         </div>
         <div className={styles.processGrid}>
           <ol className={styles.steps}>
-            <li><span className={styles.number} aria-hidden="true">01</span><div><h3>Crea tu cuenta.</h3><p>Regístrate y verifica tu correo.</p></div></li>
-            <li><span className={styles.number} aria-hidden="true">02</span><div><h3>Visita la óptica.</h3><p>Elige tus marcos y cristales con nuestra asesoría.</p></div></li>
-            <li><span className={styles.number} aria-hidden="true">03</span><div><h3>Define tu compra.</h3><p>Conoce tu pie, monto del crédito y fecha de pago antes de confirmar.</p></div></li>
+            {steps.map(({ title, text, Icon }, index) => <li key={title}>
+              <span className={styles.number} aria-hidden="true">0{index + 1}</span>
+              <span className={styles.stepIcon}><Icon aria-hidden="true" /></span>
+              <div><h3>{title}</h3><p>{text}</p></div>
+            </li>)}
           </ol>
           <aside className={styles.start} aria-labelledby="start-title">
-            <h3 id="start-title">Tu punto de partida: <span>Start</span></h3>
+            <h3 id="start-title">Tu punto de partida <span>Start</span></h3>
+            <p className={styles.startLead}>Tu categoría al registrarte.</p>
             <ul className={styles.limits}>
               <li><strong>30%</strong><span>Hasta el 30% de tu compra</span></li>
               <li><strong>$40.000</strong><span>Tope de crédito</span></li>
@@ -61,9 +75,10 @@ export function FinancingProcess() {
             </ul>
             <p className={styles.startConditions}>Siempre con pie. El monto efectivo puede ser menor según la compra y tu cupo.</p>
             <p className={styles.scope}>Crédito para lentes, marcos y cristales. No incluye accesorios.</p>
-            <Link className={`${site.button} ${site.primary}`} href="/mi-cuenta/registro">Crear mi cuenta<ArrowUpRight size={17} aria-hidden="true" /></Link>
+            <Link className={styles.primary} href="/mi-cuenta/registro">Crear mi cuenta<ArrowRight size={21} aria-hidden="true" /></Link>
           </aside>
         </div>
+        <p className={styles.location}><MapPin size={20} aria-hidden="true" />Compra presencial · Huérfanos 713 · Galería Cohen · Local 18 · Santiago Centro</p>
       </div>
     </section>
   );

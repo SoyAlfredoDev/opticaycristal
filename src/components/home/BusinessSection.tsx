@@ -5,12 +5,15 @@ import { SectionReveal } from "./SectionReveal";
 import { JornadaCta } from "./JornadaCta";
 import { CONVENIO } from "@/lib/convenios";
 import styles from "@/components/site/Site.module.css";
+import editorial from "./EditorialHome.module.css";
+import { editorialFont } from "./editorial-font";
 
 export function BusinessSection() {
   return (
-    <section aria-labelledby="business-title" className={`${styles.container} ${styles.businessSection}`}>
+    <section aria-labelledby="business-title" className={`${editorial.scope} ${editorial.business} ${editorialFont.variable}`}>
+      <div className={styles.container}>
       <SectionReveal>
-        <div className={styles.sectionHeading}>
+        <div className={editorial.sectionHeading}>
           <h2 id="business-title">También cuidamos a tu equipo</h2>
           <span className={styles.sectionCaption}>Salud visual, mayor bienestar</span>
         </div>
@@ -41,6 +44,7 @@ export function BusinessSection() {
           </article>
         </div>
       </SectionReveal>
+      </div>
     </section>
   );
 }

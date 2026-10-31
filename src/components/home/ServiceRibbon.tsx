@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import styles from "./ServiceRibbon.module.css";
 
 const topRow = [
@@ -48,8 +51,27 @@ function Row({
 }
 
 export function ServiceRibbon() {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const ribbon = ref.current;
+    const scope = ribbon?.closest("main")?.parentElement;
+    if (!ribbon || !scope) return;
+    const property = "--oc-home-services-height";
+    const previous = scope.style.getPropertyValue(property);
+    const measure = () => scope.style.setProperty(property, `${ribbon.getBoundingClientRect().height}px`);
+    measure();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    observer?.observe(ribbon);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+      if (previous) scope.style.setProperty(property, previous);
+      else scope.style.removeProperty(property);
+    };
+  }, []);
   return (
-    <section className={styles.ribbon} aria-label="Servicios">
+    <section ref={ref} className={styles.ribbon} aria-label="Servicios">
       <ul className={styles.srOnly}>
         {services.map((service) => (
           <li key={service}>{service}</li>

@@ -7,27 +7,27 @@
 .benefitList { list-style: none; margin: 0; padding: 0; }
 .benefitList li { display: flex; align-items: flex-start; gap: 18px; padding-block: 20px; }
 .benefitList li + li { border-top: 1px solid var(--line); }
-.benefitList svg { flex-shrink: 0; color: var(--cta); margin-top: 3px; }
+.benefitList svg { flex-shrink: 0; color: var(--oc-link); margin-top: 3px; }
 .benefitList h3 { font-size: 28px; line-height: 1.15; }
 .benefitList h3.discountTitle,
-.benefitList h3.discountTitle .percent { color: var(--cta); }
+.benefitList h3.discountTitle .percent { color: var(--oc-link); }
 .percent { display: inline-block; margin-right: .12em; font-size: 1.7em; line-height: 1; letter-spacing: -.04em; vertical-align: -0.08em; }
 .benefitList p { font-size: 14px; margin-top: 8px; line-height: 1.6; }
 .financing { background: var(--wine-deep); color: var(--ivory); padding-block: 48px; }
-.financing .eyebrow { color: #e9c7d1; }
+.financing .eyebrow { color: var(--oc-on-wine-muted); }
 section.financing h2,
 section.financing h3,
-section.financing h2 em { color: #fbf7f2; }
+section.financing h2 em { color: var(--oc-ivory); }
 .financingHeading { max-width: 38rem; }
-.financingHeading > p:not(.eyebrow) { margin-top: 16px; color: #f0dee3; font-size: 16px; line-height: 1.6; }
+.financingHeading > p:not(.eyebrow) { margin-top: 16px; color: var(--oc-on-wine-muted); font-size: 16px; line-height: 1.6; }
 .paymentFlow { display: grid; list-style: none; padding: 0; margin: 32px 0 8px; gap: 22px; }
 .paymentFlow li { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; row-gap: 4px; align-content: start; }
 .paymentFlow h3 { grid-column: 2; font-size: 22px; margin: 0; line-height: 1.2; }
-.paymentFlow li > p { grid-column: 2; color: #f0dee3; font-size: 14px; line-height: 1.55; }
-.paymentFlow li > .actor { color: #e9c7d1; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; line-height: 1.4; }
-.stepNumber { grid-row: 1 / span 3; color: #e9c7d1; font-size: 13px; font-variant-numeric: tabular-nums; padding-top: 2px; }
+.paymentFlow li > p { grid-column: 2; color: var(--oc-on-wine-muted); font-size: 14px; line-height: 1.55; }
+.paymentFlow li > .actor { color: var(--oc-on-wine-muted); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; line-height: 1.4; }
+.stepNumber { grid-row: 1 / span 3; color: var(--oc-on-wine-muted); font-size: 13px; font-variant-numeric: tabular-nums; padding-top: 2px; }
 .financingFoot { display: grid; gap: 18px; margin-top: 28px; }
-.financingNote { display: flex; gap: 10px; align-items: flex-start; color: #f0dee3; font-size: 13px; line-height: 1.6; margin: 0; }
+.financingNote { display: flex; gap: 10px; align-items: flex-start; color: var(--oc-on-wine-muted); font-size: 13px; line-height: 1.6; margin: 0; }
 .financingNote svg { flex-shrink: 0; margin-top: 2px; }
 .financing a { max-width: 100%; white-space: normal; text-align: center; justify-self: start; }
 .comparison .comparisonReveal[data-reveal="pending"],
@@ -36,8 +36,8 @@ section.financing h2 em { color: #fbf7f2; }
 .options { display: grid; gap: 24px; }
 .options figure {
   position: relative; display: flex; flex-direction: column; justify-content: flex-end;
-  min-height: 520px; margin: 0; overflow: hidden; background: #2a2426;
-  box-shadow: 0 18px 36px rgb(66 19 38 / .2), 0 2px 8px rgb(36 32 32 / .08);
+  min-height: 520px; margin: 0; overflow: hidden; background: var(--oc-deep);
+  box-shadow: 0 18px 36px rgb(61 11 26 / .2), 0 2px 8px rgb(36 32 32 / .08);
 }
 .options figure::before {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
@@ -47,21 +47,21 @@ section.financing h2 em { color: #fbf7f2; }
 .payroll .optionPhoto { object-position: center 42%; }
 .options figcaption {
   position: relative; z-index: 2; margin: 16px; padding: 22px 18px 16px;
-  background: rgb(251 247 242 / .9); backdrop-filter: blur(8px);
+  background: rgb(244 231 212 / .9); backdrop-filter: blur(8px);
 }
-.payroll figcaption { background: rgb(66 19 38 / .88); color: #fbf7f2; }
+.payroll figcaption { background: rgb(61 11 26 / .88); color: var(--oc-ivory); }
 .optionKicker { color: var(--wine); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 8px; }
-.payroll .optionKicker { color: #e9c7d1; }
+.payroll .optionKicker { color: var(--oc-on-wine-muted); }
 .options h3 { font-size: 32px; line-height: 1.05; margin-bottom: 14px; }
-.payroll h3 { color: #fbf7f2; }
+.payroll h3 { color: var(--oc-ivory); }
 .options ul { padding: 0; margin: 14px 0; list-style: none; display: grid; gap: 10px; }
 .options li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; }
-.options svg { width: 18px; height: 18px; color: var(--cta); flex-shrink: 0; margin-top: 1px; }
-.payroll svg { color: #e9c7d1; }
+.options svg { width: 18px; height: 18px; color: var(--oc-link); flex-shrink: 0; margin-top: 1px; }
+.payroll svg { color: var(--oc-on-wine-muted); }
 .options figcaption > p:last-child { font-size: 13px; color: var(--muted); line-height: 1.55; }
 .options figcaption > p:not(.optionKicker):not(:last-child) { font-size: 14px; line-height: 1.5; }
 .payroll figcaption > p:last-child,
-.payroll figcaption > p:not(.optionKicker):not(:last-child) { color: #f0dee3; }
+.payroll figcaption > p:not(.optionKicker):not(:last-child) { color: var(--oc-on-wine-muted); }
 .faq { padding-top: 8px; }
 .benefitList li, .paymentFlow li { transition: opacity 680ms var(--ease), transform 760ms var(--ease); }
 .benefitList li:nth-child(2), .paymentFlow li:nth-child(2) { transition-delay: 90ms; }
