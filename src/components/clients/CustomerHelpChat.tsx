@@ -4,14 +4,16 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowUp, MessageCircle, X } from "lucide-react";
 import { store, whatsappUrl } from "@/components/site/content";
+import { CREDIT_REQUIREMENTS } from "@/lib/clients/customer-help";
 import styles from "./ClientSpace.module.css";
 
-type Topic = "credit" | "verification" | "purchases" | "contact";
+type Topic = "requirements" | "credit" | "verification" | "purchases" | "contact";
 type Message = { id: number; role: "assistant" | "user"; text: string; topic?: Topic };
 const answers: Record<Topic, { label: string; text: string; href: string; action: string }> = {
-  credit: { label: "Mi cupo", text: "En Inicio puedes ver el cupo de tu nivel y el saldo utilizado. Para usar el financiamiento necesitas correo verificado. El crédito es sin intereses y sin consulta a DICOM. Siempre se exige un pie y se aplican los límites de tu nivel.", href: "/mi-cuenta", action: "Ver mi financiamiento" },
-  verification: { label: "Verificar mis contactos", text: "Desde Perfil puedes solicitar el correo de verificación. Revisa también spam. La verificación de WhatsApp estará disponible próximamente; este chat no verifica contactos ni habilita créditos.", href: "/mi-cuenta/perfil", action: "Ir a mi perfil" },
-  purchases: { label: "Compras y cuotas", text: "Consulta el historial en Compras y los financiamientos en Cuotas. La compra y contratación se realizan en la óptica. Si todavía no hay una compra asociada a tu cuenta, verás esas secciones vacías.", href: "/mi-cuenta/cuotas", action: "Ver mis cuotas" },
+  requirements: {label:"Requisitos del crédito",text:CREDIT_REQUIREMENTS,href:"/mi-cuenta/ayuda",action:"Ver requisitos y preguntas frecuentes"},
+  credit: { label: "Mi cupo", text: "En Inicio puedes ver el cupo de tu nivel y el saldo utilizado. Para usar el crédito necesitas correo verificado. El crédito es sin intereses y sin consulta a DICOM. El crédito respeta el cupo, porcentaje y cuotas de tu categoría. El precio de los lentes puede ser mayor: pagas la diferencia como pie.", href: "/mi-cuenta", action: "Ver mi crédito" },
+  verification: { label: "Verificar mi correo", text: "Desde Perfil puedes solicitar el correo de verificación. Revisa también spam. Verificar el correo es obligatorio para usar tu crédito. La verificación de WhatsApp todavía no está implementada y no es obligatoria por ahora.", href: "/mi-cuenta/perfil", action: "Ir a mi perfil" },
+  purchases: { label: "Compras y cuotas", text: "Consulta tus compras y el compromiso de pago en Compras, y tus pagos en Cuotas. Al registrar la venta en la óptica generamos el compromiso con el pie, crédito, cuotas mensuales y fechas para revisarlo y firmarlo contigo.", href: "/mi-cuenta/cuotas", action: "Ver mis cuotas" },
   contact: { label: "Hablar con la óptica", text: `Estamos en ${store.fullAddress}. Para consultas sobre una compra, corregir tus datos o presentar un reclamo, puedes contactar a nuestro equipo por WhatsApp. Abrir el enlace no envía ningún mensaje automáticamente.`, href: whatsappUrl("Hola, necesito ayuda con mi cuenta de cliente."), action: "Abrir WhatsApp" },
 };
 
@@ -43,7 +45,8 @@ export function CustomerHelpChat() {
     const text = draft.trim();
     if (!text) return;
     const normalized = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const topic: Topic | null = /verific|correo|email|activar/.test(normalized) ? "verification"
+    const topic: Topic | null = /requisit|que.*necesit|necesit.*credito|compromiso|firmar|firma|cedula|documento/.test(normalized) ? "requirements"
+      : /verific|correo|email|activar|whatsapp.*(?:oblig|valid)|(?:oblig|valid).*whatsapp/.test(normalized) ? "verification"
       : /cupo|credito|financia|nivel|interes|dicom/.test(normalized) ? "credit"
         : /cuota|compra|pago|comprobante/.test(normalized) ? "purchases"
           : /contact|direccion|horario|reclamo|whatsapp|persona|hablar/.test(normalized) ? "contact" : null;

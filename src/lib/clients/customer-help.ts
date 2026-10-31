@@ -1,0 +1,8 @@
+/** Public guidance shared by the customer FAQ and quick-answer chat. */
+export const CREDIT_REQUIREMENTS = "Para usar tu crédito necesitas estar registrado y tener el correo electrónico verificado. En la óptica revisamos tu cédula presencialmente, registramos la venta con pie y generamos un compromiso de pago para firmarlo contigo. La verificación de WhatsApp todavía no está implementada y no es obligatoria por ahora.";
+export const CUSTOMER_CREDIT_FAQ = [
+ {id:"requirements",question:"¿Qué necesito para usar mi crédito?",answer:CREDIT_REQUIREMENTS},
+ {id:"whatsapp",question:"¿Debo verificar WhatsApp?",answer:"Por ahora, no. Pedimos tu número como contacto, pero la verificación de WhatsApp se incorporará más adelante. Lo que sí debes verificar es tu correo electrónico, desde Perfil."},
+ {id:"commitment",question:"¿Cómo se genera el compromiso de pago?",answer:"Al registrar la venta en la óptica generamos el compromiso con el total, pie, monto a crédito, cuotas mensuales y fechas de pago. Lo revisamos y firmamos presencialmente contigo. Después puedes consultarlo desde Mis compras."},
+ {id:"limits",question:"¿Puedo comprar lentes que cuesten más que mi cupo?",answer:"Sí. El límite corresponde al monto a crédito, no al precio total de tus lentes. Puedes pagar la diferencia como pie. El crédito también respeta el porcentaje y las cuotas de tu categoría; el pie final se confirma según los lentes elegidos."},
+] as const;

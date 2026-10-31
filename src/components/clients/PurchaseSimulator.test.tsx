@@ -20,3 +20,10 @@ it('explica el correo pendiente sin prometer crédito aprobado',()=>{
  render(<PurchaseSimulator {...conditions} emailVerified={false}/>);expect(screen.getByRole('link',{name:'verifica tu correo'})).toHaveAttribute('href','/mi-cuenta/perfil');
  fireEvent.change(screen.getByRole('textbox'),{target:{value:'45.000'}});fireEvent.click(screen.getByRole('button',{name:'Consultar'}));expect(screen.getByRole('status')).toHaveTextContent('Pago al contado');expect(screen.getByRole('status')).not.toHaveTextContent('cuota mensual');
 });
+
+it('permite un precio mayor al cupo sin financiar más que la categoría',()=>{
+ render(<PurchaseSimulator {...conditions}/>);expect(screen.getByText(/Crédito máximo de tu categoría/)).toHaveTextContent('$40.000');
+ expect(within(screen.getByRole('combobox')).getAllByRole('option')).toHaveLength(1);
+ fireEvent.change(screen.getByRole('textbox'),{target:{value:'250.000'}});fireEvent.click(screen.getByRole('button',{name:'Consultar'}));
+ expect(screen.getByRole('status')).toHaveTextContent('$40.000');expect(screen.getByRole('status')).toHaveTextContent('$210.000');
+});
