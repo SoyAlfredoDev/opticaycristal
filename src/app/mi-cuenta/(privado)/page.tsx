@@ -1,16 +1,19 @@
+"use client";
 import Link from "next/link";
 import { PurchaseSimulatorModal } from "@/components/clients/PurchaseSimulatorModal";
 import { CategoryModalProvider, CategoryTrigger } from "@/components/clients/CategoryModal";
 import { CustomerPromotions } from "@/components/clients/CustomerPromotions";
 import { ArrowRight, BadgeCheck, Clock3, ChevronRight, ShoppingBag, Wallet } from "lucide-react";
-import { currentCustomer } from "@/lib/clients/current";
-import { getNextCustomerTier, getCustomerTiers } from "@/lib/clients/store";
+import { useCustomerData } from "@/components/clients/CustomerDataProvider";
+import { CustomerDataState } from "@/components/clients/CustomerDataState";
 import { clp } from "@/lib/clients/types";
 import styles from "@/components/clients/ClientSpace.module.css";
 
-export default async function CustomerHome() {
-  const c = await currentCustomer();
-  const [nextTier,tiers] = await Promise.all([getNextCustomerTier(c.tier.code),getCustomerTiers()]);
+export default function CustomerHome() {
+  const { customer: c, tiers, viewer } = useCustomerData();
+  if (!c) return <><div className={styles.pageIntro}><h1>Hola, {viewer.firstName}</h1></div><CustomerDataState /></>;
+  const currentIndex = tiers.findIndex(tier => tier.code === c.tier.code);
+  const nextTier = currentIndex >= 0 ? tiers[currentIndex + 1] : undefined;
 
   return <CategoryModalProvider tiers={tiers} currentCategory={c.tier.code}>
     <div className={styles.pageIntro}>

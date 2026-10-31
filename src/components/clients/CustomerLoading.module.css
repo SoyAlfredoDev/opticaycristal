@@ -1,0 +1,7 @@
+.syncStatus { min-height: 21px; margin-bottom: 6px; }
+.skeleton { display: grid; gap: 18px; min-height: 200px; }
+.bar { display: block; width: 65%; height: 16px; border-radius: 6px; background: #e6efeb; animation: breathe 1.4s ease-in-out infinite alternate; }
+.amount { width: 45%; height: 42px; }
+.caption { color: #526575; font-size: 13px; }
+@keyframes breathe { to { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .bar { animation: none; } }

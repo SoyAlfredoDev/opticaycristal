@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-31",
+  "scope": "Panel autenticado de clientes",
+  "baseCommit": "4401f3364310f0592dc5706724f7c06bd8b2d3b3",
+  "published": false,
+  "changes": [
+    "Layout valida sesión sin esperar ventas, cuotas y pagos",
+    "Pantallas con títulos inmediatos y carga de datos independiente",
+    "Snapshot privado en memoria por cuenta, compartido entre vistas; sin almacenamiento persistente del navegador",
+    "Revalidación visible cada 45 s, al recuperar foco o conexión y al navegar con información de más de 15 s",
+    "ETag privado: 304 evita descargar otra copia cuando no hay cambios; el servidor sigue autenticando y consultando la base",
+    "Abortos, aislamiento por cuenta, limpieza al cerrar sesión y aviso de cierre entre pestañas",
+    "Una consulta de perfil/contacto en lugar de dos; sin segunda lectura del historial en el documento de compromiso",
+    "Eliminada consulta no utilizada de siguiente categoría; reutilizado formateador de moneda",
+    "Configurado desplazamiento de rutas de acuerdo con la versión instalada de Next.js"
+  ],
+  "checks": {
+    "lint": "passed",
+    "typecheck": "passed",
+    "tests": 371,
+    "testFiles": 83,
+    "productionBuild": "passed",
+    "authenticatedBrowser": [
+      "Inicio",
+      "Cuotas",
+      "Compras",
+      "Perfil"
+    ],
+    "desktop": "1265x720, sin desbordes",
+    "mobile": "390x844, sin desbordes y menú inferior visible",
+    "loading": "Cuotas mostró título y menú mientras el perfil seguía pendiente",
+    "unchangedSnapshot": "Respuestas 304 observadas en navegador real",
+    "financialMutations": false
+  },
+  "controlledTest": "Una consulta inicial de datos al pasar por Cuotas, Compras y Perfil dentro de la ventana de frescura; se actualiza después en segundo plano.",
+  "timingLimit": "Pruebas locales en desarrollo. No se midió un antes/después de producción. La consulta completa aún tardó aproximadamente 2–4 s y ya no bloquea la pantalla.",
+  "recommendations": [
+    "Retirar código/dependencias sin uso tras inventariarlos y cargar el formulario global de jornadas solo cuando se necesite; hoy se importa con animaciones y tipografías públicas también en rutas privadas.",
+    "Paginar compras, cuotas y pagos: el endpoint todavía devuelve el historial completo.",
+    "Medir por consulta la latencia de sesión/base de datos y revisar proximidad de regiones, conexiones y arranque en frío antes de ajustar infraestructura."
+  ],
+  "modifiedFiles": [
+    "src/app/api/clientes/authorization.test.ts",
+    "src/app/api/clientes/perfil/route.ts",
+    "src/app/layout.tsx",
+    "src/app/mi-cuenta/(privado)/compras/[id]/compromiso/page.tsx",
+    "src/app/mi-cuenta/(privado)/compras/page.tsx",
+    "src/app/mi-cuenta/(privado)/cuotas/page.tsx",
+    "src/app/mi-cuenta/(privado)/layout.tsx",
+    "src/app/mi-cuenta/(privado)/page.tsx",
+    "src/app/mi-cuenta/(privado)/perfil/page.tsx",
+    "src/components/clients/CustomerShell.tsx",
+    "src/lib/clients/current.ts",
+    "src/lib/clients/store.ts",
+    "src/lib/clients/types.ts",
+    "src/app/api/clientes/perfil/route.test.ts",
+    "src/app/mi-cuenta/(privado)/loading.tsx",
+    "src/components/clients/CustomerDataProvider.test.tsx",
+    "src/components/clients/CustomerDataProvider.tsx",
+    "src/components/clients/CustomerDataState.tsx",
+    "src/components/clients/CustomerLoading.module.css",
+    "src/components/clients/CustomerSales.tsx",
+    "src/lib/clients/store.performance.test.ts"
+  ]
+}

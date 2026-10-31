@@ -8,7 +8,8 @@ export type CustomerProfile = {
   purchases: CustomerSale[];
 };
 export type CustomerSummary = Omit<CustomerProfile, "rut" | "whatsapp" | "purchases">;
-export function clp(value: number) { return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value); }
+const currency = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
+export function clp(value: number) { return currency.format(value); }
 export function availableCredit(maximum: number, outstanding: number, enabled: boolean) {
   const capacity = Math.max(0, maximum - outstanding);
   return { capacity, available: enabled ? capacity : 0 };
