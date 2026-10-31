@@ -2,14 +2,14 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import type { CustomerProfile } from "@/lib/clients/types";
+import type { CustomerOverview, CustomerProfile, CustomerSnapshot } from "@/lib/clients/types";
 
 export const CUSTOMER_REFRESH_MS = 45_000;
 const NAVIGATION_FRESH_MS = 15_000;
 const SESSION_CHANNEL = "oc-customer-session";
-type Snapshot = { customer: CustomerProfile; tiers: CustomerProfile["tier"][] };
+type Snapshot = CustomerSnapshot;
 type CustomerData = {
-  customer: CustomerProfile | null; tiers: CustomerProfile["tier"][];
+  customer: CustomerOverview | null; historyVersion: string; historyCache: Map<string, unknown>; tiers: CustomerProfile["tier"][];
   viewer: { firstName: string; lastName: string }; refreshing: boolean; error: string;
   refresh: () => Promise<void>; clear: () => void;
 };
@@ -25,13 +25,15 @@ export function CustomerDataProvider({ ownerId, viewer, children }: {
   const request = useRef<AbortController | null>(null), pending = useRef<Promise<void> | null>(null);
   const etag = useRef(""), checkedAt = useRef(0), stopped = useRef(false);
   const channel = useRef<BroadcastChannel | null>(null);
+  const [historyCache] = useState(() => new Map<string, unknown>());
+  const historyVersion = useRef("");
 
   const clear = useCallback(() => {
     stopped.current = true;
     request.current?.abort(); request.current = null; pending.current = null;
-    etag.current = ""; checkedAt.current = 0;
+    etag.current = ""; checkedAt.current = 0; historyCache.clear(); historyVersion.current = "";
     setSnapshot(null); setRefreshing(false); setError("");
-  }, []);
+  }, [historyCache]);
 
   const refresh = useCallback((): Promise<void> => {
     if (stopped.current) return Promise.resolve();
@@ -40,7 +42,7 @@ export function CustomerDataProvider({ ownerId, viewer, children }: {
     setRefreshing(true);
     const task = (async () => {
       try {
-        const response = await fetch("/api/clientes/perfil", {
+        const response = await fetch("/api/clientes/resumen", {
           credentials: "same-origin", cache: "no-store", signal: controller.signal,
           headers: etag.current ? { "If-None-Match": etag.current } : {},
         });
@@ -59,7 +61,9 @@ export function CustomerDataProvider({ ownerId, viewer, children }: {
         }
         etag.current = response.headers.get("ETag") ?? "";
         checkedAt.current = Date.now();
-        setSnapshot({ customer: body.customer, tiers: body.tiers }); setError("");
+        if (historyVersion.current !== body.historyVersion) historyCache.clear();
+        historyVersion.current = body.historyVersion;
+        setSnapshot(body); setError("");
       } catch {
         if (!controller.signal.aborted && !stopped.current) setError("No pudimos actualizar los datos. Reintenta cuando tengas conexión.");
       } finally {
@@ -70,7 +74,7 @@ export function CustomerDataProvider({ ownerId, viewer, children }: {
     })();
     pending.current = task;
     return task;
-  }, [clear, ownerId, router]);
+  }, [clear, ownerId, router, historyCache]);
 
   useEffect(() => {
     stopped.current = false;
@@ -101,7 +105,7 @@ export function CustomerDataProvider({ ownerId, viewer, children }: {
   }, [path, refresh]);
 
   const leave = useCallback(() => { clear(); channel.current?.postMessage("signed-out"); }, [clear]);
-  return <Context.Provider value={{ customer: snapshot?.customer ?? null, tiers: snapshot?.tiers ?? [], viewer, refreshing, error, refresh, clear: leave }}>{children}</Context.Provider>;
+  return <Context.Provider value={{ customer: snapshot?.customer ?? null, historyCache: historyCache, historyVersion: snapshot?.historyVersion ?? "", tiers: snapshot?.tiers ?? [], viewer, refreshing, error, refresh, clear: leave }}>{children}</Context.Provider>;
 }
 
 export function useCustomerData() {

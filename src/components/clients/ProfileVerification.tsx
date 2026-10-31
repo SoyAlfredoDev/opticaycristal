@@ -2,7 +2,7 @@
 import { useState } from "react";
 import type { CustomerProfile } from "@/lib/clients/types";
 import styles from "./ClientSpace.module.css";
-export function ProfileVerification({ customer }: { customer: CustomerProfile }) {
+export function ProfileVerification({ customer }: { customer: Pick<CustomerProfile, "email" | "emailVerified" | "whatsapp" | "whatsappVerified"> }) {
   const [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState("");
   async function resend() {
     setBusy(true);setMessage("");setError("");

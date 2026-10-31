@@ -42,10 +42,10 @@ export default function CustomerHome() {
 
       <section className={`${styles.panel} ${styles.activity}`} aria-labelledby="activity-title">
         <h2 id="activity-title">Tu actividad</h2>
-        <p className={`${styles.small} ${styles.muted}`}>{c.purchases.length ? `${c.purchases.length} compra(s) registrada(s)` : "Sin movimientos registrados"}</p>
+        <p className={`${styles.small} ${styles.muted}`}>{c.activity.purchaseCount ? `${c.activity.purchaseCount} compra(s) registrada(s)` : "Sin movimientos registrados"}</p>
         <div className={styles.activityGrid}>
-          <Link className={styles.activityItem} href="/mi-cuenta/compras"><span className={styles.iconTile}><ShoppingBag size={21} aria-hidden="true" /></span><span><strong>Mis compras</strong><span>{c.purchases.length ? "Consulta tus compras registradas." : "Tu historial comenzará con tu primera compra."}</span></span><ArrowRight size={18} aria-hidden="true" /></Link>
-          <Link className={styles.activityItem} href="/mi-cuenta/cuotas"><span className={styles.iconTile}><Wallet size={21} aria-hidden="true" /></span><span><strong>Mis cuotas</strong><span>{c.purchases.some(s=>s.credit>0) ? "Consulta tus cuotas y pagos." : "No tienes créditos activos."}</span></span><ArrowRight size={18} aria-hidden="true" /></Link>
+          <Link className={styles.activityItem} href="/mi-cuenta/compras"><span className={styles.iconTile}><ShoppingBag size={21} aria-hidden="true" /></span><span><strong>Mis compras</strong><span>{c.activity.purchaseCount ? "Consulta tus compras registradas." : "Tu historial comenzará con tu primera compra."}</span></span><ArrowRight size={18} aria-hidden="true" /></Link>
+          <Link className={styles.activityItem} href="/mi-cuenta/cuotas"><span className={styles.iconTile}><Wallet size={21} aria-hidden="true" /></span><span><strong>Mis cuotas</strong><span>{c.activity.creditCount > 0 ? "Consulta tus cuotas y pagos." : "No tienes créditos activos."}</span></span><ArrowRight size={18} aria-hidden="true" /></Link>
         </div>
         <p className={styles.activityNote}>Compra a crédito sin intereses y sin consulta a DICOM. Siempre con pie y según las condiciones de tu nivel.</p>
       </section>

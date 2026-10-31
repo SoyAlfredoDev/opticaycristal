@@ -33,7 +33,7 @@ export default function JornadaRequestModal({
     document.body.style.overflow = "hidden";
 
     const focusTimer = window.setTimeout(() => {
-      const firstField = dialogRef.current?.querySelector<HTMLElement>("input, select, textarea");
+      const firstField = dialogRef.current?.querySelector<HTMLElement>('input:not([tabindex="-1"]), select, textarea');
       (firstField ?? closeRef.current)?.focus();
     }, 40);
 

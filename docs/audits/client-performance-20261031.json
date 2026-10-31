@@ -17,8 +17,8 @@
   "checks": {
     "lint": "passed",
     "typecheck": "passed",
-    "tests": 371,
-    "testFiles": 83,
+    "tests": 387,
+    "testFiles": 87,
     "productionBuild": "passed",
     "authenticatedBrowser": [
       "Inicio",
@@ -33,11 +33,9 @@
     "financialMutations": false
   },
   "controlledTest": "Una consulta inicial de datos al pasar por Cuotas, Compras y Perfil dentro de la ventana de frescura; se actualiza después en segundo plano.",
-  "timingLimit": "Pruebas locales en desarrollo. No se midió un antes/después de producción. La consulta completa aún tardó aproximadamente 2–4 s y ya no bloquea la pantalla.",
+  "timingLimit": "Pruebas locales; despliegue e índices de producción pendientes. La carga inicial en frío puede tardar más que una actualización con conexión activa.",
   "recommendations": [
-    "Retirar código/dependencias sin uso tras inventariarlos y cargar el formulario global de jornadas solo cuando se necesite; hoy se importa con animaciones y tipografías públicas también en rutas privadas.",
-    "Paginar compras, cuotas y pagos: el endpoint todavía devuelve el historial completo.",
-    "Medir por consulta la latencia de sesión/base de datos y revisar proximidad de regiones, conexiones y arranque en frío antes de ajustar infraestructura."
+    "Completadas en código: carga comercial diferida, historial paginado y mejora/observabilidad de conexión. Validar región e índices al publicar."
   ],
   "modifiedFiles": [
     "src/app/api/clientes/authorization.test.ts",
@@ -61,5 +59,59 @@
     "src/components/clients/CustomerLoading.module.css",
     "src/components/clients/CustomerSales.tsx",
     "src/lib/clients/store.performance.test.ts"
-  ]
+  ],
+  "followup": {
+    "previousCommit": "e05fb1f",
+    "completed": [
+      "Resumen en una consulta independiente del historial",
+      "Páginas de diez ventas/créditos y diez pagos, con cursores estables y caché por cuenta",
+      "Próxima cuota calculada sobre toda la cuenta, aunque la venta esté en otra página",
+      "Invalidación del historial por movimientos y firma; limpieza al cerrar sesión y rechazo de respuestas de otra cuenta",
+      "Carga del formulario de jornadas solo al abrirlo; foco inicial accesible preservado",
+      "Gestión del pool mediante @vercel/functions, reutilización local de 60 s y cierre en Vercel de 5 s",
+      "Compromiso de pago consulta únicamente la venta solicitada; eliminados helpers sin consumidores"
+    ],
+    "measurements": {
+      "databaseReadOnlySelect1Ms": [
+        2007,
+        146,
+        149,
+        146
+      ],
+      "snapshotWarmSampleMs": {
+        "session": 312.9,
+        "data": 151.9,
+        "total": 465.2
+      },
+      "snapshotColdSampleMs": {
+        "session": 1354.9,
+        "data": 162.8,
+        "total": 1518.2
+      },
+      "jornadaProviderInitialChunks": {
+        "beforeBytes": 154921,
+        "beforeGzip": 50752,
+        "afterBytes": 2532,
+        "afterGzip": 1237
+      },
+      "limits": "Mediciones puntuales locales, no una comparación estadística de producción. Los tamaños corresponden a los chunks iniciales asociados al proveedor de jornadas, no a toda la app."
+    },
+    "isolatedDataChecks": {
+      "sales": 24,
+      "payments": 25,
+      "sameMillisecondTimestamps": true,
+      "newSaleDuringPagination": true,
+      "foreignOwnerRejected": true,
+      "realFinancialDataChanged": false
+    },
+    "readyForNextRelease": [
+      "Aplicar migración 009 de índices de ventas y pagos",
+      "Publicar configuración vercel.json con cle1, próxima a la base existente us-east-2",
+      "Comprobar Server-Timing y navegación en producción después del despliegue"
+    ],
+    "sources": [
+      "https://vercel.com/kb/guide/efficiently-manage-database-connection-pools-with-fluid-compute",
+      "https://vercel.com/docs/regions"
+    ]
+  }
 }

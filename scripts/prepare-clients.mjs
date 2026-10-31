@@ -22,6 +22,7 @@ try {
   await client.query(await readFile("sql/clients/006-categories.sql", "utf8"));
   await client.query(await readFile("sql/clients/007-installments.sql", "utf8"));
   await client.query(await readFile("sql/clients/008-admin-notifications.sql", "utf8"));
+  await client.query(await readFile("sql/clients/009-customer-history-indexes.sql", "utf8"));
   const { rows } = await client.query("SELECT code,name,max_percent,max_amount,max_installments FROM oc_client_tiers ORDER BY position");
   console.log(JSON.stringify({ schema, categories: rows }, null, 2));
 } catch {

@@ -1,5 +1,6 @@
 import "server-only";
 import { Pool } from "pg";
+import { attachDatabasePool } from "@vercel/functions";
 let pool: Pool | undefined;
 export function clientPool() {
   if (pool) return pool;
@@ -7,7 +8,9 @@ export function clientPool() {
   if (!connectionString) throw new Error("No está configurada la base de datos de clientes.");
   const url = new URL(connectionString);
   if (url.hostname.endsWith(".neon.tech")) url.searchParams.set("sslmode", "verify-full");
-  pool = new Pool({ connectionString: url.toString(), max: 4, idleTimeoutMillis: 20_000, connectionTimeoutMillis: 8_000 });
+  pool = new Pool({ connectionString: url.toString(), max: 4, idleTimeoutMillis: process.env.NODE_ENV === "production" && process.env.VERCEL ? 5_000 : 60_000, connectionTimeoutMillis: 8_000, keepAlive: true });
+  attachDatabasePool(pool);
+  pool.on("error", () => { console.error("Error en una conexión inactiva de clientes."); });
   return pool;
 }
 

@@ -127,3 +127,11 @@ Inicio muestra el botón «Simular mi compra», que abre un modal blanco con ace
 
 ## Límites y requisitos de ayuda · 30 de octubre
 El usuario confirmó que se limita el monto a crédito, no el precio total: se puede comprar por encima del cupo pagando la diferencia como pie. El simulador hace visibles el tope y porcentaje de la categoría; las cuotas y el cálculo siguen limitados al nivel asignado. Ayuda incorpora preguntas frecuentes y el chat un tema de requisitos, con texto compartido: correo verificado obligatorio para usar crédito; WhatsApp se pide como contacto, pero su verificación aún no está implementada ni es obligatoria; revisión de cédula presencial y compromiso de pago generado al registrar la venta para firma presencial. El compromiso contiene pie, crédito, cuotas mensuales y vencimientos, y se consulta en Compras.
+
+## Rendimiento del portal — 31/10/2026
+
+- Inicio y Perfil usan `/api/clientes/resumen`, con cupo, actividad y categorías en una consulta; no descargan todo el historial.
+- Compras y Cuotas usan páginas de diez ventas. Los pagos también se consultan de diez en diez, con cursores estables y autorización por sesión.
+- Las páginas se conservan únicamente en memoria de la cuenta actual y se invalidan al cambiar la versión financiera o cerrar sesión. La próxima cuota se calcula sobre toda la cuenta.
+- El formulario comercial de jornadas se importa al abrirlo; no forma parte de la carga inicial del portal.
+- Pruebas con historiales sintéticos en PostgreSQL aislado, navegación con cuenta real sin modificar ventas y compilación local. Despliegue y migración de índices pendientes.

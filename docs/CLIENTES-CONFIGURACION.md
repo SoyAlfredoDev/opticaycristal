@@ -247,3 +247,11 @@ correos de prueba autorizados.
 
 ### Cuotas por categoría · migración 007
 Después de publicar el código que acepta hasta cuatro cuotas, ejecutar `scripts/migrate-installments.mjs` con la conexión directa y el esquema de clientes existente. La transacción amplía las tres restricciones de cuotas y actualiza exclusivamente `oc_client_tiers.max_installments`: Start 1, VIP 2, Premium 3, Elite 4. Es repetible, con espera de bloqueo limitada a cinco segundos. No toca ventas, pagos, vencimientos ni asignaciones de clientes. La comparación del portal consulta los niveles desde la misma tabla usada por administración.
+
+## Rendimiento y observabilidad — 31/10/2026
+
+- La base existente está en `us-east-2`. `vercel.json` prepara `cle1` como región de ejecución próxima a la base; tendrá efecto con el siguiente despliegue. No se migra la base de datos.
+- El pool conserva `max: 4`, TLS verificado y keep-alive. En local mantiene conexiones 60 s; en Vercel usa 5 s y `attachDatabasePool` para cerrar conexiones antes de la suspensión.
+- Los nuevos endpoints privados exponen tiempos numéricos mediante `Server-Timing` y comprueban sesión antes de comparar ETag. Nunca habilitar caché HTTP compartida para estos datos.
+- Aplicar `sql/clients/009-customer-history-indexes.sql` mediante el preparador habitual antes de publicar; crea índices para ventas y pagos, sin cambiar condiciones de crédito ni registros.
+- Referencias: [pool de conexiones en Vercel](https://vercel.com/kb/guide/efficiently-manage-database-connection-pools-with-fluid-compute), [regiones](https://vercel.com/docs/regions).

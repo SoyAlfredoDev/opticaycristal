@@ -4,8 +4,8 @@ import { clientPool, clientTable } from "./db";
 import { normalizeClientRut,validClientRut } from "./validation";
 import { clientFingerprint } from "./privacy";
 import { revealClientValue } from "./privacy";
-import { availableCredit, type CustomerProfile, type CustomerSummary } from "./types";
-const select = (withContact = false) => `SELECT ${withContact ? 'u."rutCipher",u."whatsappCipher",' : ""}u.id,u."firstName",u."lastName",u.email,u."emailVerified",u."identityVerified",u."whatsappVerified",u."createdAt",t.code,t.name AS tier_name,t.max_percent,t.max_amount,t.max_installments,COALESCE(b.principal_outstanding,0) AS outstanding FROM ${clientTable("oc_client_user")} u JOIN ${clientTable("oc_client_tiers")} t ON t.code=u.category LEFT JOIN ${clientTable("oc_client_credit_balances")} b ON b.user_id=u.id`;
+import { availableCredit, type CustomerProfile, type CustomerSummary, type CustomerSnapshot } from "./types";
+const select = (withContact = false, extra = "") => `SELECT ${extra}${withContact ? 'u."rutCipher",u."whatsappCipher",' : ""}u.id,u."firstName",u."lastName",u.email,u."emailVerified",u."identityVerified",u."whatsappVerified",u."createdAt",t.code,t.name AS tier_name,t.max_percent,t.max_amount,t.max_installments,COALESCE(b.principal_outstanding,0) AS outstanding FROM ${clientTable("oc_client_user")} u JOIN ${clientTable("oc_client_tiers")} t ON t.code=u.category LEFT JOIN ${clientTable("oc_client_credit_balances")} b ON b.user_id=u.id`;
 type Row = Record<string, unknown>;
 function summary(r: Row): CustomerSummary {
   const emailVerified = r.emailVerified === true, identityVerified = r.identityVerified === true;
@@ -29,9 +29,30 @@ export async function searchCustomerSummaries(search="",offset=0):Promise<{custo
  const result=await clientPool().query(`${select()} WHERE ($1='' OR lower(u.name) LIKE '%'||$1||'%' OR lower(u.email) LIKE '%'||$1||'%' OR ($2<>'' AND u."rutHash"=$2)) ORDER BY u."createdAt" DESC,u.id DESC LIMIT 51 OFFSET $3`,[term,hash,offset]);
  return {customers:result.rows.slice(0,50).map(summary),hasMore:result.rows.length>50};
 }
-export async function listCustomerSummaries(search=""):Promise<CustomerSummary[]>{return (await searchCustomerSummaries(search)).customers;}
 
 export async function getCustomerTiers(): Promise<CustomerProfile["tier"][]> {
  const result = await clientPool().query(`SELECT code,name,max_percent,max_amount,max_installments FROM ${clientTable("oc_client_tiers")} ORDER BY position`);
  return result.rows.map(row => ({code:String(row.code),name:String(row.name),maxPercent:Number(row.max_percent),maxAmount:Number(row.max_amount),maxInstallments:Number(row.max_installments)}));
+}
+
+/** A single database round trip; history belongs to the paged endpoints. */
+export async function getCustomerSnapshot(userId: string): Promise<CustomerSnapshot | null> {
+ const sales = clientTable("oc_client_sales"), installments = clientTable("oc_client_installments");
+ const extra = `
+ (SELECT count(*) FROM ${sales} WHERE user_id=u.id) AS purchase_count,
+ (SELECT count(*) FROM ${sales} WHERE user_id=u.id AND credit>0) AS credit_count,
+ (SELECT jsonb_build_object('dueDate',i.due_date::text,'amount',i.amount,'paid',i.paid)
+  FROM ${installments} i JOIN ${sales} s ON s.id=i.sale_id
+  WHERE s.user_id=u.id AND s.status='active' AND s.remaining>0 AND i.paid<i.amount
+  ORDER BY i.due_date,i.number,i.id LIMIT 1) AS next_installment,
+ (SELECT jsonb_agg(jsonb_build_object('code',code,'name',name,'maxPercent',max_percent,'maxAmount',max_amount,'maxInstallments',max_installments) ORDER BY position)
+  FROM ${clientTable("oc_client_tiers")}) AS tiers,
+ md5(COALESCE(b.updated_at::text,'') || COALESCE((SELECT max(GREATEST(created_at,signed_at,cancelled_at))::text FROM ${sales} WHERE user_id=u.id),'')) AS history_version,
+ `;
+ const result = await clientPool().query(`${select(true, extra)} WHERE u.id=$1`, [userId]);
+ const row = result.rows[0];
+ if (!row) return null;
+ return { customer: { ...summary(row), rut: revealClientValue(row.rutCipher,"rut"), whatsapp: revealClientValue(row.whatsappCipher,"whatsapp"),
+  activity: { purchaseCount:Number(row.purchase_count), creditCount:Number(row.credit_count), nextInstallment:row.next_installment ?? null } },
+  tiers:row.tiers ?? [], historyVersion:String(row.history_version) };
 }

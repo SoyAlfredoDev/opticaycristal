@@ -14,3 +14,8 @@ export function availableCredit(maximum: number, outstanding: number, enabled: b
   const capacity = Math.max(0, maximum - outstanding);
   return { capacity, available: enabled ? capacity : 0 };
 }
+
+export type CustomerOverview = Omit<CustomerProfile, "purchases"> & {
+  activity: { purchaseCount: number; creditCount: number; nextInstallment: { dueDate: string; amount: number; paid: number } | null };
+};
+export type CustomerSnapshot = { customer: CustomerOverview; tiers: CustomerProfile["tier"][]; historyVersion: string };

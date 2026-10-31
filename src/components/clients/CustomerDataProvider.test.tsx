@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import type { CustomerProfile } from "@/lib/clients/types";
+import type { CustomerProfile, CustomerOverview } from "@/lib/clients/types";
 const navigation = vi.hoisted(() => ({ path: "/mi-cuenta/cuotas", router: { replace: vi.fn(), refresh: vi.fn() } }));
 vi.mock("next/navigation", () => ({ usePathname: () => navigation.path, useRouter: () => navigation.router, useSearchParams: () => new URLSearchParams() }));
 import { CustomerDataProvider, useCustomerData, CUSTOMER_REFRESH_MS } from "./CustomerDataProvider";
@@ -9,13 +9,13 @@ import Inicio from "@/app/mi-cuenta/(privado)/page";
 import Cuotas from "@/app/mi-cuenta/(privado)/cuotas/page";
 import Compras from "@/app/mi-cuenta/(privado)/compras/page";
 import Perfil from "@/app/mi-cuenta/(privado)/perfil/page";
-const customer: CustomerProfile = {
+const customer: CustomerProfile & CustomerOverview = {
   id: "one", firstName: "Cliente", lastName: "Prueba", email: "test@example.invalid", emailVerified: true,
   whatsapp: "+56900000000", whatsappVerified: false, rut: "123456785", identityVerified: false, createdAt: "2026-01-01T00:00:00.000Z",
   tier: { code: "start", name: "Start", maxAmount: 40000, maxPercent: 30, maxInstallments: 1 },
-  credit: { capacity: 40000, available: 40000, enabled: true, principalOutstanding: 0, needsIdentity: false }, purchases: [],
+  credit: { capacity: 40000, available: 40000, enabled: true, principalOutstanding: 0, needsIdentity: false }, purchases: [], activity: { purchaseCount:0, creditCount:0, nextInstallment:null },
 };
-const response = (c = customer, etag = '"v1"') => new Response(JSON.stringify({ customer: c, tiers: [c.tier] }), { headers: { ETag: etag } });
+const response = (c = customer, etag = '"v1"') => new Response(JSON.stringify({ customer: c, tiers: [c.tier], historyVersion: "history-1" }), { headers: { ETag: etag } });
 function Probe() { const data = useCustomerData(); return <><output aria-label="Cupo">{data.customer?.credit.capacity ?? "pendiente"}</output><button onClick={() => void data.refresh()}>Consultar actualización</button><button onClick={data.clear}>Salir</button></>; }
 function Portal({ view = "cuotas", owner = "one" }: { view?: string; owner?: string }) {
   return <CustomerDataProvider key={owner} ownerId={owner} viewer={{ firstName: "Cliente", lastName: "Prueba" }}><CustomerSyncStatus />{view === "inicio" ? <Inicio /> : view === "cuotas" ? <Cuotas /> : view === "perfil" ? <Perfil /> : <Compras />}<Probe /></CustomerDataProvider>;
