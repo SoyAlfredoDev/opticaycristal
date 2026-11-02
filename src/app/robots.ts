@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { AI_CRAWLERS, absoluteUrl, SITE_URL } from "@/lib/seo";
 
-const privatePaths = ["/admin", "/api"];
+const privatePaths = ["/admin", "/api", "/mi-cuenta"];
 
 export default function robots(): MetadataRoute.Robots {
   return {

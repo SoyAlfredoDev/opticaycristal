@@ -47,7 +47,7 @@ export default function CustomerHome() {
           <Link className={styles.activityItem} href="/mi-cuenta/compras"><span className={styles.iconTile}><ShoppingBag size={21} aria-hidden="true" /></span><span><strong>Mis compras</strong><span>{c.activity.purchaseCount ? "Consulta tus compras registradas." : "Tu historial comenzará con tu primera compra."}</span></span><ArrowRight size={18} aria-hidden="true" /></Link>
           <Link className={styles.activityItem} href="/mi-cuenta/cuotas"><span className={styles.iconTile}><Wallet size={21} aria-hidden="true" /></span><span><strong>Mis cuotas</strong><span>{c.activity.creditCount > 0 ? "Consulta tus cuotas y pagos." : "No tienes créditos activos."}</span></span><ArrowRight size={18} aria-hidden="true" /></Link>
         </div>
-        <p className={styles.activityNote}>Compra a crédito sin intereses y sin consulta a DICOM. Siempre con pie y según las condiciones de tu nivel.</p>
+        <p className={styles.activityNote}>Compra a crédito con interés 0 % pagando al día y sin consulta a DICOM. Siempre con pie y según las condiciones de tu nivel.</p>
       </section>
     </div>
     <PurchaseSimulatorModal key={`${c.tier.code}:${c.tier.maxAmount}:${c.tier.maxPercent}:${c.tier.maxInstallments}:${c.credit.principalOutstanding}:${c.emailVerified}`} tier={c.tier} outstanding={c.credit.principalOutstanding} emailVerified={c.emailVerified}/>

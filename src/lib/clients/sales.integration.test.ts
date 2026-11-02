@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { beforeAll, afterAll, describe, expect, it, vi } from "vitest";
+import { seedLegacyContractSettings } from "../../../tests/fixtures/legacy-contract-settings";
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
 import { randomBytes, randomUUID } from "node:crypto";
@@ -8,7 +9,7 @@ vi.mock("./db",()=>({clientPool:()=>state.pool,clientTable:(name:string)=>`"${na
 import { changeSaleState, reverseSalePayment, createSale, findCustomerByRut, listCustomerSales, listSaleProducts, parseSale, quoteSale, recordSalePayment, saveSaleProduct, todayChile } from "./sales";
 import { runSaleOperation,recoverSaleOperation } from "./operations";
 import { allowStaffLogin } from "./staff-access";
-import { clientFingerprint } from "./privacy";
+import { clientFingerprint,protectClientValue } from "./privacy";
 const db = new PGlite();
 const conn={query:async(sql:string,values?:unknown[])=>{const r=await db.query(sql,values);return {...r,rowCount:r.affectedRows??r.rows.length};},release(){}};
 state.pool={query:conn.query,connect:async()=>conn};
@@ -22,8 +23,11 @@ beforeAll(async()=>{
  await db.exec(await readFile("sql/clients/002-sales.sql","utf8"));
  await db.exec(await readFile("sql/clients/003-audit.sql","utf8"));
  await db.exec(await readFile("sql/clients/003-audit.sql","utf8"));
- for(const [id,rut,verified,tier] of [["alice","123456785",true,"start"],["bob","111111111",true,"premium"],["unverified","222222222",false,"start"]]) {
-  await db.query(`INSERT INTO oc_client_user(id,name,email,"firstName","lastName","rutCipher","rutHash","whatsappCipher","emailVerified",category) VALUES($1,$1,$2,'Cliente','Prueba','encrypted',$3,'encrypted',$4,$5)`,[id,`${id}@example.com`,clientFingerprint(String(rut),"rut"),verified,tier]);
+ await db.exec(await readFile("sql/clients/010-payment-commitments.sql","utf8"));
+ await db.exec(await readFile("sql/clients/014-category-sale-pricing.sql","utf8"));
+ await seedLegacyContractSettings(db);
+ for(const [id,rut,verified,tier] of [["alice","123456785",true,"start"],["bob","111111111",true,"premium"],["unverified","222222222",false,"start"],["category","333333333",true,"start"]]) {
+  await db.query(`INSERT INTO oc_client_user(id,name,email,"firstName","lastName","rutCipher","rutHash","whatsappCipher","emailVerified",category) VALUES($1,$1,$2,'Cliente','Prueba',$6,$3,$7,$4,$5)`,[id,`${id}@example.com`,clientFingerprint(String(rut),"rut"),verified,tier,protectClientValue(String(rut),"rut"),protectClientValue("+56911112222","whatsapp")]);
  }
  productId=await saveSaleProduct({name:"Paquete óptico de prueba",protectedCost:50000},"seller");
 },30000);
@@ -37,6 +41,12 @@ describe.sequential("Ventas y pagos con PostgreSQL aislado",()=>{
  it("desglosa IVA desde total y carga costo configurado sin exigir WhatsApp",async()=>{
   const q=await quoteSale(input());expect(q).toMatchObject({total:119000,net:100000,vat:19000,protectedCost:50000,maximumCredit:35700,minimumDeposit:83300,enabled:true});
   const two=await quoteSale({...input(),quantity:2});expect(two.maximumCredit).toBe(19000);
+ });
+ it("calcula nueva venta solo por categoría y persiste el costo como NULL sin tocar el costo del producto",async()=>{
+  const sale=parseSale({customerId:"category",productId,quantity:1,total:45000,credit:13500,installmentCount:1,firstDueDate:"2030-01-31",identityChecked:true,depositReceived:true,conditionsReviewed:true,pricingPolicy:"category",requestKey:randomUUID()});
+  const q=await quoteSale(sale);expect(q).toMatchObject({maximumCredit:13500,minimumDeposit:31500,protectedCost:null,maxInstallments:1});
+  const id=await createSale(sale,"seller");expect((await db.query("SELECT protected_cost FROM oc_client_sales WHERE id=$1",[id])).rows[0]).toEqual({protected_cost:null});
+  expect((await db.query("SELECT protected_cost FROM oc_client_products WHERE id=$1",[productId])).rows[0]).toEqual({protected_cost:50000});
  });
  it("rechaza producto/costo ausente y permite contado sin correo verificado",async()=>{
   await expect(saveSaleProduct({name:"Sin costo"},"seller")).rejects.toThrow();
@@ -125,7 +135,7 @@ describe.sequential("Recuperación y correcciones trazables",()=>{
   expect((await listCustomerSales("bob")).find(s=>s.id===old.id)?.remaining).toBe(0);
  });
  it("recupera resultado tras una respuesta perdida y no expone operaciones de otro vendedor",async()=>{
-  const raw={...input(),customerId:"unverified",credit:0,installmentCount:0,firstDueDate:"",action:"create"};
+  const raw={...input(),customerId:"unverified",credit:0,installmentCount:0,firstDueDate:"",action:"create",conditionsReviewed:true};
   const id=await runSaleOperation(raw,"seller");
   const recovered=await recoverSaleOperation(raw.requestKey,"seller");expect(recovered?.resultId).toBe(id);
   expect(await recoverSaleOperation(raw.requestKey,"other-seller")).toBeNull();
@@ -133,12 +143,14 @@ describe.sequential("Recuperación y correcciones trazables",()=>{
   expect((await db.query("SELECT count(*)::int AS count FROM oc_client_sales WHERE request_key=$1",[raw.requestKey])).rows[0]).toEqual({count:1});
   await expect(runSaleOperation({...raw,total:120000},"seller")).rejects.toThrow("otro registro");
  });
+ it("exige revisión de condiciones para una operación nueva",async()=>{const raw={...input(),customerId:"unverified",credit:0,installmentCount:0,firstDueDate:"",action:"create"};await expect(runSaleOperation(raw,"seller")).rejects.toThrow("Confirma la revisión");expect(await recoverSaleOperation(raw.requestKey,"seller")).toBeNull();});
  it("recupera un registro guardado antes de completar la venta",async()=>{
-  const raw={...input(),customerId:"unverified",credit:0,installmentCount:0,firstDueDate:"",action:"create"};
+  const raw={...input(),customerId:"unverified",credit:0,installmentCount:0,firstDueDate:"",action:"create",conditionsReviewed:true};
   await db.query("INSERT INTO oc_client_operations(request_key,actor,kind,payload) VALUES($1,'seller','create',$2)",[raw.requestKey,JSON.stringify(raw)]);
   const op=await recoverSaleOperation(raw.requestKey,"seller");expect(op?.resultId).toBeNull();
   const id=await runSaleOperation(op!.payload,"seller");expect((await recoverSaleOperation(raw.requestKey,"seller"))?.resultId).toBe(id);
  });
+ it("permite retomar una operación antigua sin exigir un campo que no existía",async()=>{const raw={...input(),customerId:"unverified",credit:0,installmentCount:0,firstDueDate:"",action:"create"};await db.query("INSERT INTO oc_client_operations(request_key,actor,kind,payload) VALUES($1,'seller','create',$2)",[raw.requestKey,JSON.stringify(raw)]);expect(await runSaleOperation(raw,"seller")).toBeTruthy();});
  it("persistencia del límite de acceso del personal y claves sin IP en claro",async()=>{
   vi.stubEnv("SESSION_SECRET","synthetic-staff-secret-with-more-than-32-characters");
   for(let n=0;n<8;n++)expect(await allowStaffLogin("198.51.100.99")).toBe(true);

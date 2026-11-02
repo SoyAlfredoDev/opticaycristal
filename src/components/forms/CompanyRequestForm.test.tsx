@@ -58,9 +58,9 @@ describe("solicitud de incorporación de empresa", () => {
   });
   it.each(["jornada", "convenio"] as const)("%s recorre tres pasos y exige confirmar el envío", async (kind) => {
     render(<CompanyRequestForm kind={kind} />);
-    expect(screen.getByRole("heading", { name: "Datos de la persona" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: kind === "jornada" ? "Persona de contacto" : "Datos de la persona" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
-    expect(screen.getByRole("heading", { name: "Datos de la persona" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: kind === "jornada" ? "Persona de contacto" : "Datos de la persona" })).toBeInTheDocument();
     for (const [label, value] of [["Nombre de contacto", "Persona de prueba"], ["Cargo", "RRHH"], ["Correo electrónico", "persona@example.invalid"], ["Teléfono", "+56 9 1234 5678"]]) fill(label, value);
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
     expect(screen.getByRole("heading", { name: "Datos de la empresa" })).toBeInTheDocument();

@@ -3,6 +3,8 @@ import { customerAdminSession,canManageProductCosts } from "@/lib/clients/admin"
 import { privateJson, readClientBody, sameClientOrigin } from "@/lib/clients/http";
 import { changeSaleState,reverseSalePayment, findCustomerByRut, listSaleProducts, quoteSale, SaleError, saveSaleProduct } from "@/lib/clients/sales";
 import { getCustomerProfile } from "@/lib/clients/store";
+import { saleInterestQuote,CommitmentError } from "@/lib/clients/commitments";
+import { todayChile } from "@/lib/clients/sales";
 export const runtime = "nodejs";
 export async function GET() {
  if (!await customerAdminSession()) return privateJson({error:"Acceso restringido."},401);
@@ -17,6 +19,7 @@ export async function POST(request: Request) {
  catch { return privateJson({error:"Datos no válidos."},400); }
  try {
   switch(body.action) {
+   case "interest": return privateJson({interest:await saleInterestQuote(body.saleId,typeof body.paidOn==="string"?body.paidOn:todayChile())});
    case "lookup": return privateJson({customer:await getCustomerProfile(await findCustomerByRut(body.rut))});
    case "product": if(!canManageProductCosts(staff.u))return privateJson({error:"Solo el responsable puede editar costos."},403); return privateJson({id:await saveSaleProduct(body,staff.u)});
    case "quote": return privateJson({quote:await quoteSale(body)});
@@ -27,5 +30,5 @@ export async function POST(request: Request) {
    case "reverse": return privateJson({id:await reverseSalePayment(body,staff.u)});
    default: return privateJson({error:"Acción no válida."},400);
   }
- } catch(error) { return privateJson({error:error instanceof SaleError ? error.message : "No se pudo completar la operación. Revisa la conexión y vuelve a intentarlo con los mismos datos."},error instanceof SaleError ? 400 : 503); }
+ } catch(error) { return privateJson({error:(error instanceof SaleError || error instanceof CommitmentError) ? error.message : "No se pudo completar la operación. Revisa la conexión y vuelve a intentarlo con los mismos datos."},(error instanceof SaleError || error instanceof CommitmentError) ? 400 : 503); }
 }

@@ -64,7 +64,7 @@ export const seoPages = {
       "20% compra online convenio",
     ],
     image: "/images/home/hero-optical-store-v2.webp",
-    imageAlt: "Muro de monturas en la óptica de Huérfanos 713, Santiago Centro",
+    imageAlt: "Muro de monturas en la óptica de Huérfanos 713, local 18, Santiago Centro",
   },
   creditoDirecto: {
     title: "Crédito directo",

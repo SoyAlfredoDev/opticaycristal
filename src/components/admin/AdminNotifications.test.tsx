@@ -11,3 +11,7 @@ it('sincroniza contador y lectura sin cambiar el ticket',async()=>{
 it('ofrece filtros y no presenta los fallos de conexión como una bandeja vacía',async()=>{
  vi.stubGlobal('fetch',vi.fn(async()=>({ok:false,json:async()=>({error:'Tu sesión venció. Vuelve a ingresar.'})})));render(<AdminNotificationsPage/>);const alert=await screen.findByRole('alert');expect(alert).toHaveTextContent('Tu sesión venció');expect(within(alert).getByRole('button',{name:'Reintentar'})).toBeInTheDocument();expect(screen.queryByText('No hay notificaciones para mostrar.')).not.toBeInTheDocument();
 });
+
+it('permite salir desde los avisos del menú móvil sin dejar el menú abierto',async()=>{
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({items:[],unreadCount:0,hasMore:false,asOf:'2026-11-02T15:00:00Z'})})));const onNavigate=vi.fn();render(<AdminNotificationBell variant="drawer" onNavigate={onNavigate}/>);fireEvent.click(screen.getByText('Avisos'));const all=screen.getByRole('link',{name:'Ver todas'});all.addEventListener('click',event=>event.preventDefault());fireEvent.click(all);expect(onNavigate).toHaveBeenCalledTimes(1);expect(document.querySelector('details')).not.toHaveAttribute('open');
+});

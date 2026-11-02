@@ -1,0 +1,11 @@
+import { beforeEach,expect,it,vi } from "vitest";
+const m=vi.hoisted(()=>({session:vi.fn(),calculate:vi.fn(),lookup:vi.fn(),pdf:vi.fn()}));
+vi.mock("@/lib/clients/admin",()=>({customerAdminSession:m.session}));
+vi.mock("@/lib/clients/admin-simulation",()=>({SimulationError:class SimulationError extends Error{},calculateAdminSimulation:m.calculate,lookupSimulationCustomer:m.lookup}));
+vi.mock("@/lib/clients/credit-proposal-pdf",()=>({creditProposalPdf:m.pdf}));
+import { POST } from "./route";
+const req=(body:unknown,origin="https://opticaycristal.cl")=>new Request("https://opticaycristal.cl/api/admin/clientes/simulador",{method:"POST",headers:{origin,"content-type":"application/json"},body:JSON.stringify(body)});
+beforeEach(()=>{vi.clearAllMocks();vi.stubEnv("CLIENT_APP_URL","https://opticaycristal.cl");m.session.mockResolvedValue({u:"admin"});m.calculate.mockResolvedValue({fingerprint:"current"});});
+it("exige sesión administrativa y origen propio antes de consultar",async()=>{m.session.mockResolvedValueOnce(null);expect((await POST(req({action:"lookup"}))).status).toBe(401);expect((await POST(req({action:"calculate"},"https://externo.invalid"))).status).toBe(403);expect(m.lookup).not.toHaveBeenCalled();expect(m.calculate).not.toHaveBeenCalled();});
+it("no genera un PDF cuando cambian los datos calculados",async()=>{expect((await POST(req({action:"pdf",expectedFingerprint:"previous"}))).status).toBe(409);expect(m.pdf).not.toHaveBeenCalled();});
+it("descarga un archivo privado y utiliza el cálculo del servidor",async()=>{m.pdf.mockResolvedValue(new Uint8Array([37,80,68,70]));const r=await POST(req({action:"pdf",expectedFingerprint:"current",credit:999999}));expect(r.status).toBe(200);expect(r.headers.get("content-type")).toBe("application/pdf");expect(r.headers.get("cache-control")).toContain("no-store");expect(m.pdf).toHaveBeenCalledWith({fingerprint:"current"});});

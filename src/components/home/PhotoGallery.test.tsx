@@ -7,7 +7,7 @@ describe("PhotoGallery", () => {
   it("muestra fotos de la óptica y de clientes en lugares distintos", () => {
     render(<PhotoGallery />);
     expect(screen.getByRole("heading", { name: "Vistas de la óptica" })).toBeVisible();
-    expect(screen.getByText(/Huérfanos 713, Santiago Centro/)).toBeVisible();
+    expect(screen.getByText(/Huérfanos 713, local 18, Santiago Centro/)).toBeVisible();
     expect(screen.getAllByRole("img").map((image) => image.getAttribute("alt"))).toEqual(
       galleryPhotos.map((photo) => photo.alt),
     );

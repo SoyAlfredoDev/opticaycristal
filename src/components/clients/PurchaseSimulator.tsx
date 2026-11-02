@@ -38,7 +38,7 @@ export function PurchaseSimulator({embedded=false,...conditions}:SimulationCondi
    <div className={styles.resultHeading}><h3>Tu simulación</h3><span>Total: {clp(result.total)}</span></div>
    <div className={styles.amounts}>
     <div className={styles.deposit}><span>{result.credit?"Pie estimado":"Pago al contado"}</span><strong><AnimatedAmount value={result.deposit}/></strong><small>Al comprar en la óptica</small></div>
-    <div><span>Crédito estimado</span><strong><AnimatedAmount value={result.credit}/></strong><small>{result.credit?"Sin intereses":"Sin crédito en esta simulación"}</small></div>
+    <div><span>Crédito estimado</span><strong><AnimatedAmount value={result.credit}/></strong><small>{result.credit?"Interés 0 % al día":"Sin crédito en esta simulación"}</small></div>
     {result.installments.length>0&&<div><span>{result.installments.length} {result.installments.length===1?"cuota mensual":"cuotas mensuales"}</span><strong><AnimatedAmount value={result.installments[0]}/></strong><small>{result.installments.at(-1)===result.installments[0]?"Cada cuota":`Última cuota: ${clp(result.installments.at(-1)!)}`}</small></div>}
    </div>
    <p className={styles.disclaimer}>Estimación según tu categoría. El pie final se confirma en la óptica según los lentes elegidos.</p>

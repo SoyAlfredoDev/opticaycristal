@@ -6,13 +6,14 @@ function dataKey() {
   if (key.length !== 32) throw new Error("CLIENT_DATA_KEY debe contener 32 bytes codificados en base64.");
   return key;
 }
-export function protectClientValue(value: string, purpose: "rut" | "whatsapp" | "support-subject" | "support-message" | "support-email") {
+type ProtectedPurpose = "rut" | "whatsapp" | "support-subject" | "support-message" | "support-email" | "contract-settings" | "contract-document" | "profile-change";
+export function protectClientValue(value: string, purpose: ProtectedPurpose) {
   const iv = randomBytes(12), cipher = createCipheriv("aes-256-gcm", dataKey(), iv);
   cipher.setAAD(Buffer.from(`oc-client-v1:${purpose}`));
   const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
   return ["v1", iv.toString("base64url"), cipher.getAuthTag().toString("base64url"), encrypted.toString("base64url")].join(".");
 }
-export function revealClientValue(value: string, purpose: "rut" | "whatsapp" | "support-subject" | "support-message" | "support-email") {
+export function revealClientValue(value: string, purpose: ProtectedPurpose) {
   const [version, iv, tag, ciphertext] = value.split(".");
   if (version !== "v1" || !iv || !tag || !ciphertext) throw new Error("Dato protegido no válido.");
   const decipher = createDecipheriv("aes-256-gcm", dataKey(), Buffer.from(iv, "base64url"));

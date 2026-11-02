@@ -7,7 +7,7 @@ import { storeMapUrl } from "@/components/site/content";
 afterEach(()=>{state.photos=[];});
 describe("La óptica en el portal del cliente",()=>{
  it("muestra la dirección compartida, un mapa y rutas sin transmitir la página privada como referencia",()=>{
-  render(<CustomerOptic/>);expect(screen.getByRole("heading",{name:"Huérfanos 713"})).toBeVisible();expect(screen.getByText(/Local 18 · Santiago Centro/)).toBeVisible();
+  render(<CustomerOptic/>);expect(screen.getByRole("heading",{name:"Huérfanos 713"})).toBeVisible();expect(screen.getByText("Local 18")).toBeVisible();expect(screen.getByText("Local 18").closest("address")).toHaveTextContent("Local 18 · Santiago Centro");
   const map=screen.getByTitle("Mapa de Óptica & Cristal, Huérfanos 713, local 18, Santiago Centro");expect(map).toHaveAttribute("src",storeMapUrl("embed"));expect(map).toHaveAttribute("referrerpolicy","no-referrer");expect(map).toHaveAttribute("loading","lazy");expect(screen.getByRole("link",{name:"Cómo llegar"})).toHaveAttribute("href",storeMapUrl("directions"));
  });
  it("conecta Instagram, WhatsApp y correo y ofrece fotos sin presentar imágenes referenciales como reales",()=>{

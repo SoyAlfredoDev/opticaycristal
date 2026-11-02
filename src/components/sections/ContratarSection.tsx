@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import { CheckCircle, Phone, PaperPlaneTilt } from "@phosphor-icons/react";
+import { CheckCircle, WhatsappLogo, PaperPlaneTilt } from "@phosphor-icons/react";
+import { whatsappUrl } from "@/components/site/content";
 import JornadaLeadForm from "@/components/forms/JornadaLeadForm";
 import { Button } from "@/components/ui/Button";
 
@@ -113,8 +114,8 @@ export default function ContratarSection() {
 
               <div className="hidden flex-col gap-3 rounded-xl border border-border bg-muted/40 p-5 sm:flex">
                 <p className="text-sm font-semibold text-brand-dark">¿Prefieres hablar directamente?</p>
-                <Button href="tel:+56900000000" variant="outline" size="md" icon={<Phone size={16} weight="bold" />} className="w-fit">
-                  Llamar ahora
+                <Button href={whatsappUrl()} variant="outline" size="md" icon={<WhatsappLogo size={16} weight="bold" />} className="w-fit">
+                  Escribir por WhatsApp
                 </Button>
               </div>
             </motion.div>
@@ -128,8 +129,8 @@ export default function ContratarSection() {
           transition={{ duration: 0.45, ease: EASE }}
           className="mt-5 lg:hidden"
         >
-          <Button href="tel:+56900000000" variant="outline" size="lg" className="w-full min-h-[48px]" icon={<Phone size={16} weight="bold" />}>
-            Llamar ahora
+          <Button href={whatsappUrl()} variant="outline" size="lg" className="w-full min-h-[48px]" icon={<WhatsappLogo size={16} weight="bold" />}>
+            Escribir por WhatsApp
           </Button>
         </motion.div>
       </div>

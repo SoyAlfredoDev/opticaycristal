@@ -44,7 +44,7 @@ const previousPhotos: readonly GalleryPhoto[] = [
   {
     id: "vitrina",
     src: "/images/home/hero-optical-store-v2.webp",
-    alt: "Muro de monturas en la óptica de Huérfanos 713",
+    alt: "Muro de monturas en la óptica de Huérfanos 713, local 18",
     fit: "cover",
     position: "center 42%",
     x: 548,

@@ -5,11 +5,16 @@ import { clientPool,clientTable } from "@/lib/clients/db";
 import { getCustomerProfile } from "@/lib/clients/store";
 import { listCustomerSales } from "@/lib/clients/sales";
 import { PaymentCommitment } from "@/components/clients/PaymentCommitment";
+import { getStoredCommitment } from "@/lib/clients/commitments";
+import { CreditAgreement } from "@/components/clients/CreditAgreement";
+import { PrepareCommitment } from "@/components/clients/AdminCommitments";
 export const dynamic="force-dynamic";
 export default async function CommitmentPage({params}:{params:Promise<{id:string}>}){const {id}=await params;
  if(!await customerAdminSession())return <AdminAccessDenied/>;
  const owner=(await clientPool().query(`SELECT user_id FROM ${clientTable("oc_client_sales")} WHERE id=$1`,[id])).rows[0];if(!owner)notFound();
  const customer=await getCustomerProfile(owner.user_id);if(!customer)notFound();
  const sale=(await listCustomerSales(customer.id)).find(s=>s.id===id);if(!sale||!sale.credit)notFound();
- return <PaymentCommitment backHref={`/admin/clientes/${customer.id}`} customer={customer} sale={sale}/>;
+ const document=await getStoredCommitment(id,customer.id);
+ if(document)return <CreditAgreement pdfHref={`/api/admin/clientes/ventas/${id}/compromiso/pdf`} document={document} backHref={`/admin/clientes/${customer.id}`} cancelled={sale.status==="cancelled"} signedAt={sale.signedAt}/>;
+ return <>{sale.status==="active"&&!sale.signedAt&&sale.remaining>0&&<PrepareCommitment saleId={sale.id}/>}<PaymentCommitment backHref={`/admin/clientes/${customer.id}`} customer={customer} sale={sale}/></>;
 }

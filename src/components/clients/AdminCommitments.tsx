@@ -1,0 +1,34 @@
+"use client";
+import Link from "next/link";
+import { useState,type FormEvent } from "react";
+import type { ContractSettingsSummary } from "@/lib/clients/commitments";
+import styles from "./ClientSpace.module.css";
+import printStyles from "./Commitment.module.css";
+async function post(body:Record<string,unknown>){const response=await fetch("/api/admin/clientes/compromisos",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});const data=await response.json();if(!response.ok)throw new Error(data.error||"No se pudo completar la operación.");}
+export function PrepareCommitment({saleId}:{saleId:string}){
+ const[busy,setBusy]=useState(false),[error,setError]=useState("");
+ async function prepare(){setBusy(true);setError("");try{await post({action:"prepare",saleId});window.location.reload();}catch(e){setError(e instanceof Error?e.message:"Inténtalo nuevamente.");setBusy(false);}}
+ return <section className={printStyles.preparation} aria-label="Preparación del compromiso"><div><button type="button" disabled={busy} onClick={prepare}>{busy?"Preparando…":"Generar compromiso con firma preimpresa"}</button><Link href="/admin/clientes/compromisos">Configuración de firma</Link></div><p>Se conservará una versión de este documento para la venta. Generarlo no confirma la firma del cliente ni activa recargos por mora.</p>{error&&<p role="alert">{error}</p>}</section>;
+}
+export function AdminCommitmentSettings({initial,unavailable=false}:{initial:ContractSettingsSummary|null;unavailable?:boolean}){
+ const[busy,setBusy]=useState(false),[error,setError]=useState(""),[saved,setSaved]=useState(false);
+ async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();const form=event.currentTarget,data=new FormData(form);setBusy(true);setError("");setSaved(false);try{
+  const file=data.get("signature") as File|null;let signature:string|undefined;
+  if(file?.size){if(file.type!=="image/png"||file.size>80_000)throw new Error("Selecciona una firma PNG de hasta 80 KB.");signature=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error("No se pudo leer la firma."));reader.readAsDataURL(file);});}
+  await post({action:"settings",representativeName:data.get("representativeName"),representativeRut:data.get("representativeRut"),paymentMethod:data.get("paymentMethod"),signature,authorizeSignature:data.get("authorizeSignature")==="on",authorizeCurrentTerms:data.get("authorizeCurrentTerms")==="on",legalAnnualMaximum:Number(data.get("legalAnnualMaximum")),legalLimitChecked:data.get("legalLimitChecked")==="on",webpayUrl:data.get("webpayUrl")||undefined});setSaved(true);
+ }catch(e){setError(e instanceof Error?e.message:"Revisa los datos e inténtalo nuevamente.");}finally{setBusy(false);}}
+ return <section className={`${styles.panel} ${styles.section}`}><h2>Firma del representante</h2><p>Se aplicará a los nuevos documentos. Los compromisos ya preparados conservarán su versión.</p>{unavailable&&<p role="alert">La configuración todavía no está habilitada. El documento original de cada venta sigue disponible.</p>}
+ <form onSubmit={save} className={styles.form}><fieldset disabled={busy||unavailable} style={{border:0,padding:0,margin:0,display:"grid",gap:16}}>
+ <label className={styles.field}>Nombre legal completo<input className={styles.input} name="representativeName" defaultValue={initial?.representativeName||""} maxLength={160} required autoComplete="name"/></label>
+ <label className={styles.field}>RUT del representante<input className={styles.input} name="representativeRut" defaultValue={initial?.representativeRut||""} maxLength={20} placeholder="12.345.678-5" required autoComplete="off"/></label>
+ <label className={styles.field}>Firma original en PNG<input className={styles.input} name="signature" type="file" accept="image/png" required={!initial?.signatureConfigured&&!saved}/><span className={styles.small}>Hasta 80 KB y 2000 × 1000 píxeles. {initial?.signatureConfigured||saved?"Ya hay una firma guardada; selecciona otra solo para reemplazarla.":"Usa una imagen legible de la firma autorizada."}</span></label>
+ <label className={styles.field}>Pago de cuotas<select className={styles.input} name="paymentMethod" defaultValue={initial?.paymentMethod||"both"} required><option value="" disabled>Selecciona los medios</option><option value="both">En el local y por transferencia</option><option value="local">Solo en el local</option><option value="transfer">Solo por transferencia</option><option value="all">Local, transferencia y Webpay</option></select></label>
+ <label className={styles.field}>Enlace Webpay, cuando esté habilitado<input className={styles.input} name="webpayUrl" type="url" maxLength={500} defaultValue={initial?.webpayUrl||""} placeholder="https://www.webpay.cl/…"/><span className={styles.small}>Opcional. Webpay no se ofrece mientras no haya un enlace oficial.</span></label>
+ <label className={styles.field}>Máximo legal anual verificado (%)<input className={styles.input} name="legalAnnualMaximum" type="number" min="0.01" max="100" step="0.01" defaultValue={initial?.legalAnnualMaximum||41.02} required/><span className={styles.small}>Referencia consultada el 02/11/2026: 41,02 % para créditos de hasta 50 UF a 90 días o más. <a href="https://www.cmfchile.cl/portal/estadisticas/626/w4-propertyvalue-43285.html" target="_blank" rel="noopener noreferrer">Consultar CMF</a>. Confirma el máximo aplicable vigente; la mora pactada nunca superará ese límite.</span></label>
+ <label className={styles.check}><input name="legalLimitChecked" type="checkbox" required/>Verifiqué el máximo legal aplicable a las nuevas operaciones.</label>
+ <label className={styles.check}><input name="authorizeSignature" type="checkbox" required/>Autorizo el uso preimpreso de esta firma en los compromisos de la óptica y confirmo las facultades del representante.</label>
+ <label className={styles.check}><input name="authorizeCurrentTerms" type="checkbox" required/>Confirmo interés corriente 0 % y mora simple de hasta 1,5 % mensual desde el día 61, solo en contratos nuevos, sin retroactividad ni capitalización y sujeta al máximo legal.</label>
+ <p className={styles.small}>Las ventas anteriores a esta configuración conservan su condición sin mora. Los documentos ya preparados no se modifican.</p>
+ <button className={`${styles.button} ${styles.primary}`} disabled={busy||unavailable}>{busy?"Guardando…":"Guardar configuración"}</button>
+ </fieldset>{error&&<p role="alert" className={styles.error}>{error}</p>}{saved&&<p role="status">Configuración guardada. Puedes generar el compromiso desde una venta con crédito pendiente de firma.</p>}</form></section>;
+}

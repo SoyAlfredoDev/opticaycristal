@@ -1,0 +1,11 @@
+import { beforeEach,expect,it,vi } from "vitest";
+const mock=vi.hoisted(()=>({session:vi.fn(),owner:vi.fn(),summary:vi.fn(),save:vi.fn(),prepare:vi.fn()}));
+vi.mock("@/lib/clients/admin",()=>({customerAdminSession:mock.session,canManageProductCosts:mock.owner}));
+vi.mock("@/lib/clients/commitments",()=>({CommitmentError:class CommitmentError extends Error{},contractSettingsSummary:mock.summary,saveContractSettings:mock.save,prepareCommitment:mock.prepare}));
+import { GET,POST } from "./route";
+beforeEach(()=>{vi.clearAllMocks();vi.stubEnv("CLIENT_APP_URL","https://opticaycristal.cl");mock.session.mockResolvedValue({u:"owner"});mock.owner.mockReturnValue(true);});
+const request=(body:unknown,origin="https://opticaycristal.cl")=>new Request("https://opticaycristal.cl/api/admin/clientes/compromisos",{method:"POST",headers:{origin,"content-type":"application/json"},body:JSON.stringify(body)});
+it("bloquea usuarios sin sesión y evita consultar la configuración",async()=>{mock.session.mockResolvedValue(null);expect((await GET()).status).toBe(401);expect((await POST(request({action:"prepare"}))).status).toBe(401);expect(mock.summary).not.toHaveBeenCalled();expect(mock.prepare).not.toHaveBeenCalled();});
+it("solo permite que el responsable consulte o modifique la firma",async()=>{mock.owner.mockReturnValue(false);expect((await GET()).status).toBe(403);expect((await POST(request({action:"settings"}))).status).toBe(403);expect(mock.save).not.toHaveBeenCalled();});
+it("rechaza solicitudes externas antes de generar un documento",async()=>{expect((await POST(request({action:"prepare",saleId:"sale-qa"},"https://externo.invalid"))).status).toBe(403);expect(mock.prepare).not.toHaveBeenCalled();});
+it("prepara usando exclusivamente la identidad administrativa de la sesión",async()=>{const response=await POST(request({action:"prepare",saleId:"sale-qa",actor:"injected"}));expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toContain("no-store");expect(mock.prepare).toHaveBeenCalledWith("sale-qa","owner");});

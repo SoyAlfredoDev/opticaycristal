@@ -345,3 +345,6 @@
   .reveal[data-reveal="pending"] { opacity: 1; transform: none; }
   .collectionImage, .heroImage, .heroSignature, .reveal .collection, .reveal .businessPanel { transform: none !important; }
 }
+
+.footerUnit { display: inline-block; white-space: nowrap; font-weight: 700; }
+.footerContact a > span { min-width: 0; white-space: normal; overflow-wrap: anywhere; }

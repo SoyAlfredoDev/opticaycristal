@@ -34,7 +34,7 @@ export function VisitSection({
               <p className={styles.kicker}>{financing ? "Te esperamos en la óptica." : "Visítanos"}</p>
               <h2 id="visit-title">{store.street}</h2>
               <address className={styles.address}>
-                {financing ? <>Galería Cohen<br />{store.unit} · {store.locality}</> : <>{store.unit}, {store.locality}</>}
+                {financing && <>Galería Cohen<br /></>}<strong className={styles.unit}>{store.unit}</strong>{financing ? " · " : ", "}{store.locality}
               </address>
               {financing ? <p className={styles.hours}>Lunes a viernes: 10:00 a 18:00<br />Sábado: 10:00 a 15:00</p> : <p className={styles.lead}>{lead}</p>}
               <div className={styles.actions}>

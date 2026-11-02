@@ -1,0 +1,8 @@
+// @vitest-environment node
+import {beforeEach,expect,it,vi} from "vitest";
+const m=vi.hoisted(()=>({staff:vi.fn(),send:vi.fn(),confirm:vi.fn()}));vi.mock("@/lib/clients/admin",()=>({customerAdminSession:m.staff}));vi.mock("@/lib/clients/staff-email-verification",()=>({sendCustomerEmailCode:m.send,confirmCustomerEmailCode:m.confirm,StaffEmailCodeError:class extends Error{status=400}}));
+import {POST} from "./route";
+const ctx={params:Promise.resolve({id:"customer"})},request=(body:unknown,origin="http://localhost:3033")=>new Request("http://localhost:3033/api/admin/clientes/customer/verificar-correo",{method:"POST",headers:{Origin:origin,"Content-Type":"application/json"},body:JSON.stringify(body)});
+beforeEach(()=>{vi.clearAllMocks();vi.stubEnv("CLIENT_APP_URL","http://localhost:3033");});
+it("exige sesión administrativa y origen para enviar y confirmar códigos",async()=>{m.staff.mockResolvedValue(null);for(const action of ["send","confirm"])expect((await POST(request({action}),ctx)).status).toBe(401);m.staff.mockResolvedValue({u:"staff"});expect((await POST(request({action:"send"},"https://other.invalid"),ctx)).status).toBe(403);expect(m.send).not.toHaveBeenCalled();expect(m.confirm).not.toHaveBeenCalled();});
+it("vincula la operación a la sesión y responde sin caché ni código",async()=>{m.staff.mockResolvedValue({u:"staff"});m.send.mockResolvedValue({requestId:"opaque",expiresIn:600});const r=await POST(request({action:"send",actor:"forged",email:"forged@example.invalid"}),ctx);expect(r.status).toBe(200);expect(m.send).toHaveBeenCalledWith("customer","staff");expect(r.headers.get("cache-control")).toContain("no-store");expect(await r.json()).not.toHaveProperty("code");});

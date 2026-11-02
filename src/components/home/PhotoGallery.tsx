@@ -60,7 +60,7 @@ export function PhotoGallery() {
               </button>
             </div>
           </div>
-          <p className={styles.lead}>Nuestra óptica y las miradas de quienes nos visitan en Huérfanos 713, Santiago Centro.</p>
+          <p className={styles.lead}>Nuestra óptica y las miradas de quienes nos visitan en Huérfanos 713, local 18, Santiago Centro.</p>
         </div>
         <div className={styles.stage} role="region" aria-label="Vistas de la óptica y de clientes">
           <div className={styles.track} data-paused={paused ? "true" : "false"}>

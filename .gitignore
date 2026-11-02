@@ -50,3 +50,6 @@ next-env.d.ts
 /.cache/
 
 .neon
+
+# Metadatos macOS en discos externos
+**/._*

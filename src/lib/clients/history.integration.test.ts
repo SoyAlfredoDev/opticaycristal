@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { seedLegacyContractSettings } from "../../../tests/fixtures/legacy-contract-settings";
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
@@ -22,7 +23,7 @@ async function seedSale(id:string,user="own",credit=0,micro=0){
 }
 beforeAll(async()=>{
  vi.stubEnv("CLIENT_DATA_KEY",randomBytes(32).toString("base64"));
- for(const name of ["001-customers.sql","002-sales.sql","003-audit.sql","007-installments.sql","009-customer-history-indexes.sql","009-customer-history-indexes.sql"])await db.exec(await readFile(`sql/clients/${name}`,"utf8"));
+ for(const name of ["001-customers.sql","002-sales.sql","003-audit.sql","007-installments.sql","010-payment-commitments.sql","009-customer-history-indexes.sql","009-customer-history-indexes.sql"])await db.exec(await readFile(`sql/clients/${name}`,"utf8"));await seedLegacyContractSettings(db);
  for(const user of ["own","other"])await db.query(`INSERT INTO oc_client_user(id,name,email,"firstName","lastName","rutCipher","rutHash","whatsappCipher","emailVerified") VALUES($1,$1,$2,'Cliente','Prueba',$3,$1,$4,true)`,[user,`${user}@example.invalid`,protectClientValue("123456785","rut"),protectClientValue("+56900000000","whatsapp")]);
  await db.query(`INSERT INTO oc_client_products(id,name,protected_cost,updated_by) VALUES('product','Producto QA',6000,'staff')`);
  for(let n=0;n<24;n++)await seedSale(`sale-${String(n).padStart(2,'0')}`,"own",n===0?30000:0,n);

@@ -11,7 +11,7 @@ export function CustomerOptic() {
    <div className={styles.address}>
     <span className={styles.icon}><MapPin size={23} aria-hidden="true"/></span>
     <p className={styles.kicker}>ÓPTICA &amp; CRISTAL</p><h2 id="optic-location">{store.street}</h2>
-    <address>{store.unit} · {store.locality}<br/><span>Galería Cohen</span></address>
+    <address><strong className={styles.unit}>{store.unit}</strong> · {store.locality}<br/><span>Galería Cohen</span></address>
     <div className={styles.hours}><h3><Clock3 size={17} aria-hidden="true"/>Horario de atención</h3><dl><div><dt>Lunes a viernes</dt><dd>10:00 a 18:00</dd></div><div><dt>Sábado</dt><dd>10:00 a 15:00</dd></div></dl></div>
     <div className={styles.actions}><a href={storeMapUrl("directions")} target="_blank" rel="noopener noreferrer" className={`${ui.button} ${ui.primary}`}><Navigation size={17} aria-hidden="true"/>Cómo llegar</a><a href={whatsappUrl("Hola, quiero visitar la óptica en Huérfanos 713, local 18.")} target="_blank" rel="noopener noreferrer" className={ui.button}>Consultar por WhatsApp</a></div>
    </div>

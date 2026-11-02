@@ -17,7 +17,7 @@ export const store = {
   unit: "Local 18",
   locality: "Santiago Centro",
   fullAddress: "Huérfanos 713, local 18, Santiago Centro",
-  mapsQuery: "Huérfanos 713, Santiago Centro, Santiago, Chile",
+  mapsQuery: "Huérfanos 713, local 18, Santiago Centro, Santiago, Chile",
 } as const;
 
 export type StorePhoto = {

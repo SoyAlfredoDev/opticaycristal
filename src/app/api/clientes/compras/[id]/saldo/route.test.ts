@@ -1,0 +1,12 @@
+import { beforeEach,expect,it,vi } from "vitest";
+const m=vi.hoisted(()=>({session:vi.fn(),quote:vi.fn()}));
+vi.mock("@/lib/clients/auth",()=>({customerSession:m.session}));
+vi.mock("@/lib/clients/commitments",()=>({saleInterestQuote:m.quote,CommitmentError:class CommitmentError extends Error{}}));
+import { GET } from "./route";
+import { CommitmentError } from "@/lib/clients/commitments";
+beforeEach(()=>{vi.clearAllMocks();m.session.mockResolvedValue({user:{id:"own-customer"}});});
+const request=()=>new Request("https://opticaycristal.cl/api/clientes/compras/sale-qa/saldo?userId=other-customer");
+const context={params:Promise.resolve({id:"sale-qa"})};
+it("autentica antes de consultar un saldo",async()=>{m.session.mockResolvedValue(null);expect((await GET(request(),context)).status).toBe(401);expect(m.quote).not.toHaveBeenCalled();});
+it("resuelve el propietario desde la sesión e ignora IDs externos",async()=>{m.quote.mockResolvedValue({principalDue:20000,due:300,totalDue:20300,asOf:"2026-11-02"});const r=await GET(request(),context);expect(r.status).toBe(200);expect(m.quote.mock.calls[0][2]).toBe("own-customer");expect(r.headers.get("cache-control")).toContain("private");});
+it("no revela un préstamo ajeno o inexistente",async()=>{m.quote.mockRejectedValue(new CommitmentError("No disponible"));expect((await GET(request(),context)).status).toBe(404);});

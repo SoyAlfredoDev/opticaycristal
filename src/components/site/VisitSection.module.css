@@ -68,3 +68,5 @@ p.hours { margin-top: 20px; font-size: 15px; line-height: 1.8; }
 @media (min-width: 900px) {
   .faqs { grid-template-columns: minmax(280px, .84fr) minmax(0, 1.16fr); gap: 56px; padding-bottom: 44px; margin-bottom: 44px; }
 }
+
+.unit { display: inline-block; white-space: nowrap; font-weight: 700; }

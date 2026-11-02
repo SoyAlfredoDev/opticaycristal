@@ -22,6 +22,7 @@ async function post(path: string, body: unknown, sessionCookie = "") { return au
 beforeAll(async () => {
   vi.stubEnv("CLIENT_DATABASE_SCHEMA", "public");vi.stubEnv("CLIENT_AUTH_SECRET", randomBytes(32).toString("base64"));vi.stubEnv("CLIENT_DATA_KEY", randomBytes(32).toString("base64"));vi.stubEnv("CLIENT_APP_URL", base);
   await database.exec(await readFile("sql/clients/001-customers.sql", "utf8"));
+  await database.exec(await readFile("sql/clients/012-customer-profile-edits.sql", "utf8"));
   extra.rutCipher = protectClientValue("123456785", "rut");extra.rutHash = clientFingerprint("123456785", "rut");extra.whatsappCipher = protectClientValue("+56912345678", "whatsapp");
   auth = createClientAuth(pool, async message => { mails.push(message); });
 }, 30_000);

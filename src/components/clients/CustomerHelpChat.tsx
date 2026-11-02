@@ -11,7 +11,7 @@ type Topic = "requirements" | "credit" | "verification" | "purchases" | "contact
 type Message = { id: number; role: "assistant" | "user"; text: string; topic?: Topic };
 const answers: Record<Topic, { label: string; text: string; href: string; action: string }> = {
   requirements: {label:"Requisitos del crédito",text:CREDIT_REQUIREMENTS,href:"/mi-cuenta/ayuda",action:"Ver requisitos y preguntas frecuentes"},
-  credit: { label: "Mi cupo", text: "En Inicio puedes ver el cupo de tu nivel y el saldo utilizado. Para usar el crédito necesitas correo verificado. El crédito es sin intereses y sin consulta a DICOM. El crédito respeta el cupo, porcentaje y cuotas de tu categoría. El precio de los lentes puede ser mayor: pagas la diferencia como pie.", href: "/mi-cuenta", action: "Ver mi crédito" },
+  credit: { label: "Mi cupo", text: "En Inicio puedes ver el cupo de tu nivel y el saldo utilizado. Para usar el crédito necesitas correo verificado. Pagando al día, el interés es 0 % y no consultamos DICOM. Solo los contratos nuevos pueden incluir mora simple de hasta 1,5 % mensual desde el día 61, sujeta al máximo legal y a tu compromiso; los anteriores conservan sus condiciones. El crédito respeta el cupo, porcentaje y cuotas de tu categoría. El precio de los lentes puede ser mayor: pagas la diferencia como pie.", href: "/mi-cuenta", action: "Ver mi crédito" },
   verification: { label: "Verificar mi correo", text: "Desde Perfil puedes solicitar el correo de verificación. Revisa también spam. Verificar el correo es obligatorio para usar tu crédito. La verificación de WhatsApp todavía no está implementada y no es obligatoria por ahora.", href: "/mi-cuenta/perfil", action: "Ir a mi perfil" },
   purchases: { label: "Compras y cuotas", text: "Consulta tus compras y el compromiso de pago en Compras, y tus pagos en Cuotas. Al registrar la venta en la óptica generamos el compromiso con el pie, crédito, cuotas mensuales y fechas para revisarlo y firmarlo contigo.", href: "/mi-cuenta/cuotas", action: "Ver mis cuotas" },
   contact: { label: "Hablar con la óptica", text: `Estamos en ${store.fullAddress}. Para consultas sobre una compra, corregir tus datos o presentar un reclamo, puedes contactar a nuestro equipo por WhatsApp. Abrir el enlace no envía ningún mensaje automáticamente.`, href: whatsappUrl("Hola, necesito ayuda con mi cuenta de cliente."), action: "Abrir WhatsApp" },
@@ -47,7 +47,7 @@ export function CustomerHelpChat() {
     const normalized = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const topic: Topic | null = /requisit|que.*necesit|necesit.*credito|compromiso|firmar|firma|cedula|documento/.test(normalized) ? "requirements"
       : /verific|correo|email|activar|whatsapp.*(?:oblig|valid)|(?:oblig|valid).*whatsapp/.test(normalized) ? "verification"
-      : /cupo|credito|financia|nivel|interes|dicom/.test(normalized) ? "credit"
+      : /cupo|credito|financia|nivel|interes|mora|atraso|dicom/.test(normalized) ? "credit"
         : /cuota|compra|pago|comprobante/.test(normalized) ? "purchases"
           : /contact|direccion|horario|reclamo|whatsapp|persona|hablar/.test(normalized) ? "contact" : null;
     reply(topic, text);

@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { MapPin, Phone, EnvelopeSimple, Clock } from "@phosphor-icons/react";
+import { MapPin, WhatsappLogo, EnvelopeSimple, Clock } from "@phosphor-icons/react";
+import { brand, whatsappUrl } from "@/components/site/content";
 import SolicitarJornadaButton from "@/components/forms/SolicitarJornadaButton";
 
 const navLinks = [
@@ -14,7 +15,7 @@ const navLinks = [
 
 const contactItems = [
   { icon: MapPin, label: "Huérfanos 713, local 18, Santiago Centro", href: undefined },
-  { icon: Phone, label: "+56 9 0000 0000", href: "tel:+56900000000" },
+  { icon: WhatsappLogo, label: `WhatsApp ${brand.phone}`, href: whatsappUrl() },
   { icon: EnvelopeSimple, label: "contacto@opticaycristal.cl", href: "mailto:contacto@opticaycristal.cl" },
 ];
 

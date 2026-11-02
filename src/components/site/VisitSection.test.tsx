@@ -7,7 +7,8 @@ describe("local de Óptica & Cristal", () => {
   it("usa la dirección oficial y enlaces de Google Maps", () => {
     expect(store.fullAddress).toBe("Huérfanos 713, local 18, Santiago Centro");
     expect(storePhotos).toEqual([]);
-    expect(decodeURIComponent(storeMapUrl("embed"))).toContain("Huérfanos 713, Santiago Centro, Santiago, Chile");
+    expect(decodeURIComponent(storeMapUrl("embed"))).toContain("Huérfanos 713, local 18, Santiago Centro, Santiago, Chile");
+    for (const mode of ["embed", "directions", "search"] as const) expect(decodeURIComponent(storeMapUrl(mode))).toContain("local 18");
     expect(storeMapUrl("embed")).toContain("output=embed");
     expect(storeMapUrl("directions")).toContain("https://www.google.com/maps/dir/?api=1&destination=");
     expect(storeMapUrl("search")).toContain("https://www.google.com/maps/search/?api=1&query=");
@@ -16,7 +17,8 @@ describe("local de Óptica & Cristal", () => {
   it("muestra dirección y mapa, sin el bloque de fotos", () => {
     render(<VisitSection />);
     expect(screen.getByRole("heading", { name: "Huérfanos 713" })).toBeVisible();
-    expect(screen.getByText("Local 18, Santiago Centro")).toBeVisible();
+    expect(screen.getByText("Local 18")).toBeVisible();
+    expect(screen.getByText("Local 18").closest("address")).toHaveTextContent("Local 18, Santiago Centro");
     expect(screen.getByTitle("Mapa de Óptica & Cristal, Huérfanos 713, local 18, Santiago Centro")).toHaveAttribute("src", storeMapUrl("embed"));
     expect(screen.getByRole("link", { name: "Cómo llegar" })).toHaveAttribute("href", storeMapUrl("directions"));
     expect(screen.getByRole("link", { name: "Abrir en Google Maps" })).toHaveAttribute("href", storeMapUrl("search"));

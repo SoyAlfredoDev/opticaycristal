@@ -1,15 +1,17 @@
 import { bodyFont } from "@/components/site/fonts";
 import { editorialFont } from "@/components/home/editorial-font";
 import theme from "@/components/site/PublicTheme.module.css";
+import siteStyles from "@/components/site/Site.module.css";
 import Image from "next/image";
 import Link from "next/link";
-import Footer from "@/components/layout/Footer";
+import { SiteFooter } from "@/components/site/SiteFooter";
 import { pageMetadata, seoPages } from "@/lib/seo";
 
 export const metadata = pageMetadata(seoPages.privacidad);
 
 export default function PrivacidadPage() {
   return (
+    <>
     <div data-public-site className={`${theme.scope} ${theme.legacy} ${theme.privacy} ${bodyFont.variable} ${editorialFont.variable}`}>
       <header className="border-b border-border/70 bg-white">
         <div className="container-site flex h-16 items-center justify-between">
@@ -109,7 +111,10 @@ export default function PrivacidadPage() {
           </div>
         </article>
       </main>
-      <Footer />
     </div>
+    <div data-public-site className={`${theme.scope} ${siteStyles.home} ${bodyFont.variable} ${editorialFont.variable}`}>
+      <SiteFooter showContact={false} />
+    </div>
+    </>
   );
 }

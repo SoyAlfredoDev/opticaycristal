@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   serverExternalPackages: ["mysql2"],
   outputFileTracingIncludes: {
+    "/api/clientes/compras/*/compromiso/pdf": ["./public/images/home/oc-logo-oficial.png"],
+    "/api/admin/clientes/*/verificar-correo": ["./public/images/home/oc-logo-oficial.png"],
+    "/api/admin/clientes/ventas/*/compromiso/pdf": ["./public/images/home/oc-logo-oficial.png"],
     "/api/clientes/*": ["./public/images/home/oc-logo-oficial.png"],
     "/api/clientes/soporte/**": ["./public/images/home/oc-logo-oficial.png"],
     "/api/admin/clientes/soporte": ["./public/images/home/oc-logo-oficial.png"],

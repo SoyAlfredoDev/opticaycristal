@@ -29,7 +29,7 @@ export function SiteFooter({ showContact = true }: { showContact?: boolean }) {
             {siteNavigation.map((item) => <Link key={item.href} href={item.href}>{item.footerLabel}</Link>)}
           </nav>
           <address className={styles.footerContact}>
-            <a href={storeMapUrl("search")} target="_blank" rel="noopener noreferrer"><MapPin size={18} aria-hidden="true" /><span>{store.fullAddress}</span></a>
+            <a href={storeMapUrl("search")} target="_blank" rel="noopener noreferrer"><MapPin size={18} aria-hidden="true" /><span>{store.street}, <strong className={styles.footerUnit}>{store.unit}</strong>, {store.locality}</span></a>
             <a href={brand.website}><Globe size={18} aria-hidden="true" />www.opticaycristal.cl</a>
             <a href={brand.instagram} target="_blank" rel="noopener noreferrer"><Instagram size={18} aria-hidden="true" />{brand.instagramLabel}</a>
             <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} aria-hidden="true" />{brand.phone}</a>

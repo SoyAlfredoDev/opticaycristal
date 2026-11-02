@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight, Phone } from "@phosphor-icons/react";
+import { ArrowRight, WhatsappLogo } from "@phosphor-icons/react";
+import { whatsappUrl } from "@/components/site/content";
 import { Button } from "@/components/ui/Button";
 import SolicitarJornadaButton from "@/components/forms/SolicitarJornadaButton";
 import { Reveal } from "@/components/ui/Reveal";
@@ -38,13 +39,13 @@ export default function CtaSection() {
                     Solicitar jornada
                   </SolicitarJornadaButton>
                   <Button
-                    href="tel:+56900000000"
+                    href={whatsappUrl()}
                     variant="outline"
                     size="lg"
                     className="w-full sm:w-auto bg-transparent border-2 border-white/25 text-white hover:bg-white/10 hover:text-white hover:border-white/40"
-                    icon={<Phone size={16} weight="bold" />}
+                    icon={<WhatsappLogo size={16} weight="bold" />}
                   >
-                    Llamar ahora
+                    Escribir por WhatsApp
                   </Button>
                 </div>
               </div>

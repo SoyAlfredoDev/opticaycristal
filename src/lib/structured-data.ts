@@ -92,7 +92,7 @@ export function homeJsonLd() {
     "@type": "ImageGallery",
     "@id": `${SITE_URL}/#galeria`,
     name: "Vistas de la óptica",
-    description: "Interior de Óptica & Cristal en Huérfanos 713, Santiago Centro: vitrinas, muro de monturas y atención en el local.",
+    description: "Interior de Óptica & Cristal en Huérfanos 713, local 18, Santiago Centro: vitrinas, muro de monturas y atención en el local.",
     url: `${SITE_URL}/#galeria`,
     about: { "@id": opticianId },
     image: galleryPhotos.map((photo) => imageObject(photo.src, photo.alt)),

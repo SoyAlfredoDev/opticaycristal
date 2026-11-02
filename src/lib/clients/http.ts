@@ -7,13 +7,13 @@ export function sameClientOrigin(request: Request) {
   const expected = new URL(process.env.CLIENT_APP_URL || "https://opticaycristal.cl").origin;
   return request.headers.get("origin") === expected;
 }
-export async function readClientBody(request: Request) {
+export async function readClientBody(request: Request, maxBytes = 8192) {
   if (!request.headers.get("content-type")?.startsWith("application/json")) throw new Error("Formato de solicitud no válido.");
-  if (Number(request.headers.get("content-length") || 0) > 8192) throw new Error("La solicitud es demasiado grande.");
+  if (Number(request.headers.get("content-length") || 0) > maxBytes) throw new Error("La solicitud es demasiado grande.");
   const reader = request.body?.getReader();
   if (!reader) throw new Error("Solicitud vacía.");
   let size = 0; const chunks: Uint8Array[] = [];
-  while (true) { const { done, value } = await reader.read(); if (done) break; size += value.byteLength; if (size > 8192) { await reader.cancel(); throw new Error("La solicitud es demasiado grande."); } chunks.push(value); }
+  while (true) { const { done, value } = await reader.read(); if (done) break; size += value.byteLength; if (size > maxBytes) { await reader.cancel(); throw new Error("La solicitud es demasiado grande."); } chunks.push(value); }
   try { return JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown; } catch { throw new Error("No se pudo leer la solicitud."); }
 }
 export async function allowClientRegistration(request: Request, email: string) {

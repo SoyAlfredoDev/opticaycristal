@@ -1,6 +1,7 @@
 // @vitest-environment node
 import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
 import {PGlite} from '@electric-sql/pglite';
+import {seedLegacyContractSettings} from "../../../tests/fixtures/legacy-contract-settings";
 import {readFile,writeFile} from 'node:fs/promises';
 import {randomBytes,randomUUID} from 'node:crypto';
 const state=vi.hoisted(()=>({pool:null as unknown}));
@@ -16,7 +17,7 @@ const proof:Record<string,unknown>={product:'NTD — ficticio',protectedCost:200
 const input=(customerId='ntd-start',credit=13500,count=1)=>parseSale({customerId,productId,quantity:1,total:45000,credit,installmentCount:count,firstDueDate:'2030-01-31',identityChecked:true,depositReceived:true,requestKey:randomUUID()});
 beforeAll(async()=>{
  vi.stubEnv('CLIENT_DATA_KEY',randomBytes(32).toString('base64'));
- for(const f of ['001-customers.sql','002-sales.sql','003-audit.sql'])await db.exec(await readFile('sql/clients/'+f,'utf8'));
+ for(const f of ['001-customers.sql','002-sales.sql','003-audit.sql','010-payment-commitments.sql'])await db.exec(await readFile('sql/clients/'+f,'utf8'));await seedLegacyContractSettings(db);
  for(const tier of ['start','vip','premium','elite'])await db.query(`INSERT INTO oc_client_user(id,name,email,"firstName","lastName","rutCipher","rutHash","whatsappCipher","emailVerified",category) VALUES($1,'Cliente NTD',$2,'Cliente','NTD',$3,$4,$5,true,$6)`,['ntd-'+tier,tier+'@example.invalid',protectClientValue('123456785','rut'),clientFingerprint(tier,'rut'),protectClientValue('+56912345678','whatsapp'),tier]);
  productId=await saveSaleProduct({name:'NTD — ficticio',protectedCost:20000},'vendedor-prueba');
 },30000);

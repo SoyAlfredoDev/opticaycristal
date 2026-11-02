@@ -14,14 +14,14 @@ describe("Regresiones de la auditoría",()=>{
   let finish!:(value:Response)=>void;
   vi.stubGlobal("fetch",vi.fn().mockResolvedValueOnce(response({customer})).mockImplementationOnce(()=>new Promise(r=>{finish=r;})));
   render(<AdminSales initialProducts={[{id:"product",name:"Paquete QA",protectedCost:50000}]}/>);
-  fireEvent.change(screen.getByLabelText("RUT del cliente"),{target:{value:"90.000.001-4"}});fireEvent.click(screen.getByRole("button",{name:"Buscar cliente"}));await screen.findByText("Auditoría QA");
-  fireEvent.change(screen.getByLabelText("Producto o paquete",{exact:true}),{target:{value:"product"}});fireEvent.change(screen.getByLabelText("Precio total final con IVA incluido"),{target:{value:"119000"}});fireEvent.click(screen.getByRole("button",{name:"Calcular condiciones"}));
-  expect(screen.getByLabelText("Precio total final con IVA incluido")).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("RUT del cliente"),{target:{value:"90.000.001-4"}});fireEvent.click(screen.getByRole("button",{name:"Buscar cliente"}));await screen.findByText("Auditoría QA");fireEvent.click(screen.getByRole("button",{name:"Continuar"}));
+  fireEvent.change(screen.getByLabelText("Producto o paquete",{exact:true}),{target:{value:"product"}});fireEvent.change(screen.getByLabelText("Precio total con IVA incluido"),{target:{value:"119000"}});fireEvent.click(screen.getByRole("button",{name:"Calcular y continuar"}));
+  expect(screen.getByLabelText("Precio total con IVA incluido")).toBeDisabled();
   // Even an external state change must invalidate an in-flight result.
-  fireEvent.change(screen.getByLabelText("Precio total final con IVA incluido"),{target:{value:"200000"}});
+  fireEvent.change(screen.getByLabelText("Precio total con IVA incluido"),{target:{value:"200000"}});
   finish(response({quote:{net:100000,vat:19000,total:119000,protectedCost:50000,maximumCredit:69000,maxInstallments:2}}));
-  await waitFor(()=>expect(screen.getByRole("button",{name:"Calcular condiciones"})).toBeEnabled());
-  expect(screen.queryByLabelText("Primer vencimiento")).not.toBeInTheDocument();expect(screen.getByLabelText("Precio total final con IVA incluido")).toHaveValue(200000);
+  await waitFor(()=>expect(screen.getByRole("button",{name:"Calcular y continuar"})).toBeEnabled());
+  expect(screen.queryByLabelText("Primer vencimiento")).not.toBeInTheDocument();expect(screen.getByLabelText("Precio total con IVA incluido")).toHaveValue(200000);
  });
  it("precarga el producto y permite revisar el cambio anterior y nuevo",()=>{
   render(<ProductEditor products={[{id:"product",name:"Paquete QA",protectedCost:50000}]} onSaved={vi.fn()}/>);

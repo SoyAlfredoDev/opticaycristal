@@ -1,0 +1,11 @@
+// @vitest-environment node
+import {expect,it} from "vitest";
+import {PDFDocument} from "pdf-lib";
+import {mkdir,writeFile} from "node:fs/promises";
+import {creditAgreementPdf} from "./credit-agreement-pdf";
+import {CLIENT_MAIL_COMPANY} from "./mail";
+import {monthlyInstallments} from "./financing";
+import type {CreditAgreementDocument} from "./commitments";
+const example:CreditAgreementDocument={version:"EJEMPLO SIN VALIDEZ",preparedAt:"2026-11-02T15:00:00Z",company:CLIENT_MAIL_COMPANY,representative:{name:"Representante de prueba",rut:"123456785",signature:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6NwAAAABJRU5ErkJggg=="},customer:{name:"Cliente Demostración",rut:"123456785",email:"demostracion@example.invalid",whatsapp:"+56911111111"},sale:{id:"00000000-0000-4000-8000-000000000000",productName:"Lente Óptico",quantity:1,total:500000,net:420168,vat:79832,deposit:350000,credit:150000,createdAt:"2026-11-02T15:00:00Z"},installments:monthlyInstallments(150000,4,"2030-01-30"),paymentMethod:"both",ordinaryAnnualRate:0,lateAnnualRate:18,lateGraceDays:60,legalAnnualMaximum:41.02,webpayUrl:null};
+it("genera A4 paginado desde el compromiso inmutable con espacio de firma presencial",async()=>{const bytes=await creditAgreementPdf(example),pdf=await PDFDocument.load(bytes);expect(pdf.getPageCount()).toBeGreaterThanOrEqual(2);expect(pdf.getPageCount()).toBeLessThanOrEqual(4);for(const page of pdf.getPages()){expect(page.getWidth()).toBeCloseTo(595.28);expect(page.getHeight()).toBeCloseTo(841.89);}expect(pdf.getTitle()).toBe("Compromiso de pago - Óptica & Cristal");expect(pdf.getForm().getFields()).toHaveLength(0);if(process.env.PDF_QA_OUTPUT){await mkdir(process.env.PDF_QA_OUTPUT,{recursive:true});await writeFile(`${process.env.PDF_QA_OUTPUT}/compromiso-ejemplo.pdf`,bytes);}});
+it("admite las cuatro cuotas y nombres largos sin alterar el documento de origen",async()=>{const d=structuredClone(example);d.customer.name="Demostración ".repeat(12);d.sale.productName="Lente de demostración ".repeat(20);const original=JSON.stringify(d);expect((await PDFDocument.load(await creditAgreementPdf(d,{cancelled:true}))).getPageCount()).toBeLessThanOrEqual(5);expect(JSON.stringify(d)).toBe(original);});

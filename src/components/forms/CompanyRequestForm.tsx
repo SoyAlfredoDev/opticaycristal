@@ -125,7 +125,7 @@ export function CompanyRequestForm({ kind }: { kind: RequestKind }) {
   </select>{errors.region ? <span id={`${uid}-region-error`} className={styles.fieldError}>{errors.region}</span> : null}</div>;
   const interest = data.detalles?.modalidadConvenio;
   const stepCopy = {
-    1: ["Datos de la persona", "Déjanos tus datos para enviarte la información y conversar sobre el beneficio para tu equipo."],
+    1: [convenio ? "Datos de la persona" : "Persona de contacto", "Déjanos tus datos para enviarte la información y conversar sobre el beneficio para tu equipo."],
     2: ["Datos de la empresa", convenio ? "Estos datos nos ayudan a orientarte sobre el beneficio para tus trabajadores y sus familiares." : "Indica dónde realizar la jornada y el mes que les acomoda. Los campos opcionales están indicados."],
     3: ["Confirma la solicitud", "Revisa los datos antes de enviar. Pedir información no firma un contrato ni reserva una jornada."],
   } as const;
