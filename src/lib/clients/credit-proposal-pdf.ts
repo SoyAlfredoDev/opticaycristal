@@ -22,8 +22,8 @@ export async function creditProposalPdf(quote:AdminSimulation){
  text(`Emitida el ${date}`,48,694,10,font,muted);text(`Referencia ${quote.fingerprint.slice(0,10).toUpperCase()}`,350,694,9,font,muted);
  let y=664;
  let customerName=quote.customer?.name||"";try{font.encodeText(customerName);}catch{customerName="Identificado por RUT";}
- y=paragraph(quote.customer?`Cliente: ${customerName} | RUT ${quote.customer.rut.slice(0,-1)}-${quote.customer.rut.slice(-1)}`:"Escenario por categoría. No asociado a un cliente registrado.",y,11)-6;
- y=paragraph(`Categoría ${quote.tier.name} | Hasta el ${quote.tier.maxPercent}% de la compra | Tope ${clp(quote.tier.maxAmount)} | Máximo ${quote.tier.maxInstallments} ${quote.tier.maxInstallments===1?"cuota mensual":"cuotas mensuales"}.`,y,10)-12;
+ y=paragraph(quote.customer?`Cliente: ${customerName} | RUT ${quote.customer.rut.slice(0,-1)}-${quote.customer.rut.slice(-1)}`:"Escenario por nivel. No asociado a un cliente registrado.",y,11)-6;
+ y=paragraph(`Nivel ${quote.tier.name} | Hasta el ${quote.tier.maxPercent}% de la compra | Tope ${clp(quote.tier.maxAmount)} | Máximo ${quote.tier.maxInstallments} ${quote.tier.maxInstallments===1?"cuota mensual":"cuotas mensuales"}.`,y,10)-12;
  if(quote.productName){let productName=quote.productName;try{font.encodeText(productName);}catch{productName="Producto seleccionado; consulta su descripción en administración.";}y=paragraph(`Producto: ${productName}`,y,10)-12;}
  const boxY=y-90;
  page.drawRectangle({x:48,y:boxY,width:499,height:90,color:rgb(.94,.98,.96),borderColor:line,borderWidth:1});
@@ -36,7 +36,7 @@ export async function creditProposalPdf(quote:AdminSimulation){
   for(const i of quote.installments){text(String(i.number),60,y);text(i.dueDate.split("-").reverse().join("/"),215,y);text(clp(i.amount),440,y,11,bold);page.drawLine({start:{x:48,y:y-10},end:{x:547,y:y-10},color:line,thickness:.5});y-=30;}
  }else{y=paragraph(quote.reason||"No hay monto a crédito en este cálculo.",y,11)-12;}
  y-=12;
- const note=quote.reason?quote.reason:quote.mode==="tier"?"Escenario referencial: el cálculo utiliza las condiciones de la categoría; la disponibilidad real depende de la cuenta y sus verificaciones.":quote.productName?"Cálculo con las condiciones de la categoría y disponibilidad consultada. Debe validarse nuevamente al registrar la venta.":"Cálculo referencial por categoría, sin producto seleccionado. El pie corresponde a la diferencia entre el precio total y el crédito permitido.";
+ const note=quote.reason?quote.reason:quote.mode==="tier"?"Escenario referencial: el cálculo utiliza las condiciones del nivel; la disponibilidad real depende de la cuenta y sus verificaciones.":quote.productName?"Cálculo con las condiciones del nivel y disponibilidad consultada. Debe validarse nuevamente al registrar la venta.":"Cálculo referencial por nivel, sin producto seleccionado. El pie corresponde a la diferencia entre el precio total y el crédito permitido.";
  y=paragraph(note,y,9)-10;
  y=paragraph("Esta propuesta no registra una venta, no reserva cupo ni genera deuda. La compra se confirma en la óptica.",y,9)-8;
  paragraph("Contratos nuevos: mora simple de hasta 1,5 % mensual desde el día 61 de atraso, sujeta al máximo legal y al compromiso aceptado, sin retroactividad ni capitalización.",y,9);

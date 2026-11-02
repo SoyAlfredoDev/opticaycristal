@@ -42,7 +42,7 @@ describe.sequential("Ventas y pagos con PostgreSQL aislado",()=>{
   const q=await quoteSale(input());expect(q).toMatchObject({total:119000,net:100000,vat:19000,protectedCost:50000,maximumCredit:35700,minimumDeposit:83300,enabled:true});
   const two=await quoteSale({...input(),quantity:2});expect(two.maximumCredit).toBe(19000);
  });
- it("calcula nueva venta solo por categoría y persiste el costo como NULL sin tocar el costo del producto",async()=>{
+ it("calcula nueva venta solo por nivel y persiste el costo como NULL sin tocar el costo del producto",async()=>{
   const sale=parseSale({customerId:"category",productId,quantity:1,total:45000,credit:13500,installmentCount:1,firstDueDate:"2030-01-31",identityChecked:true,depositReceived:true,conditionsReviewed:true,pricingPolicy:"category",requestKey:randomUUID()});
   const q=await quoteSale(sale);expect(q).toMatchObject({maximumCredit:13500,minimumDeposit:31500,protectedCost:null,maxInstallments:1});
   const id=await createSale(sale,"seller");expect((await db.query("SELECT protected_cost FROM oc_client_sales WHERE id=$1",[id])).rows[0]).toEqual({protected_cost:null});

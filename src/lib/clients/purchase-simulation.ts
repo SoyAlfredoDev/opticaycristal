@@ -3,7 +3,7 @@ export type SimulationConditions={tier:FinancingTier;outstanding:number;emailVer
 /** Reference estimate only: no product has been chosen and protected costs stay on the server. */
 export function simulatePurchase(total:number,count:number,conditions:SimulationConditions){
  const quote=calculateFinancing({total,protectedCost:0,outstanding:conditions.outstanding,tier:conditions.tier});
- if(!Number.isInteger(count)||count<1||count>quote.maxInstallments)throw new Error("Elige las cuotas disponibles para tu categoría.");
+ if(!Number.isInteger(count)||count<1||count>quote.maxInstallments)throw new Error("Elige las cuotas disponibles para tu nivel.");
  const reason=!conditions.emailVerified?"email":conditions.outstanding>0?"active":null;
  const credit=reason?0:quote.maximumCredit;
  const installmentCount=Math.min(count,credit),base=installmentCount?Math.floor(credit/installmentCount):0;

@@ -28,7 +28,7 @@ beforeAll(async () => {
 }, 30_000);
 afterAll(async () => { await database.close();vi.unstubAllEnvs(); });
 describe.sequential("Autenticación real contra PostgreSQL local aislado", () => {
-  it("crea las cuatro categorías y la migración se puede repetir", async () => { const r = await database.query<{ code: string; max_amount: number }>("SELECT code,max_amount FROM oc_client_tiers ORDER BY position");expect(r.rows.map(x => [x.code, x.max_amount])).toEqual([["start",40000],["vip",60000],["premium",80000],["elite",150000]]);await database.exec(await readFile("sql/clients/001-customers.sql", "utf8")); });
+  it("crea las cuatro niveles y la migración se puede repetir", async () => { const r = await database.query<{ code: string; max_amount: number }>("SELECT code,max_amount FROM oc_client_tiers ORDER BY position");expect(r.rows.map(x => [x.code, x.max_amount])).toEqual([["start",40000],["vip",60000],["premium",80000],["elite",150000]]);await database.exec(await readFile("sql/clients/001-customers.sql", "utf8")); });
   it("crea la cuenta en Start, con hash de contraseña y saldo inicial atómico", async () => {
     const r = await auth.api.signUpEmail({ body: { name: "Cliente Prueba", email: "cliente@example.com", password, ...extra, category: "elite", emailVerified: true, whatsappVerified: true } as never });
     id = r.user.id;
@@ -41,7 +41,7 @@ describe.sequential("Autenticación real contra PostgreSQL local aislado", () =>
   }, 20_000);
   it("impide cuentas duplicadas por RUT aun usando otro correo", async () => { await expect(auth.api.signUpEmail({ body: { name: "Duplicado", email: "otro@example.com", password, ...extra } as never })).rejects.toThrow();expect((await database.query("SELECT count(*)::int AS count FROM oc_client_user")).rows[0]).toEqual({ count: 1 }); });
   it("permite entrar antes de verificar y emite cookie HttpOnly SameSite", async () => { const r = await post("sign-in/email", { email: "cliente@example.com", password });expect(r.status).toBe(200);const set = r.headers.get("set-cookie") || "";expect(set.toLowerCase()).toContain("httponly");expect(set.toLowerCase()).toContain("samesite=lax");cookie = set.split(";")[0];const s = await auth.api.getSession({ headers: new Headers({ Cookie: cookie }) });expect(s?.user.id).toBe(id);expect(s?.user.emailVerified).toBe(false); });
-  it("el cliente no puede cambiar ni restablecer su categoría al actualizar su perfil", async () => {
+  it("el cliente no puede cambiar ni restablecer su nivel al actualizar su perfil", async () => {
     await database.query("UPDATE oc_client_user SET category='vip' WHERE id=$1",[id]);
     try {
       expect((await post("update-user",{name:"Cliente Prueba",category:"elite"},cookie)).status).toBe(400);

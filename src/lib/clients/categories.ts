@@ -4,7 +4,7 @@ import { clientPool,clientTable } from "./db";
 import type { CategorySettings } from "./category-types";
 export class CategoryError extends Error{constructor(message:string,public status=400){super(message);}}
 function customerId(id:string){if(!id||id.length>100)throw new CategoryError("Cliente no válido.");return id;}
-function code(value:unknown){if(typeof value!=="string"||!["start","vip","premium","elite"].includes(value))throw new CategoryError("Selecciona una categoría válida.");return value;}
+function code(value:unknown){if(typeof value!=="string"||!["start","vip","premium","elite"].includes(value))throw new CategoryError("Selecciona un nivel válida.");return value;}
 export async function getCategorySettings(id:string):Promise<CategorySettings>{
  const user=await clientPool().query<{category:string}>(`SELECT category FROM ${clientTable("oc_client_user")} WHERE id=$1`,[customerId(id)]);
  if(!user.rows[0])throw new CategoryError("Cliente no encontrado.",404);
@@ -29,9 +29,9 @@ export async function changeCustomerCategory(id:string,raw:unknown,actor:string)
   if(previous.rows[0]){
    const p=previous.rows[0];if(p.customer_id!==id||p.actor!==actor||p.old_category!==expected||p.new_category!==category)throw new CategoryError("Este envío ya se usó para otro cambio.",409);replayed=true;
   }else{
-   if(user.rows[0].category!==expected)throw new CategoryError("La categoría cambió mientras editabas. Revisa el nivel actual y vuelve a guardar.",409);
+   if(user.rows[0].category!==expected)throw new CategoryError("El nivel cambió mientras editabas. Revisa el nivel actual y vuelve a guardar.",409);
    if(category!==expected){
-    const tier=await db.query(`SELECT code FROM ${clientTable("oc_client_tiers")} WHERE code=$1`,[category]);if(!tier.rows.length)throw new CategoryError("Categoría no disponible.");
+    const tier=await db.query(`SELECT code FROM ${clientTable("oc_client_tiers")} WHERE code=$1`,[category]);if(!tier.rows.length)throw new CategoryError("Nivel no disponible.");
     await db.query(`UPDATE ${clientTable("oc_client_user")} SET category=$2,"updatedAt"=now() WHERE id=$1`,[id,category]);
     await db.query(`INSERT INTO ${clientTable("oc_client_category_changes")}(id,customer_id,old_category,new_category,actor,request_key) VALUES($1,$2,$3,$4,$5,$6)`,[randomUUID(),id,expected,category,actor,key]);changed=true;
    }

@@ -27,7 +27,7 @@ export function PurchaseSimulator({embedded=false,...conditions}:SimulationCondi
  return <section className={`${styles.simulator} ${embedded?styles.embedded:""}`} aria-labelledby={embedded?"purchase-simulator-modal-title":"purchase-simulator-title"}>
   {!embedded&&<div className={styles.heading}><span className={styles.icon}><Calculator size={22} aria-hidden="true"/></span><div><h2 id="purchase-simulator-title">Simula tu compra</h2><p>Ingresa el precio total de tus lentes, con IVA incluido.</p></div></div>}
   {reason&&<p className={styles.notice}>{reason==="email"?<>Para usar tu crédito, <Link href="/mi-cuenta/perfil">verifica tu correo</Link>. Mientras tanto, verás el pago al contado.</>:<>Tienes un crédito activo. Podrás usar uno nuevo al <Link href="/mi-cuenta/cuotas">pagar tu saldo pendiente</Link>.</>}</p>}
-  <p className={styles.limits}>Crédito máximo de tu categoría: <strong>{clp(conditions.tier.maxAmount)}</strong> · hasta el {conditions.tier.maxPercent}% de la compra. Puedes pagar el resto como pie.</p>
+  <p className={styles.limits}>Crédito máximo de tu nivel: <strong>{clp(conditions.tier.maxAmount)}</strong> · hasta el {conditions.tier.maxPercent}% de la compra. Puedes pagar el resto como pie.</p>
   <form className={styles.form} onSubmit={consult}>
    <label>Precio total con IVA<div className={styles.priceField}><span aria-hidden="true">$</span><input name="purchaseTotal" aria-label="Precio total con IVA" inputMode="numeric" autoComplete="off" placeholder="Ej.: 100.000" value={price} maxLength={18} onChange={event=>{setPrice(event.target.value);setResult(null);setError("");}} required aria-invalid={Boolean(error)} aria-describedby={error?"purchase-simulator-error":undefined}/></div></label>
    <label>Cuotas mensuales<select value={count} onChange={event=>{setCount(Number(event.target.value));setResult(null);}}>{Array.from({length:conditions.tier.maxInstallments},(_,i)=><option key={i+1} value={i+1}>{i+1} {i?"cuotas":"cuota"}</option>)}</select></label>
@@ -41,7 +41,7 @@ export function PurchaseSimulator({embedded=false,...conditions}:SimulationCondi
     <div><span>Crédito estimado</span><strong><AnimatedAmount value={result.credit}/></strong><small>{result.credit?"Interés 0 % al día":"Sin crédito en esta simulación"}</small></div>
     {result.installments.length>0&&<div><span>{result.installments.length} {result.installments.length===1?"cuota mensual":"cuotas mensuales"}</span><strong><AnimatedAmount value={result.installments[0]}/></strong><small>{result.installments.at(-1)===result.installments[0]?"Cada cuota":`Última cuota: ${clp(result.installments.at(-1)!)}`}</small></div>}
    </div>
-   <p className={styles.disclaimer}>Estimación según tu categoría. El pie final se confirma en la óptica según los lentes elegidos.</p>
+   <p className={styles.disclaimer}>Estimación según tu nivel. El pie final se confirma en la óptica según los lentes elegidos.</p>
   </div>}
  </section>;
 }

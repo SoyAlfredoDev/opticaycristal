@@ -3,12 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
 import {useEffect,useRef,useState,type ReactNode} from "react";
-import {Menu,X,ClipboardList,Users,ShoppingBag,LifeBuoy,Package,Radio,Bell,LogOut,FileSignature,Calculator} from "lucide-react";
+import {Menu,X,ClipboardList,Users,ShoppingBag,LifeBuoy,Package,Radio,Bell,LogOut,FileSignature,Calculator,Layers} from "lucide-react";
 import {logoutAction} from "@/app/admin/actions";
 import {AdminMemory} from "./AdminMemory";
 import {AdminNotificationBell} from "./AdminNotifications";
 import styles from "./AdminShell.module.css";
-const links=[{href:"/admin",label:"Solicitudes",icon:ClipboardList},{href:"/admin/clientes",label:"Clientes",icon:Users,customers:true},{href:"/admin/clientes/ventas",label:"Ventas",icon:ShoppingBag,customers:true},{href:"/admin/clientes/simulador",label:"Simulador de crédito",icon:Calculator,customers:true},{href:"/admin/clientes/compromisos",label:"Compromisos",icon:FileSignature,customers:true},{href:"/admin/clientes/soporte",label:"Soporte",icon:LifeBuoy,customers:true},{href:"/admin/pedidos",label:"Pedidos web",icon:Package},{href:"/admin/radar",label:"Radar B2B",icon:Radio},{href:"/admin/notificaciones",label:"Notificaciones",icon:Bell,customers:true}];
+const links=[{href:"/admin",label:"Solicitudes",icon:ClipboardList},{href:"/admin/clientes",label:"Clientes",icon:Users,customers:true},{href:"/admin/clientes/niveles",label:"Niveles y beneficios",icon:Layers,customers:true},{href:"/admin/clientes/ventas",label:"Ventas",icon:ShoppingBag,customers:true},{href:"/admin/clientes/simulador",label:"Simulador de crédito",icon:Calculator,customers:true},{href:"/admin/clientes/compromisos",label:"Compromisos",icon:FileSignature,customers:true},{href:"/admin/clientes/soporte",label:"Soporte",icon:LifeBuoy,customers:true},{href:"/admin/pedidos",label:"Pedidos web",icon:Package},{href:"/admin/radar",label:"Radar B2B",icon:Radio},{href:"/admin/notificaciones",label:"Notificaciones",icon:Bell,customers:true}];
 function activeRoute(path:string){return links.filter(link=>link.href==="/admin"?path===link.href:path===link.href||path.startsWith(link.href+"/")).sort((a,b)=>b.href.length-a.href.length)[0]?.href;}
 export function AdminShell({children,allowCustomers}:{children:ReactNode;allowCustomers:boolean}){
  const path=usePathname(),drawer=useRef<HTMLDialogElement>(null),[open,setOpen]=useState(false);

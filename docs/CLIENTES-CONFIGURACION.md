@@ -255,3 +255,8 @@ Después de publicar el código que acepta hasta cuatro cuotas, ejecutar `script
 - Los nuevos endpoints privados exponen tiempos numéricos mediante `Server-Timing` y comprueban sesión antes de comparar ETag. Nunca habilitar caché HTTP compartida para estos datos.
 - Aplicar `sql/clients/009-customer-history-indexes.sql` mediante el preparador habitual antes de publicar; crea índices para ventas y pagos, sin cambiar condiciones de crédito ni registros.
 - Referencias: [pool de conexiones en Vercel](https://vercel.com/kb/guide/efficiently-manage-database-connection-pools-with-fluid-compute), [regiones](https://vercel.com/docs/regions).
+
+
+### Niveles y beneficios — migración 015
+
+La nueva vista `/admin/clientes/niveles` configura porcentaje, cupo y cuotas de los niveles con historial por usuario. Aplicar la migración 015 antes de publicar. Alcance, permisos y activación: [NIVELES-Y-BENEFICIOS.md](NIVELES-Y-BENEFICIOS.md).

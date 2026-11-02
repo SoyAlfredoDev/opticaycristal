@@ -24,7 +24,7 @@ export default function CustomerHome() {
       <section className={`${styles.panel} ${styles.finance}`} aria-labelledby="finance-title">
         <div className={styles.line}>
           <div className={styles.iconLabel}><span className={styles.iconTile}><Wallet size={20} aria-hidden="true" /></span><h2 id="finance-title">Tu crédito</h2></div>
-          <CategoryTrigger className={`${styles.pill} ${styles.tierBadge}`} label={`Ver categorías de crédito: tu categoría es ${c.tier.name}`}>{c.tier.name}<ChevronRight size={14} aria-hidden="true"/></CategoryTrigger>
+          <CategoryTrigger className={`${styles.pill} ${styles.tierBadge}`} label={`Ver niveles de crédito: tu nivel es ${c.tier.name}`}>{c.tier.name}<ChevronRight size={14} aria-hidden="true"/></CategoryTrigger>
         </div>
         <p className={styles.balanceLabel}>Cupo disponible</p>
         <div className={styles.money}>{clp(c.credit.capacity)}</div>

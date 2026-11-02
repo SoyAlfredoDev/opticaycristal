@@ -10,7 +10,7 @@ export async function GET(_request:Request,context:Context){
 }
 export async function POST(request:Request,context:Context){
  const staff=await customerAdminSession();if(!staff)return privateJson({error:"Acceso restringido."},401);
- if(!canManageCustomerCategories(staff.u))return privateJson({error:"Solo el responsable autorizado puede cambiar categorías."},403);
+ if(!canManageCustomerCategories(staff.u))return privateJson({error:"Solo el responsable autorizado puede cambiar niveles."},403);
  if(!sameClientOrigin(request))return privateJson({error:"Origen no permitido."},403);
  let body:unknown;try{body=await readClientBody(request);}catch{return privateJson({error:"Datos no válidos."},400);}
  try{return privateJson(await changeCustomerCategory((await context.params).id,body,staff.u));}catch(error){return failure(error);}

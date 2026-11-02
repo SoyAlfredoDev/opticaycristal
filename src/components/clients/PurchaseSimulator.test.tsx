@@ -10,7 +10,7 @@ it('consulta sin enviar solicitudes y elimina el resultado anterior cuando cambi
  const result=screen.getByRole('status');expect(result).toHaveTextContent('Pie estimado');expect(result).toHaveTextContent('$31.500');expect(result).toHaveTextContent('$13.500');expect(result).toHaveTextContent('El pie final se confirma en la óptica');expect(fetcher).not.toHaveBeenCalled();
  fireEvent.change(screen.getByRole('textbox'),{target:{value:'50.000'}});expect(screen.queryByRole('status')).not.toBeInTheDocument();
 });
-it('muestra el ajuste de la última cuota y restringe la selección a la categoría asignada',()=>{
+it('muestra el ajuste de la última cuota y restringe la selección a el nivel asignada',()=>{
  render(<PurchaseSimulator {...conditions} tier={{maxPercent:70,maxAmount:150000,maxInstallments:4}}/>);
  expect(within(screen.getByRole('combobox')).getAllByRole('option')).toHaveLength(4);
  fireEvent.change(screen.getByRole('textbox'),{target:{value:'119.002'}});fireEvent.click(screen.getByRole('button',{name:'Consultar'}));
@@ -21,8 +21,8 @@ it('explica el correo pendiente sin prometer crédito aprobado',()=>{
  fireEvent.change(screen.getByRole('textbox'),{target:{value:'45.000'}});fireEvent.click(screen.getByRole('button',{name:'Consultar'}));expect(screen.getByRole('status')).toHaveTextContent('Pago al contado');expect(screen.getByRole('status')).not.toHaveTextContent('cuota mensual');
 });
 
-it('permite un precio mayor al cupo sin financiar más que la categoría',()=>{
- render(<PurchaseSimulator {...conditions}/>);expect(screen.getByText(/Crédito máximo de tu categoría/)).toHaveTextContent('$40.000');
+it('permite un precio mayor al cupo sin financiar más que el nivel',()=>{
+ render(<PurchaseSimulator {...conditions}/>);expect(screen.getByText(/Crédito máximo de tu nivel/)).toHaveTextContent('$40.000');
  expect(within(screen.getByRole('combobox')).getAllByRole('option')).toHaveLength(1);
  fireEvent.change(screen.getByRole('textbox'),{target:{value:'250.000'}});fireEvent.click(screen.getByRole('button',{name:'Consultar'}));
  expect(screen.getByRole('status')).toHaveTextContent('$40.000');expect(screen.getByRole('status')).toHaveTextContent('$210.000');

@@ -19,15 +19,15 @@ export async function lookupSimulationCustomer(rut:unknown):Promise<SimulationCu
  return {id:c.id,name:`${c.firstName} ${c.lastName}`,rut:c.rut,tier:c.tier,capacity:c.credit.capacity,available:c.credit.available,emailVerified:c.emailVerified,outstanding:c.credit.principalOutstanding};
 }
 export async function calculateAdminSimulation(input:Record<string,unknown>):Promise<AdminSimulation>{
- if(input.mode!=="customer"&&input.mode!=="tier")throw new SimulationError("Selecciona un cliente o una categoría.");
+ if(input.mode!=="customer"&&input.mode!=="tier")throw new SimulationError("Selecciona un cliente o un nivel.");
  const mode:AdminSimulation["mode"]=input.mode;
  const customer=mode==="customer"?await lookupSimulationCustomer(input.rut):null;
  const tiers=customer?null:await getCustomerTiers();
  const tier=customer?.tier??tiers?.find(t=>t.code===input.tierCode);
- if(!tier)throw new SimulationError("Selecciona una categoría válida.");
+ if(!tier)throw new SimulationError("Selecciona un nivel válida.");
  let total:number;try{total=parsePurchasePrice(typeof input.total==="number"?String(input.total):typeof input.total==="string"?input.total:"");}catch(error){throw new SimulationError(error instanceof Error?error.message:"Revisa el precio.");}
  const count=input.installmentCount;
- if(typeof count!=="number"||!Number.isInteger(count)||count<1||count>tier.maxInstallments)throw new SimulationError("Las cuotas deben respetar el máximo de la categoría.");
+ if(typeof count!=="number"||!Number.isInteger(count)||count<1||count>tier.maxInstallments)throw new SimulationError("Las cuotas deben respetar el máximo del nivel.");
  if(typeof input.firstDueDate!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(input.firstDueDate)||input.firstDueDate<=todayChile())throw new SimulationError("Selecciona una primera cuota con fecha futura.");
  // Validate the date even when verification or an existing credit disables financing.
  try{monthlyInstallments(1,1,input.firstDueDate);}catch{throw new SimulationError("La fecha de primera cuota no es válida.");}

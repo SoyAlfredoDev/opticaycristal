@@ -18,7 +18,8 @@
     "db:clients:category-sale-pricing": "node scripts/migrate-category-sale-pricing.mjs",
     "db:clients:commitments": "node scripts/migrate-commitments.mjs",
     "db:clients:prepare": "node scripts/prepare-clients.mjs",
-    "test:clients": "node node_modules/vitest/vitest.mjs run src/lib/clients src/app/api/clientes src/app/api/admin/clientes src/components/clients"
+    "test:clients": "node node_modules/vitest/vitest.mjs run src/lib/clients src/app/api/clientes src/app/api/admin/clientes src/components/clients",
+    "db:clients:levels": "node scripts/migrate-level-benefits.mjs"
   },
   "dependencies": {
     "@neon/config": "^1.8.6",

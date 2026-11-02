@@ -77,7 +77,7 @@ async function transaction<T>(work: (db: PoolClient) => Promise<T>) {
 async function quoteWith(db: Pick<PoolClient,"query">, b: Pick<SaleInput,"customerId"|"productId"|"quantity"|"total"|"unitProtectedCost"|"pricingPolicy">, lock = false): Promise<SaleQuote & { productName: string; tierCode: string; maxPercent: number; maxAmount: number }> {
  const r = await db.query(`SELECT u."emailVerified",u.category,tier.max_percent,tier.max_amount,tier.max_installments,b.principal_outstanding
  FROM ${t("oc_client_user")} u JOIN ${t("oc_client_tiers")} tier ON tier.code=u.category
- JOIN ${t("oc_client_credit_balances")} b ON b.user_id=u.id WHERE u.id=$1 ${lock ? "FOR UPDATE OF u,b" : ""}`,[b.customerId]);
+ JOIN ${t("oc_client_credit_balances")} b ON b.user_id=u.id WHERE u.id=$1 ${lock ? "FOR UPDATE OF u,b FOR SHARE OF tier" : ""}`,[b.customerId]);
  const c = r.rows[0]; if (!c) throw new SaleError("Cliente no encontrado.");
  const p = (await db.query(`SELECT name,protected_cost FROM ${t("oc_client_products")} WHERE id=$1 ${lock ? "FOR SHARE" : ""}`,[b.productId])).rows[0];
  if (!p) throw new SaleError("Selecciona un producto configurado.");

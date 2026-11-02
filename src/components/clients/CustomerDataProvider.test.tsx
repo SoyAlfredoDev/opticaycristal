@@ -123,16 +123,16 @@ it("el cierre de sesión en otra pestaña borra los datos de esta", async () => 
   page.unmount(); expect(close).toHaveBeenCalled();
 });
 
-it("actualiza cupo y categoría de Inicio con la nueva información del servidor", async () => {
+it("actualiza cupo y nivel de Inicio con la nueva información del servidor", async () => {
   navigation.path = "/mi-cuenta";
   vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(response()).mockResolvedValue(response({ ...customer,
     tier: { ...customer.tier, code: "vip", name: "VIP", maxAmount: 80000, maxPercent: 40, maxInstallments: 2 },
     credit: { ...customer.credit, capacity: 80000, available: 80000 } }, '\"v2\"')));
   render(<Portal view="inicio" />); await flush();
   expect(screen.getByRole("heading", { name: "Hola, Cliente" })).toBeVisible();
-  expect(screen.getByRole("button", { name: /tu categoría es Start/ })).toBeVisible();
+  expect(screen.getByRole("button", { name: /tu nivel es Start/ })).toBeVisible();
   await act(async () => window.dispatchEvent(new Event("focus")));
-  expect(screen.getByRole("button", { name: /tu categoría es VIP/ })).toBeVisible();
+  expect(screen.getByRole("button", { name: /tu nivel es VIP/ })).toBeVisible();
   expect(screen.getByLabelText("Cupo")).toHaveTextContent("80000");
   expect(screen.getByText(/Hasta el 40% de tu compra · 2 cuotas/)).toBeVisible();
 });

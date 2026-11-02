@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, FileText, Glasses, IdCard, MapPin, MessageCircle, UserRoundPlus } from "lucide-react";
 import { whatsappUrl } from "@/components/site/content";
+import { clp, type CustomerProfile } from "@/lib/clients/types";
 import site from "@/components/site/Site.module.css";
 import { editorialFont } from "./editorial-font";
 import styles from "./FinancingSections.module.css";
@@ -25,7 +26,7 @@ export function FinancingIntroduction() {
             <Link className={styles.primary} href="/mi-cuenta/registro">Conocer mi cupo<ArrowRight size={20} aria-hidden="true" /></Link>
             <a className={styles.secondary} href={whatsappUrl(financingMessage)} target="_blank" rel="noopener noreferrer"><MessageCircle size={21} aria-hidden="true" />Consultar por WhatsApp</a>
           </div>
-          <p className={styles.conditions}>Regístrate para conocer tu cupo disponible.<br />El crédito depende de tu categoría. Siempre con pie. Compra presencial.</p>
+          <p className={styles.conditions}>Regístrate para conocer tu cupo disponible.<br />El crédito depende de tu nivel. Siempre con pie. Compra presencial.</p>
         </div>
         <div className={styles.visual}>
           <p className={styles.signature}>Confiamos en<br />nuestros clientes.</p>
@@ -48,7 +49,7 @@ const steps = [
   { title: "Define tu compra.", text: "Conoce tu pie, monto del crédito y fechas de pago. Firma tu compromiso de pago antes de confirmar.", Icon: FileText },
 ];
 
-export function FinancingProcess() {
+export function FinancingProcess({ start }: { start: CustomerProfile["tier"] | null }) {
   return (
     <section id="como-financiar" tabIndex={-1} aria-labelledby="financing-process-title" className={`${styles.process} ${editorialFont.variable}`}>
       <div className={site.container}>
@@ -67,12 +68,12 @@ export function FinancingProcess() {
           </ol>
           <aside className={styles.start} aria-labelledby="start-title">
             <h3 id="start-title">Tu punto de partida <span>Start</span></h3>
-            <p className={styles.startLead}>Tu categoría al registrarte.</p>
-            <ul className={styles.limits}>
-              <li><strong>30%</strong><span>Hasta el 30% de tu compra</span></li>
-              <li><strong>$40.000</strong><span>Tope de crédito</span></li>
-              <li><strong>1 cuota</strong><span>mensual</span></li>
-            </ul>
+            <p className={styles.startLead}>Tu nivel al registrarte.</p>
+            {start ? <ul className={styles.limits}>
+              <li><strong>{start.maxPercent}%</strong><span>Hasta el {start.maxPercent}% de tu compra</span></li>
+              <li><strong>{clp(start.maxAmount)}</strong><span>Tope de crédito</span></li>
+              <li><strong>{start.maxInstallments} {start.maxInstallments === 1 ? "cuota" : "cuotas"}</strong><span>{start.maxInstallments === 1 ? "mensual" : "mensuales"}</span></li>
+            </ul> : <p className={styles.startConditions}>Consulta los beneficios vigentes de tu nivel al crear tu cuenta o en la óptica.</p>}
             <p className={styles.startConditions}>Siempre con pie. El monto efectivo puede ser menor según la compra y tu cupo.</p>
             <p className={styles.scope}>Crédito para lentes, marcos y cristales. No incluye accesorios.</p>
             <Link className={styles.primary} href="/mi-cuenta/registro">Crear mi cuenta<ArrowRight size={21} aria-hidden="true" /></Link>

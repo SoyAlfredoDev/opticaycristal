@@ -34,7 +34,7 @@ describe("Registro administrativo de una venta",()=>{
   expect(retry).toEqual(first);
   expect(retry.operation).toMatchObject({customerId:"customer",productId:"product",total:119000,credit:69000,installmentCount:2,firstDueDate:"2026-11-30",identityChecked:true,depositReceived:true,conditionsReviewed:true});
  });
- it("calcula por categoría sin solicitar un costo variable y conserva los controles de venta",async()=>{
+ it("calcula por nivel sin solicitar un costo variable y conserva los controles de venta",async()=>{
   const response=(value:unknown)=>new Response(JSON.stringify(value),{headers:{"Content-Type":"application/json"}});
   const fetcher=vi.fn().mockResolvedValueOnce(response({customer:{id:"qa",firstName:"Cliente",lastName:"Prueba",tier:{name:"Start"}}})).mockResolvedValueOnce(response({quote:{net:37815,vat:7185,total:45000,maximumCredit:5000,maxInstallments:1,reason:""}}));vi.stubGlobal("fetch",fetcher);
   render(<AdminSales initialProducts={[{id:"variable",name:"Lente óptico",protectedCost:null}]} contractReady={false}/>);

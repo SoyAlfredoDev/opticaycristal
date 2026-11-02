@@ -30,7 +30,7 @@ describe('Simulación referencial de compra',()=>{
  });
 });
 
-describe('Matriz completa de límites por categoría',()=>{
+describe('Matriz completa de límites por nivel',()=>{
  it.each([{name:'Start',maxPercent:30,maxAmount:40000,maxInstallments:1},{name:'VIP',maxPercent:40,maxAmount:60000,maxInstallments:2},{name:'Premium',maxPercent:60,maxAmount:80000,maxInstallments:3},{name:'Élite',maxPercent:70,maxAmount:150000,maxInstallments:4}])('$name: topes, porcentaje y todas las cuotas permitidas',tier=>{
   const threshold=Math.ceil(tier.maxAmount*100/tier.maxPercent);
   for(const total of [10000,45000,100000,250000,500000,threshold-1,threshold,threshold+1])for(let count=1;count<=tier.maxInstallments;count++){
