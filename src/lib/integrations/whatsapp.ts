@@ -3,7 +3,7 @@ import {createHash,timingSafeEqual} from "node:crypto";
 import {clientPool,clientTable as t} from "@/lib/clients/db";
 import {clientFingerprint} from "@/lib/clients/privacy";
 import {normalizeClientRut,validClientRut} from "@/lib/clients/validation";
-import {getCustomerIntegrationContact} from "@/lib/clients/store";
+import {getCustomerIntegrationContact,getCustomerTiers} from "@/lib/clients/store";
 export class IntegrationError extends Error { constructor(public code:string,message:string,public status=400){super(message);} }
 export function integrationKey(request:Request){
  const configured=(process.env.WHATSAPP_API_TOKEN_HASHES||"").split(",").map(v=>v.trim()).filter(Boolean);
@@ -51,4 +51,10 @@ export async function queryWhatsappCustomer(contact:{rut:string;whatsapp:string}
  if(action==="validar-whatsapp")return{whatsapp};
  const reason=!c.emailVerified?"EMAIL_VERIFICATION_REQUIRED":c.credit.principalOutstanding>0?"ACTIVE_CREDIT":c.credit.available<=0?"NO_AVAILABLE_CREDIT":"AVAILABLE";
  return{currency:"CLP",category:{code:c.tier.code,name:c.tier.name,maximumCredit:c.tier.maxAmount,maximumPercent:c.tier.maxPercent,maximumMonthlyInstallments:c.tier.maxInstallments},credit:{capacity:c.credit.capacity,usableNow:c.credit.available,hasCapacity:c.credit.capacity>0,canUseNow:c.credit.available>0,reason},requirements:{emailVerified:c.emailVerified,whatsappVerificationRequired:false,inPersonIdentityReview:true,paymentAgreementRequired:true,inStorePurchase:true},whatsapp};
+}
+
+/** Business conditions only. No customer lookup or personal data. */
+export async function queryWhatsappConditions(){
+ const tiers=await getCustomerTiers();
+ return {currency:"CLP",categories:tiers.map(tier=>({code:tier.code,name:tier.name,maximumCredit:tier.maxAmount,maximumPercent:tier.maxPercent,maximumMonthlyInstallments:tier.maxInstallments})),requirements:{downPaymentRequired:true,inStorePurchase:true}};
 }
