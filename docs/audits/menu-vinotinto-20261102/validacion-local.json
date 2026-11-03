@@ -1,0 +1,24 @@
+[
+  {
+    "width": 1104,
+    "headerRemoved": true,
+    "sidebarVisible": true,
+    "mobileVisible": false,
+    "sidebarColor": "rgb(104, 28, 48)",
+    "logoPresent": true,
+    "logoLoaded": true,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "headerRemoved": true,
+    "sidebarVisible": false,
+    "mobileVisible": true,
+    "sidebarColor": "rgb(104, 28, 48)",
+    "logoPresent": true,
+    "logoLoaded": true,
+    "overflow": false,
+    "errors": []
+  }
+]
