@@ -16,8 +16,8 @@ it('muestra el ajuste de la última cuota y restringe la selección a el nivel a
  fireEvent.change(screen.getByRole('textbox'),{target:{value:'119.002'}});fireEvent.click(screen.getByRole('button',{name:'Consultar'}));
  expect(screen.getByRole('status')).toHaveTextContent('4 cuotas mensuales');expect(screen.getByRole('status')).toHaveTextContent('Última cuota: $20.826');
 });
-it('explica el correo pendiente sin prometer crédito aprobado',()=>{
- render(<PurchaseSimulator {...conditions} emailVerified={false}/>);expect(screen.getByRole('link',{name:'verifica tu correo'})).toHaveAttribute('href','/mi-cuenta/perfil');
+it('oculta el aviso de correo y mantiene la restricción del crédito sin verificar',()=>{
+ render(<PurchaseSimulator {...conditions} emailVerified={false}/>);expect(screen.queryByText(/Para usar tu crédito/)).not.toBeInTheDocument();
  fireEvent.change(screen.getByRole('textbox'),{target:{value:'45.000'}});fireEvent.click(screen.getByRole('button',{name:'Consultar'}));expect(screen.getByRole('status')).toHaveTextContent('Pago al contado');expect(screen.getByRole('status')).not.toHaveTextContent('cuota mensual');
 });
 

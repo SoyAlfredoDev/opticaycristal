@@ -33,8 +33,8 @@ export const storePhotos: readonly StorePhoto[] = [];
 
 const encodedStoreQuery = encodeURIComponent(store.mapsQuery);
 
-export function storeMapUrl(mode: "embed" | "directions" | "search"): string {
-  if (mode === "embed") return `https://maps.google.com/maps?q=${encodedStoreQuery}&hl=es&z=17&output=embed`;
+export function storeMapUrl(mode: "embed" | "directions" | "search", zoom = 17): string {
+  if (mode === "embed") return `https://maps.google.com/maps?q=${encodedStoreQuery}&hl=es&z=${zoom}&output=embed`;
   if (mode === "directions") return `https://www.google.com/maps/dir/?api=1&destination=${encodedStoreQuery}`;
   return `https://www.google.com/maps/search/?api=1&query=${encodedStoreQuery}`;
 }

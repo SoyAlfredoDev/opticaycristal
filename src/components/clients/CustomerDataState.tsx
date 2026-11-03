@@ -1,4 +1,5 @@
 "use client";
+import { LoaderCircle } from "lucide-react";
 import { useOptionalCustomerData } from "./CustomerDataProvider";
 import styles from "./ClientSpace.module.css";
 import loading from "./CustomerLoading.module.css";
@@ -6,8 +7,11 @@ import loading from "./CustomerLoading.module.css";
 export function CustomerSkeleton() {
   return <section className={`${styles.panel} ${styles.section} ${loading.skeleton}`} role="status" aria-label="Cargando tus datos">
     <span className={loading.bar} /><span className={`${loading.bar} ${loading.amount}`} /><span className={loading.bar} />
-    <span className={loading.caption}>Cargando tus datos…</span>
+    <span className={loading.caption}><LoaderCircle size={18} className={loading.spinner} aria-hidden="true" />Cargando tus datos…</span>
   </section>;
+}
+export function CustomerRouteLoading({ title = "Mi cuenta" }: { title?: string }) {
+  return <div aria-busy="true"><h1>{title}</h1><CustomerSkeleton /></div>;
 }
 export function CustomerDataState() {
   const data = useOptionalCustomerData();

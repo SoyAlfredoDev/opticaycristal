@@ -6,6 +6,7 @@ import { CustomerPromotions } from "@/components/clients/CustomerPromotions";
 import { ArrowRight, ShoppingBag, Wallet } from "lucide-react";
 import { useCustomerData } from "@/components/clients/CustomerDataProvider";
 import { CustomerDataState } from "@/components/clients/CustomerDataState";
+import dashboard from "@/components/clients/CustomerDashboard.module.css";
 import styles from "@/components/clients/ClientSpace.module.css";
 
 export default function CustomerHome() {
@@ -17,7 +18,7 @@ export default function CustomerHome() {
       <h1>Hola, {c.firstName}</h1>
     </div>
 
-    <div className={styles.dashboardGrid}>
+    <div className={dashboard.cards} role="region" aria-label="Resumen de tu cuenta" tabIndex={0}>
       <CustomerFinancingCard customer={c} />
 
       <section className={`${styles.panel} ${styles.activity}`} aria-labelledby="activity-title">
@@ -29,8 +30,7 @@ export default function CustomerHome() {
         </div>
         <p className={styles.activityNote}>Compra a crédito con interés 0 % pagando al día y sin consulta a DICOM. Siempre con pie y según las condiciones de tu nivel.</p>
       </section>
+      <div className={dashboard.promotion}><CustomerPromotions /></div>
     </div>
-
-    <CustomerPromotions />
   </CategoryModalProvider>;
 }

@@ -201,3 +201,5 @@
 .creditInvitation .button{margin-top:4px}
 
 .panel:target{outline:3px solid #39b992;outline-offset:4px;scroll-margin-top:24px}
+
+.side .navLink,.bottom a{position:relative}

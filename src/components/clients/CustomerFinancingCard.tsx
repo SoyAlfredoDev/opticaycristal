@@ -32,7 +32,7 @@ export function CustomerFinancingCard({ customer }: Props) {
   return <section className={styles.card} aria-labelledby="financing-title">
     <div className={styles.header}>
       <div className={styles.heading}><span className={styles.icon}><Wallet size={21} aria-hidden="true" /></span><h2 id="financing-title">Tu financiamiento</h2></div>
-      <CategoryTrigger className={`${shared.pill} ${styles.level}`} label={`Ver niveles de crédito: tu nivel es ${tier.name}`}>{tier.name}<ChevronRight size={15} aria-hidden="true" /></CategoryTrigger>
+      <CategoryTrigger className={`${shared.pill} ${styles.level}`} label={`Ver niveles de crédito: tu nivel es ${tier.name}`}>Tu nivel · {tier.name}<ChevronRight size={15} aria-hidden="true" /></CategoryTrigger>
     </div>
 
     <dl className={styles.metrics}>

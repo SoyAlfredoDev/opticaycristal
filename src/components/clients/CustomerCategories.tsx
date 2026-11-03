@@ -13,6 +13,6 @@ export function CustomerCategories({tiers,currentCategory,embedded=false}:{tiers
    <p className={styles.count}><span>Parte del precio que financiamos</span><strong>Hasta el {tier.maxPercent}%</strong></p>
    <dl><div><dt>Cuotas mensuales</dt><dd>Hasta {tier.maxInstallments}</dd></div><div><dt>Tope del monto a crédito</dt><dd>{clp(tier.maxAmount)}</dd></div></dl>
   <p className={styles.conditions}>El resto se paga como pie. El crédito se devuelve en cuotas.</p></section>)}</div>
-  {tiers.find(tier=>tier.code===currentCategory)&&<FinancingExplanation tier={tiers.find(tier=>tier.code===currentCategory)!} compact/>}
+  {!embedded&&tiers.find(tier=>tier.code===currentCategory)&&<FinancingExplanation tier={tiers.find(tier=>tier.code===currentCategory)!} compact/>}
  </div>;
 }

@@ -8,7 +8,7 @@ describe('Modal de niveles',()=>{
   render(<CategoryModalProvider tiers={[{code:'start',name:'Start',maxAmount:40000,maxPercent:30,maxInstallments:1}]} currentCategory="start"><CategoryTrigger>Start · Ver niveles</CategoryTrigger></CategoryModalProvider>);
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button',{name:'Start · Ver niveles'}));
-  const dialog=await screen.findByRole('dialog',{name:'Encuentra tu siguiente nivel'});expect(document.body.style.overflow).toBe('hidden');expect(screen.getByText('Tu nivel')).toBeVisible();
+  const dialog=await screen.findByRole('dialog',{name:'Encuentra tu siguiente nivel'});expect(document.body.style.overflow).toBe('hidden');expect(screen.getByText('Tu nivel')).toBeVisible();expect(screen.queryByRole('complementary',{name:'Cómo se calcula tu financiamiento'})).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button',{name:'Cerrar niveles'}));await waitFor(()=>expect(dialog).not.toHaveAttribute('open'));expect(document.body.style.overflow).not.toBe('hidden');
   fireEvent.click(screen.getByRole('button',{name:'Start · Ver niveles'}));fireEvent(dialog,new Event('cancel',{bubbles:false,cancelable:true}));await waitFor(()=>expect(dialog).not.toHaveAttribute('open'));
  });

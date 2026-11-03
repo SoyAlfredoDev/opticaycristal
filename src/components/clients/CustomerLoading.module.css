@@ -2,6 +2,14 @@
 .skeleton { display: grid; gap: 18px; min-height: 200px; }
 .bar { display: block; width: 65%; height: 16px; border-radius: 6px; background: #e6efeb; animation: breathe 1.4s ease-in-out infinite alternate; }
 .amount { width: 45%; height: 42px; }
-.caption { color: #526575; font-size: 13px; }
+.caption { display:flex;align-items:center;gap:9px;color: #526575; font-size: 13px; }
 @keyframes breathe { to { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { .bar { animation: none; } }
+
+.spinner{flex-shrink:0;animation:turn 900ms linear infinite;color:inherit}
+.navigationHint{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:18px;height:18px;visibility:hidden;opacity:0;pointer-events:none}
+.pending{visibility:visible;animation:showHint 120ms ease 100ms forwards}
+@keyframes turn{to{transform:rotate(360deg)}}
+@keyframes showHint{to{opacity:1}}
+@media(max-width:650px){.navigationHint{top:8px;right:6px;transform:none}}
+@media(prefers-reduced-motion:reduce){.spinner{animation:none}.pending{animation:none;opacity:1}}

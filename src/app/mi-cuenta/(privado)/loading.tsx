@@ -1,2 +1,2 @@
-import { CustomerSkeleton } from "@/components/clients/CustomerDataState";
-export default function Loading() { return <CustomerSkeleton />; }
+import { CustomerRouteLoading } from "@/components/clients/CustomerDataState";
+export default function Loading() { return <CustomerRouteLoading title="Mi cuenta" />; }
