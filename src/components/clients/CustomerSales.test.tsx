@@ -6,6 +6,7 @@ const navigation=vi.hoisted(()=>({router:{replace:vi.fn(),refresh:vi.fn()},path:
 vi.mock("next/navigation",()=>({usePathname:()=>navigation.path,useRouter:()=>navigation.router}));
 import { CustomerDataProvider,useCustomerData } from "./CustomerDataProvider";
 import { CustomerSales } from "./CustomerSales";
+import { CUSTOMER_REQUEST_TIMEOUT_MS } from "./customer-request";
 const snapshot:CustomerSnapshot={
  customer:{id:"own",firstName:"Cliente",lastName:"Prueba",email:"test@example.invalid",emailVerified:true,whatsapp:"+56900000000",whatsappVerified:false,rut:"123456785",identityVerified:false,createdAt:"2026-01-01T00:00:00.000Z",
  tier:{code:"start",name:"Start",maxAmount:40000,maxPercent:30,maxInstallments:1},credit:{principalOutstanding:10000,capacity:30000,available:0,enabled:true,needsIdentity:false},activity:{purchaseCount:21,creditCount:1,nextInstallment:{dueDate:"2030-01-31",amount:30000,paid:20000}}},
@@ -16,7 +17,24 @@ const response=(body:unknown)=>new Response(JSON.stringify(body),{headers:{ETag:
 function Refresh(){const data=useCustomerData();return <button onClick={()=>void data.refresh()}>Actualizar resumen</button>;}
 function Portal({cuotas=false}:{cuotas?:boolean}){return <CustomerDataProvider ownerId="own" viewer={{firstName:"Cliente",lastName:"Prueba"}}><CustomerSales installmentsOnly={cuotas}/><Refresh/></CustomerDataProvider>;}
 beforeEach(()=>{vi.stubGlobal("BroadcastChannel",undefined);HTMLElement.prototype.scrollIntoView=vi.fn();});
-afterEach(()=>{cleanup();vi.unstubAllGlobals();});
+afterEach(()=>{cleanup();vi.useRealTimers();vi.unstubAllGlobals();});
+it("permite reintentar un historial atascado sin perder la pantalla",async()=>{
+ vi.useFakeTimers();
+ let historyCalls=0;
+ vi.stubGlobal("fetch",vi.fn(async(url:string)=>{
+  if(url.includes("resumen"))return response(snapshot);
+  if(++historyCalls===1)return new Promise<Response>(()=>{});
+  return response({sales:[sale(0)],nextCursor:null});
+ }));
+ render(<Portal/>);
+ await act(async()=>{await Promise.resolve();});
+ await act(async()=>{vi.advanceTimersByTime(CUSTOMER_REQUEST_TIMEOUT_MS);});
+ expect(screen.getByRole("alert")).toHaveTextContent("No pudimos cargar el historial");
+ fireEvent.click(screen.getByRole("button",{name:"Reintentar"}));
+ await act(async()=>{await Promise.resolve();});
+ expect(screen.getByRole("heading",{name:"Compra 0"})).toBeVisible();
+ expect(historyCalls).toBe(2);
+});
 it("muestra diez compras por página y vuelve a una página guardada sin otra consulta",async()=>{
  const history=vi.fn((url:string)=>response({sales:Array.from({length:10},(_,index)=>sale(index+(url.includes("cursor")?10:0))),nextCursor:url.includes("cursor")?null:"next"}));
  vi.stubGlobal("fetch",vi.fn(async(url:string)=>url.includes("resumen")?response(snapshot):history(url)));

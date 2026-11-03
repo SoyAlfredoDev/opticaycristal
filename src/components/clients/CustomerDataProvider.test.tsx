@@ -9,6 +9,7 @@ import Inicio from "@/app/mi-cuenta/(privado)/page";
 import Cuotas from "@/app/mi-cuenta/(privado)/cuotas/page";
 import Compras from "@/app/mi-cuenta/(privado)/compras/page";
 import Perfil from "@/app/mi-cuenta/(privado)/perfil/page";
+import { CUSTOMER_REQUEST_TIMEOUT_MS } from "./customer-request";
 const customer: CustomerProfile & CustomerOverview = {
   id: "one", firstName: "Cliente", lastName: "Prueba", email: "test@example.invalid", emailVerified: true,
   whatsapp: "+56900000000", whatsappVerified: false, rut: "123456785", identityVerified: false, createdAt: "2026-01-01T00:00:00.000Z",
@@ -21,6 +22,26 @@ function Portal({ view = "cuotas", owner = "one" }: { view?: string; owner?: str
   return <CustomerDataProvider key={owner} ownerId={owner} viewer={{ firstName: "Cliente", lastName: "Prueba" }}><CustomerSyncStatus />{view === "inicio" ? <Inicio /> : view === "cuotas" ? <Cuotas /> : view === "perfil" ? <Perfil /> : <Compras />}<Probe /></CustomerDataProvider>;
 }
 const flush = async () => { await act(async () => { await Promise.resolve(); }); };
+
+it("libera una consulta atascada, conserva el saldo y descarta su respuesta tardía", async () => {
+  vi.useFakeTimers();
+  let finish!: (response: Response) => void;
+  const fetcher = vi.fn().mockResolvedValueOnce(response())
+    .mockImplementationOnce(() => new Promise<Response>(resolve => { finish = resolve; }))
+    .mockResolvedValue(response());
+  vi.stubGlobal("fetch", fetcher);
+  render(<Portal />); await flush();
+  fireEvent.click(screen.getByRole("button", { name: "Consultar actualización" })); await flush();
+  const signal = fetcher.mock.calls[1][1].signal as AbortSignal;
+  await act(async () => { vi.advanceTimersByTime(CUSTOMER_REQUEST_TIMEOUT_MS); });
+  expect(signal.aborted).toBe(true);
+  expect(screen.getByText(/Mostrando la última información/)).toBeVisible();
+  expect(screen.getByLabelText("Cupo")).toHaveTextContent("40000");
+  fireEvent.click(screen.getByRole("button", { name: "Actualizar" })); await flush();
+  expect(fetcher).toHaveBeenCalledTimes(3);
+  await act(async () => finish(response({ ...customer, credit: { ...customer.credit, capacity: 1 } })));
+  expect(screen.getByLabelText("Cupo")).toHaveTextContent("40000");
+});
 beforeEach(() => { navigation.path = "/mi-cuenta/cuotas"; vi.stubGlobal("BroadcastChannel", undefined); });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 it("muestra la pantalla antes de recibir los datos, sin inventar cero cuotas ni saldo", async () => {
@@ -134,5 +155,6 @@ it("actualiza cupo y nivel de Inicio con la nueva información del servidor", as
   await act(async () => window.dispatchEvent(new Event("focus")));
   expect(screen.getByRole("button", { name: /tu nivel es VIP/ })).toBeVisible();
   expect(screen.getByLabelText("Cupo")).toHaveTextContent("80000");
-  expect(screen.getByText(/Financiamos hasta el 40% del precio de tus lentes · 2 cuotas/)).toBeVisible();
+  expect(screen.getByText("40%", { selector: "dd" })).toBeVisible();
+  expect(screen.getByText(/2 cuotas mensuales de/)).toHaveTextContent("$20.000");
 });

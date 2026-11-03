@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { customerRequest } from "./customer-request";
 import type { CustomerOverview, CustomerProfile, CustomerSnapshot } from "@/lib/clients/types";
 
 export const CUSTOMER_REFRESH_MS = 45_000;
@@ -42,28 +43,30 @@ export function CustomerDataProvider({ ownerId, viewer, children }: {
     setRefreshing(true);
     const task = (async () => {
       try {
-        const response = await fetch("/api/clientes/resumen", {
-          credentials: "same-origin", cache: "no-store", signal: controller.signal,
-          headers: etag.current ? { "If-None-Match": etag.current } : {},
-        });
-        if (controller.signal.aborted || stopped.current) return;
-        if (response.status === 401 || response.status === 404) {
-          clear(); router.replace("/mi-cuenta/ingresar"); router.refresh(); return;
-        }
-        if (response.status === 304) {
-          checkedAt.current = Date.now(); setError(""); return;
-        }
-        if (!response.ok) throw new Error("No pudimos actualizar tus datos.");
-        const body = await response.json() as Snapshot;
-        if (controller.signal.aborted || stopped.current) return;
-        if (!body.customer || body.customer.id !== ownerId) {
-          clear(); router.replace("/mi-cuenta/ingresar"); router.refresh(); return;
-        }
-        etag.current = response.headers.get("ETag") ?? "";
-        checkedAt.current = Date.now();
-        if (historyVersion.current !== body.historyVersion) historyCache.clear();
-        historyVersion.current = body.historyVersion;
-        setSnapshot(body); setError("");
+        await customerRequest(async signal => {
+          const response = await fetch("/api/clientes/resumen", {
+            credentials: "same-origin", cache: "no-store", signal,
+            headers: etag.current ? { "If-None-Match": etag.current } : {},
+          });
+          if (signal.aborted || stopped.current) return;
+          if (response.status === 401 || response.status === 404) {
+            clear(); router.replace("/mi-cuenta/ingresar"); router.refresh(); return;
+          }
+          if (response.status === 304) {
+            checkedAt.current = Date.now(); setError(""); return;
+          }
+          if (!response.ok) throw new Error("No pudimos actualizar tus datos.");
+          const body = await response.json() as Snapshot;
+          if (signal.aborted || stopped.current) return;
+          if (!body.customer || body.customer.id !== ownerId) {
+            clear(); router.replace("/mi-cuenta/ingresar"); router.refresh(); return;
+          }
+          etag.current = response.headers.get("ETag") ?? "";
+          checkedAt.current = Date.now();
+          if (historyVersion.current !== body.historyVersion) historyCache.clear();
+          historyVersion.current = body.historyVersion;
+          setSnapshot(body); setError("");
+        }, controller.signal);
       } catch {
         if (!controller.signal.aborted && !stopped.current) setError("No pudimos actualizar los datos. Reintenta cuando tengas conexión.");
       } finally {
