@@ -52,10 +52,14 @@ describe.sequential("Avisos de soporte: cola transaccional y proveedor aislado",
   const t=await make(),requestKey=randomUUID();await updateSupportTicket(staff,t.id,{action:"reply",message:"Le ayudamos",requestKey});await drainSupportMail({ticketId:t.id,requestKey});
   expect(state.send.mock.calls[0][0].to).toBe("alice@example.com");expect(state.send.mock.calls[0][0].subject).toContain("Respuesta a su ticket");
  });
- it("espera la verificación del correo para avisar al cliente",async()=>{
-  const t=await make();await drainSupportMail({ticketId:t.id});state.send.mockClear();await db.exec("UPDATE oc_client_user SET \"emailVerified\"=false");
-  await updateSupportTicket(staff,t.id,{action:"reply",message:"Le ayudamos",requestKey:randomUUID()});expect(await job()).toMatchObject({state:"unverified"});expect(await drainSupportMail({ticketId:t.id})).toEqual({sent:0});expect(state.send).not.toHaveBeenCalled();
-  await db.exec("UPDATE oc_client_user SET \"emailVerified\"=true");await drainSupportMail({ticketId:t.id});expect(state.send).toHaveBeenCalledTimes(1);expect(state.send.mock.calls[0][0].to).toBe("alice@example.com");
+ it("notifica respuestas aunque el correo esté pendiente y recupera avisos antiguos",async()=>{
+  const t=await make();await drainSupportMail({ticketId:t.id});state.send.mockClear();
+  await db.query('UPDATE oc_client_user SET "emailVerified"=false');
+  await updateSupportTicket(staff,t.id,{action:"reply",message:"Le ayudamos",requestKey:randomUUID()});
+  expect(await job()).toMatchObject({state:"pending"});
+  await db.query("UPDATE oc_client_support_mail SET state='unverified' WHERE kind='staff_reply'");
+  expect(await drainSupportMail({ticketId:t.id})).toEqual({sent:1});expect(state.send).toHaveBeenCalledOnce();
+  expect((await db.query<{emailVerified:boolean}>('SELECT "emailVerified" FROM oc_client_user')).rows[0].emailVerified).toBe(false);
  });
  it("no envía a una dirección anterior si el cliente cambió su correo",async()=>{
   const t=await make();await drainSupportMail({ticketId:t.id});state.send.mockClear();await updateSupportTicket(staff,t.id,{action:"reply",message:"Respuesta",requestKey:randomUUID()});await db.exec("UPDATE oc_client_user SET email='changed@example.com'");await drainSupportMail({ticketId:t.id});expect(state.send).not.toHaveBeenCalled();expect(await job()).toMatchObject({state:"failed",failure_code:"address_changed"});

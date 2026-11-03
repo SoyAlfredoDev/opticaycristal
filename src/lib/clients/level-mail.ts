@@ -12,7 +12,7 @@ export async function queueLevelUpgradeMail(db:Pick<PoolClient,'query'>,input:{c
  if(!row||Number(row.position)<=Number(row.previous_position))return false;
  const maxAmount=Number(row.max_amount),outstanding=Number(row.outstanding),verified=row.emailVerified===true;
  const payload:LevelUpgradeMail={to:String(row.email),firstName:String(row.firstName),previousName:String(row.previous_name),tier:{code:String(row.code),name:String(row.name),maxPercent:Number(row.max_percent),maxAmount,maxInstallments:Number(row.max_installments)},capacity:Math.max(0,maxAmount-outstanding),available:verified&&outstanding===0?maxAmount:0,outstanding,emailVerified:verified,changedAt:new Date(row.changed_at).toISOString()};
- await db.query(`INSERT INTO ${t('oc_client_level_mail')}(id,change_id,customer_id,payload_cipher,state) VALUES($1,$2,$3,$4,$5) ON CONFLICT(change_id) DO NOTHING`,[randomUUID(),input.changeId,input.customerId,protectClientValue(JSON.stringify(payload),'level-email'),verified?'pending':'unverified']);
+ await db.query(`INSERT INTO ${t('oc_client_level_mail')}(id,change_id,customer_id,payload_cipher,state) VALUES($1,$2,$3,$4,$5) ON CONFLICT(change_id) DO NOTHING`,[randomUUID(),input.changeId,input.customerId,protectClientValue(JSON.stringify(payload),'level-email'),'pending']);
  return true;
 }
 /** New mail never reaches real recipients from development, even if Resend credentials exist. */
@@ -21,20 +21,20 @@ export async function drainLevelUpgradeMail(scope:{customerId?:string}={},option
  if(!options.transport&&!levelMailEnabled())return {accepted:0,disabled:true};
  const pool=clientPool(),queue=t('oc_client_level_mail'),token=randomUUID();
  await pool.query(`UPDATE ${queue} SET state='review',failure_code='idempotency_expired',lease_until=NULL,lease_token=NULL WHERE state IN ('pending','processing','unverified') AND attempts>0 AND first_attempt_at<now()-interval '23 hours'`);
- const result=await pool.query(`WITH candidate AS(SELECT n.id,u.email,u."emailVerified" AS verified,u.category FROM ${queue} n JOIN ${t('oc_client_user')} u ON u.id=n.customer_id WHERE (n.state='pending' OR (n.state='processing' AND n.lease_until<now()) OR (n.state='unverified' AND u."emailVerified")) AND n.next_attempt_at<=now() AND ($1::text IS NULL OR n.customer_id=$1) ORDER BY n.created_at,n.id FOR UPDATE OF n SKIP LOCKED LIMIT 1) UPDATE ${queue} n SET state='processing',lease_token=$2,lease_until=now()+interval '2 minutes' FROM candidate c WHERE n.id=c.id RETURNING n.id,n.payload_cipher,n.attempts,c.email,c.verified,c.category`,[scope.customerId??null,token]);
+ const result=await pool.query(`WITH candidate AS(SELECT n.id,u.email,u."emailVerified" AS verified,u.category FROM ${queue} n JOIN ${t('oc_client_user')} u ON u.id=n.customer_id WHERE (n.state='pending' OR (n.state='processing' AND n.lease_until<now()) OR n.state='unverified') AND n.next_attempt_at<=now() AND ($1::text IS NULL OR n.customer_id=$1) ORDER BY n.created_at,n.id FOR UPDATE OF n SKIP LOCKED LIMIT 1) UPDATE ${queue} n SET state='processing',lease_token=$2,lease_until=now()+interval '2 minutes' FROM candidate c WHERE n.id=c.id RETURNING n.id,n.payload_cipher,n.attempts,c.email,c.verified,c.category`,[scope.customerId??null,token]);
  const job=result.rows[0];if(!job)return {accepted:0};
  let payload:LevelUpgradeMail;
  try{payload=JSON.parse(revealClientValue(job.payload_cipher,'level-email'));}
  catch{await pool.query(`UPDATE ${queue} SET state='review',failure_code='payload_invalid',lease_token=NULL,lease_until=NULL WHERE id=$1 AND lease_token=$2`,[job.id,token]);return {accepted:0};}
- if(!job.verified||job.email!==payload.to||job.category!==payload.tier.code){
-  const state=job.email!==payload.to||job.category!==payload.tier.code?'cancelled':'unverified';
-  await pool.query(`UPDATE ${queue} SET state=$3,failure_code=$4,lease_token=NULL,lease_until=NULL WHERE id=$1 AND lease_token=$2`,[job.id,token,state,state==='cancelled'?'recipient_or_level_changed':'unverified']);return {accepted:0};
+ if(job.email!==payload.to||job.category!==payload.tier.code){
+  const state='cancelled';
+  await pool.query(`UPDATE ${queue} SET state=$3,failure_code=$4,lease_token=NULL,lease_until=NULL WHERE id=$1 AND lease_token=$2`,[job.id,token,state,'recipient_or_level_changed']);return {accepted:0};
  }
  if(Number(job.attempts)===0){
   const fresh=(await pool.query(`SELECT u.email,u."emailVerified",tier.code,tier.name,tier.max_percent,tier.max_amount,tier.max_installments,COALESCE(b.principal_outstanding,0) AS outstanding,clock_timestamp() AS as_of FROM ${t('oc_client_user')} u JOIN ${t('oc_client_tiers')} tier ON tier.code=u.category LEFT JOIN ${t('oc_client_credit_balances')} b ON b.user_id=u.id JOIN ${queue} n ON n.customer_id=u.id WHERE n.id=$1`,[job.id])).rows[0];
-  if(!fresh||fresh.email!==payload.to||fresh.code!==payload.tier.code||!fresh.emailVerified){await pool.query(`UPDATE ${queue} SET state='cancelled',failure_code='recipient_or_level_changed',lease_token=NULL,lease_until=NULL WHERE id=$1 AND lease_token=$2`,[job.id,token]);return {accepted:0};}
+  if(!fresh||fresh.email!==payload.to||fresh.code!==payload.tier.code){await pool.query(`UPDATE ${queue} SET state='cancelled',failure_code='recipient_or_level_changed',lease_token=NULL,lease_until=NULL WHERE id=$1 AND lease_token=$2`,[job.id,token]);return {accepted:0};}
   const outstanding=Number(fresh.outstanding),maximum=Number(fresh.max_amount);
-  payload={...payload,tier:{code:String(fresh.code),name:String(fresh.name),maxAmount:maximum,maxPercent:Number(fresh.max_percent),maxInstallments:Number(fresh.max_installments)},outstanding,capacity:Math.max(0,maximum-outstanding),available:outstanding===0?maximum:0,emailVerified:true,changedAt:new Date(fresh.as_of).toISOString()};
+  payload={...payload,tier:{code:String(fresh.code),name:String(fresh.name),maxAmount:maximum,maxPercent:Number(fresh.max_percent),maxInstallments:Number(fresh.max_installments)},outstanding,capacity:Math.max(0,maximum-outstanding),available:fresh.emailVerified&&outstanding===0?maximum:0,emailVerified:fresh.emailVerified===true,changedAt:new Date(fresh.as_of).toISOString()};
   await pool.query(`UPDATE ${queue} SET payload_cipher=$3 WHERE id=$1 AND lease_token=$2`,[job.id,token,protectClientValue(JSON.stringify(payload),'level-email')]);
  }
  // The body remains immutable across retries with the same provider idempotency key.

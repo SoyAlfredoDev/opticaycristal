@@ -1,5 +1,6 @@
 {
   "crons": [
+    {"path": "/api/admin/clientes/nivel-correos", "schedule": "0 15 * * *"},
     {
       "path": "/api/radar/cron",
       "schedule": "0 12 * * *"

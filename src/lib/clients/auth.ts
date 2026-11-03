@@ -1,4 +1,5 @@
 import "server-only";
+import { queueAfterTransactionHook } from "@better-auth/core/context";
 import { betterAuth } from "better-auth";
 import type { Pool } from "pg";
 import { PostgresDialect } from "kysely";
@@ -13,9 +14,12 @@ export function createClientAuth(database: Pool, sendMail: (message: ClientMail)
   const baseURL = process.env.CLIENT_APP_URL || "https://opticaycristal.cl";
   if (!/^https:\/\//.test(baseURL) && !(process.env.NODE_ENV !== "production" && /^http:\/\/localhost:\d+$/.test(baseURL))) throw new Error("CLIENT_APP_URL debe ser un origen HTTPS confiable.");
   async function sendCurrentUserMail(user:{id:string;email:string},url:string,kind:ClientMail["kind"]){
-    const current=await database.query(`SELECT email FROM ${clientTable("oc_client_user")} WHERE id=$1 FOR SHARE`,[user.id]);
-    if(current.rows[0]?.email!==user.email)return;
-    await sendMail({to:user.email,url,kind});
+    await queueAfterTransactionHook(async () => {
+      const current=await database.query(`SELECT email FROM ${clientTable("oc_client_user")} WHERE id=$1 FOR SHARE`,[user.id]);
+      if(current.rows[0]?.email!==user.email)return;
+      try { await sendMail({to:user.email,url,kind}); }
+      catch (error) { console.error("No se pudo enviar un correo de seguridad del cliente."); throw error; }
+    });
   }
   return betterAuth({
     appName: "Óptica & Cristal", logger: { disabled: true }, secret, baseURL, basePath: "/api/clientes/auth", database: { dialect: new PostgresDialect({ pool: database }), type: "postgres", schemaName: clientSchema(), transaction: true },

@@ -53,9 +53,15 @@ describe.sequential('Ascensos y felicitaciones sin correos reales',()=>{
   await db.query("UPDATE oc_client_credit_balances SET principal_outstanding=10000 WHERE user_id='qa'");await changeCustomerCategory('qa',request(),'responsable');const send=transport();await drainLevelUpgradeMail({}, {transport:send});
   expect(send.mock.calls[0][0].text).toContain('Disponible para utilizar al preparar este correo: $0');expect(send.mock.calls[0][0].text).toContain('cuando pagues el saldo pendiente');expect((await db.query<{principal_outstanding:number}>("SELECT principal_outstanding FROM oc_client_credit_balances WHERE user_id='qa'")).rows[0].principal_outstanding).toBe(10000);
  });
- it('espera la verificación del correo y consulta el cupo vigente antes del primer envío',async()=>{
-  await db.query('UPDATE oc_client_user SET "emailVerified"=false WHERE id=\'qa\'');await changeCustomerCategory('qa',request(),'responsable');const send=transport();await drainLevelUpgradeMail({}, {transport:send});expect(send).not.toHaveBeenCalled();
-  await db.query('UPDATE oc_client_user SET "emailVerified"=true WHERE id=\'qa\'');await drainLevelUpgradeMail({}, {transport:send});expect(send).toHaveBeenCalledOnce();expect(send.mock.calls[0][0].text).toContain('Disponible para utilizar al preparar este correo: $80.000');
+ it('envía el ascenso con correo pendiente sin habilitar el crédito y recupera avisos antiguos retenidos',async()=>{
+  await db.query('UPDATE oc_client_user SET "emailVerified"=false WHERE id=\'qa\'');await changeCustomerCategory('qa',request(),'responsable');
+  expect((await queue())[0].state).toBe('pending');
+  await db.query("UPDATE oc_client_level_mail SET state='unverified'");
+  const send=transport();await drainLevelUpgradeMail({}, {transport:send});expect(send).toHaveBeenCalledOnce();
+  expect(send.mock.calls[0][0].text).toContain('Disponible para utilizar al preparar este correo: $0');
+  expect(send.mock.calls[0][0].text).toContain('debes verificar tu correo');
+  expect((await queue())[0].state).toBe('accepted');
+  expect((await db.query<{emailVerified:boolean}>('SELECT "emailVerified" FROM oc_client_user WHERE id=\'qa\'')).rows[0].emailVerified).toBe(false);
  });
  it.each(['email','category'])('cancela un correo cuando cambia %s para evitar destinatarios o niveles obsoletos',async field=>{
   await changeCustomerCategory('qa',request(),'responsable');await db.query(field==='email'?"UPDATE oc_client_user SET email='other@example.invalid' WHERE id='qa'":"UPDATE oc_client_user SET category='vip' WHERE id='qa'");const send=transport();await drainLevelUpgradeMail({}, {transport:send});expect(send).not.toHaveBeenCalled();expect((await queue())[0].state).toBe('cancelled');
