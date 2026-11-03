@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { FinancingExplanation } from "@/components/clients/FinancingExplanation";
 import { PurchaseSimulatorModal } from "@/components/clients/PurchaseSimulatorModal";
 import { CategoryModalProvider, CategoryTrigger } from "@/components/clients/CategoryModal";
 import { CustomerPromotions } from "@/components/clients/CustomerPromotions";
@@ -33,10 +34,10 @@ export default function CustomerHome() {
           {c.credit.principalOutstanding > 0 ? "Crédito activo" : c.credit.enabled ? "Crédito habilitado" : "Verificaciones pendientes"}
         </span>
         <div className={styles.financeMetrics}>
-          <div><CategoryTrigger className={styles.textLink}>{nextTier ? `Siguiente nivel · ${nextTier.name}` : `Nivel más alto · ${c.tier.name}`}</CategoryTrigger><strong>{clp(nextTier?.maxAmount ?? c.tier.maxAmount)}</strong><span>Crédito máximo</span></div>
+          <div><CategoryTrigger className={styles.textLink}>{nextTier ? `Siguiente nivel · ${nextTier.name}` : `Nivel más alto · ${c.tier.name}`}</CategoryTrigger><strong>{clp(nextTier?.maxAmount ?? c.tier.maxAmount)}</strong><span>Tope a crédito · hasta el {nextTier?.maxPercent ?? c.tier.maxPercent}% del precio</span></div>
           <div><span>Saldo utilizado</span><strong>{clp(c.credit.principalOutstanding)}</strong></div>
         </div>
-        <p className={styles.financeTerms}>Hasta el {c.tier.maxPercent}% de tu compra · {c.tier.maxInstallments} cuota{c.tier.maxInstallments > 1 ? "s" : ""} · Siempre con pie.</p>
+        <p className={styles.financeTerms}>Financiamos hasta el {c.tier.maxPercent}% del precio de tus lentes · {c.tier.maxInstallments} cuota{c.tier.maxInstallments > 1 ? "s" : ""} · Siempre con pie.</p><FinancingExplanation tier={c.tier} compact/>
 
       </section>
 

@@ -24,7 +24,7 @@ export async function calculateAdminSimulation(input:Record<string,unknown>):Pro
  const customer=mode==="customer"?await lookupSimulationCustomer(input.rut):null;
  const tiers=customer?null:await getCustomerTiers();
  const tier=customer?.tier??tiers?.find(t=>t.code===input.tierCode);
- if(!tier)throw new SimulationError("Selecciona un nivel válida.");
+ if(!tier)throw new SimulationError("Selecciona un nivel válido.");
  let total:number;try{total=parsePurchasePrice(typeof input.total==="number"?String(input.total):typeof input.total==="string"?input.total:"");}catch(error){throw new SimulationError(error instanceof Error?error.message:"Revisa el precio.");}
  const count=input.installmentCount;
  if(typeof count!=="number"||!Number.isInteger(count)||count<1||count>tier.maxInstallments)throw new SimulationError("Las cuotas deben respetar el máximo del nivel.");

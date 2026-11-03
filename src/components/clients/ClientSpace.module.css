@@ -199,3 +199,5 @@
 .creditInvitation .money{font-size:clamp(36px,7vw,52px);line-height:1.05;margin:0}
 .invitationTerms{font-size:13px;color:#006c50}
 .creditInvitation .button{margin-top:4px}
+
+.panel:target{outline:3px solid #39b992;outline-offset:4px;scroll-margin-top:24px}

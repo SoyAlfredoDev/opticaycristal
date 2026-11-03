@@ -1,0 +1,79 @@
+{
+  "at": "2026-11-03T00:29:29.976Z",
+  "schema": "oc_customers",
+  "website": "public",
+  "migrations": [
+    16,
+    17,
+    18
+  ],
+  "businessRowsPreserved": true,
+  "before": {
+    "oc_client_user": {
+      "count": 2,
+      "hash": "fe3c37ab4d9ff250152ae7f40c77fd9c"
+    },
+    "oc_client_sales": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oc_client_installments": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oc_client_payments": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oc_client_tiers": {
+      "count": 4,
+      "hash": "d92e0fb1938a40bb1e2ba17f0dbe1d79"
+    },
+    "oc_client_category_changes": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oc_client_commitments": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oc_client_contract_settings": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  },
+  "after": {
+    "oc_client_user": {
+      "count": 2,
+      "hash": "fe3c37ab4d9ff250152ae7f40c77fd9c"
+    },
+    "oc_client_sales": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oc_client_installments": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oc_client_payments": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oc_client_tiers": {
+      "count": 4,
+      "hash": "d92e0fb1938a40bb1e2ba17f0dbe1d79"
+    },
+    "oc_client_category_changes": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oc_client_commitments": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oc_client_contract_settings": {
+      "count": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  }
+}

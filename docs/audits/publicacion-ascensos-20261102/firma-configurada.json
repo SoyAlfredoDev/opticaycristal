@@ -1,0 +1,11 @@
+{
+  "at": "2026-11-03T00:29:54.056Z",
+  "postStatus": 200,
+  "readStatus": 200,
+  "signatureConfigured": true,
+  "identityMatches": true,
+  "paymentMethod": "both",
+  "privateNoStore": true,
+  "unchangedExistingDocuments": true,
+  "signaturePublic": false
+}

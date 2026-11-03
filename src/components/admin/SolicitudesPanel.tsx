@@ -183,6 +183,7 @@ export default function SolicitudesPanel({
               const reenviando = isPending && pendingId === item.id;
               return (
                 <article
+                  id={`solicitud-${item.id}`}
                   key={item.id}
                   className="rounded-[1.25rem] border border-border bg-white px-4 py-4 shadow-[var(--shadow-soft)] sm:px-5"
                 >

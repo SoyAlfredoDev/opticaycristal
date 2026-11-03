@@ -86,3 +86,17 @@ en Production. Origen https://opticaycristal.cl; esquema oc_customers. El pendie
 de variables del nuevo módulo queda resuelto para el próximo despliegue. Ver el
 registro de configuración para respaldo y tareas todavía pendientes. No se
 realizaron despliegues ni migraciones durante esta configuración.
+
+### Migración y candidato de publicación completados
+
+Las migraciones 001–003 ya están aplicadas al esquema productivo oc_customers:
+15 tablas, cuatro niveles y pruebas transaccionales revertidas. Se fijó también
+CLIENT_DATABASE_URL como secreto exclusivo de Production. Candidato construido
+sobre 33df116: 229 pruebas, lint, TypeScript, compilación y 18 comprobaciones HTTP
+correctas. La publicación pública y recepción real de correo siguen pendientes.
+
+Registro vigente: PREPARACION-PRODUCCION-2026-10-29.md. El manifiesto
+clients-production-candidate-20261029.json identifica el parche persistente,
+su SHA-256 y el commit base para continuar la publicación sin reconstruir el
+trabajo. El candidato no contiene secretos. El directorio original no se reseteó
+ni se modificó su historial.

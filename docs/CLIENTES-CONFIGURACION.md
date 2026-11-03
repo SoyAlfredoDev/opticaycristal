@@ -257,6 +257,70 @@ Después de publicar el código que acepta hasta cuatro cuotas, ejecutar `script
 - Referencias: [pool de conexiones en Vercel](https://vercel.com/kb/guide/efficiently-manage-database-connection-pools-with-fluid-compute), [regiones](https://vercel.com/docs/regions).
 
 
+## Compromisos y simulador — revisión 2026-11-02
+
+Migración 010 aplicada el 02/11/2026 con autorización explícita del usuario. Se verificó por huellas que ventas, cuotas, pagos, saldos y productos preexistentes conservaron sus datos. El código sigue pendiente de publicación; la versión local usa el esquema actualizado.
+
+Después de migrar, el administrador autorizado configura `/admin/clientes/compromisos`: nombre legal completo del representante, RUT, PNG original de firma (máximo 80 KB y 2000 × 1000 px), autorización de uso, medios local/transferencia y máximo legal anual verificado. Datos y firma se cifran con las llaves existentes; no cambiar esas llaves sin un plan de recifrado. Webpay no está configurado; se habilita únicamente con enlace oficial posterior.
+
+Cada nueva venta a crédito requiere la configuración y crea un documento inmutable en la misma transacción. Una configuración incompleta cancela íntegramente la creación del crédito. No marcar la firma presencial hasta que el cliente firme y reciba su copia; conservar el original firmado. Operaciones anteriores no adquieren la nueva tasa.
+
+La mora nueva es 18 % anual simple (equivalente a 1,5 % mensual), desde el día 61, limitada al máximo legal configurado. No se consulta automáticamente a CMF: el responsable verifica la vigencia antes de contratar y revisa liquidaciones si cambia el máximo. Registrar/condonar mora separada del capital y documentar los motivos de condonación.
+
+`/admin/clientes/simulador` funciona por RUT o categoría referencial. «Propuesta de crédito» PDF no es contrato, venta ni reserva de cupo. El servidor revalida los límites y la situación del cliente al descargar. No requiere datos del representante para simular.
+
+Ver investigación, decisiones y comprobaciones en `docs/contracts/compromiso-pago-20261102.md`.
+
+
+## Productos de costo variable — 2026-11-02
+
+Migración 011 (`npm run db:clients:variable-products`): permite que el costo del catálogo y su registro de cambio sean NULL para representar un producto de costo variable. Los costos fijos y los costos históricos de ventas no se modifican. NULL no significa costo cero.
+
+Crear «Lente óptico» desde Productos y costos, marcando «El costo varía en cada venta». No asignar un costo ficticio. El vendedor debe indicar el costo protegido total por unidad, incluidos impuestos que correspondan, antes de calcular; el servidor valida pesos enteros positivos, multiplica por cantidad y limita el crédito para proteger el pie. El costo queda registrado en la venta y en el reintento de esa misma operación. Un costo enviado para un producto fijo no reemplaza el configurado.
+
+El simulador administrativo también exige el costo al seleccionar un producto variable. Ese costo interno no aparece en la propuesta PDF ni en el historial del cliente. Migración 011 aplicada el 02/11/2026 con autorización explícita del usuario. Las ventas, cuotas, pagos, saldos y productos preexistentes conservaron sus datos. Se creó y verificó exactamente un producto «Lente Óptico» con costo variable y auditoría desde la sesión administrativa; no se asigna un costo fijo ficticio. La publicación del código sigue pendiente.
+
+
+### Venta por etapas y edición de contactos · 2 de noviembre de 2026
+
+Ventas muestra una sola tarjeta activa: cliente; producto, costo y precio con IVA; cálculo y condiciones. Se puede retroceder conservando los campos. Los cambios financieros invalidan el cálculo o su aceptación. La confirmación del vendedor no reemplaza la firma presencial del cliente. Los reintentos conservan el identificador y el contenido de la operación. Se mantienen recuperables las operaciones antiguas sin el campo nuevo `conditionsReviewed`; las nuevas exigen revisión expresa.
+
+La edición administrativa permite nombre, apellido y WhatsApp. El RUT nunca se modifica. El correo solo se puede corregir si sigue sin verificar al tomar el bloqueo de la fila. Un cambio de correo revoca sesiones y enlaces de recuperación, conserva pendiente su verificación y reserva la dirección anterior para otros usuarios durante 25 horas: la vigencia de los enlaces de verificación más una hora de margen. El envío de verificación/recuperación comprueba la dirección actual antes de enviar. No usar una versión anterior del servicio de autenticación para habilitar esta edición.
+
+La migración aditiva `012-customer-profile-edits.sql` agrega historial de contactos cifrado y reservas temporales de correo con protección en la base de datos. Comando: `npm run db:clients:customer-edits`. Se aplicó al esquema configurado y se verificó que clientes, ventas, cuotas, pagos y saldos conservaran el mismo contenido; no se crearon registros financieros de prueba.
+
+Después de registrar una venta a crédito se ofrece `Descargar compromiso de pago`. El PDF usa exclusivamente la copia inmutable de esa venta, conserva el calendario original, incluye la firma preimpresa autorizada y el espacio de firma del cliente. Su descarga no crea ni modifica ventas. También queda disponible la versión imprimible. Si falta la firma del representante en Compromisos, la interfaz informa el requisito y bloquea la confirmación de crédito; el contado continúa disponible.
+
+Verificación: PostgreSQL aislado para cambios de contacto, protección de correos, auditoría y operaciones financieras; pruebas de permisos/origen; PDF A4 de ejemplo renderizado y revisado; navegación local sin crear ventas ni modificar contactos reales. El código de esta mejora se prepara localmente, sin publicación automática.
+
+
+### Verificación por código en Ventas · 2 de noviembre de 2026
+
+La tarjeta de cliente incluye el lápiz de edición y un check o una advertencia accesibles para el correo. El botón Verificar envía un código numérico de cuatro dígitos con la plantilla corporativa existente y permite ingresarlo en la misma tarjeta. Se conservan ceros iniciales. Solo el personal autenticado puede solicitar o confirmar el código, con control de origen y vinculación al cliente, correo y operador. No se devuelve ni registra el código en texto visible: se conserva un HMAC con clave privada y se elimina al usarlo.
+
+Los desafíos vencen en 10 minutos y admiten cinco intentos. El reenvío espera un minuto y conserva límites de tres envíos por ventana de una hora y seis por ventana diaria, aunque cambie el operador o el correo. Los desafíos anteriores se reemplazan. Un cambio de correo o un fallo confirmado del envío invalida su código. El envío requiere `RESEND_API_KEY` en el servidor, con el remitente corporativo existente. La migración aditiva `013-staff-email-codes.sql`, disponible mediante `npm run db:clients:email-codes`, fue aplicada sin alterar clientes, ventas, cuotas, pagos ni saldos existentes.
+
+El formulario de venta ya no muestra el bloque inferior de casillas y párrafos. Registrar venta abre un recordatorio: revisión de cédula, correo y firma presencial del compromiso. Cancelar no registra nada. Confirmar venta declara la revisión de identidad y condiciones y la recepción del monto mostrado. No marca el compromiso como firmado; la firma física sigue siendo una acción posterior. Una configuración de firma pendiente permite revisar el recordatorio pero bloquea su confirmación para crédito. Los reintentos conservan la operación original.
+
+Pruebas de códigos, límites, expiración, cambio de correo, permisos, plantilla y confirmación con datos sintéticos y transporte de correo simulado. La revisión visual no envió códigos a clientes reales ni registró una venta. Código preparado localmente; sin publicación automática.
+
+### Cálculo de ventas por categoría · 2 de noviembre de 2026
+
+La captura administrativa de nuevas ventas aplica el porcentaje, cupo disponible y máximo de cuotas mensuales de la categoría. El precio total conserva el IVA incluido y el pie es la diferencia entre ese total y el crédito autorizado. El costo variable por producto ya no se pide en cada venta ni limita el cálculo. El servidor marca estas operaciones con `pricingPolicy: "category"` y guarda `protected_cost` como `NULL` para indicar que no se utilizó un costo, nunca como cero. La migración `014-category-sale-pricing.sql` permite ese valor opcional; no modifica productos ni ventas históricas. Las solicitudes anteriores sin la marca conservan el cálculo de costo protegido para permitir reintentos seguros.
+
+El simulador administrativo usa las mismas condiciones de categoría. La vista cliente conserva el mismo modelo. Correo verificado, los límites de financiamiento y el pie obligatorio continúan aplicándose.
+
+
 ### Niveles y beneficios — migración 015
 
 La nueva vista `/admin/clientes/niveles` configura porcentaje, cupo y cuotas de los niveles con historial por usuario. Aplicar la migración 015 antes de publicar. Alcance, permisos y activación: [NIVELES-Y-BENEFICIOS.md](NIVELES-Y-BENEFICIOS.md).
+
+
+### Avisos administrativos en evaluación local
+
+Implementación nueva solo en desarrollo, sin migraciones productivas ni publicación. Evaluación en memoria: `npm run dev:notifications`. Diagnóstico, eventos, permisos y activación futura: [AVISOS-ADMINISTRATIVOS-DESARROLLO.md](AVISOS-ADMINISTRATIVOS-DESARROLLO.md).
+
+
+### Ascensos y felicitaciones en desarrollo
+
+La migración 018 y el correo de ascenso están preparados únicamente para evaluación local. No se activaron reglas automáticas ni envíos reales. Detalle, decisiones confirmadas y revisión: [ASCENSOS-Y-FINANCIAMIENTO-DESARROLLO.md](ASCENSOS-Y-FINANCIAMIENTO-DESARROLLO.md).

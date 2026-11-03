@@ -22,7 +22,7 @@ it('explica el correo pendiente sin prometer crédito aprobado',()=>{
 });
 
 it('permite un precio mayor al cupo sin financiar más que el nivel',()=>{
- render(<PurchaseSimulator {...conditions}/>);expect(screen.getByText(/Crédito máximo de tu nivel/)).toHaveTextContent('$40.000');
+ render(<PurchaseSimulator {...conditions}/>);expect(screen.getByText(/con un tope de crédito/)).toHaveTextContent('$40.000');
  expect(within(screen.getByRole('combobox')).getAllByRole('option')).toHaveLength(1);
  fireEvent.change(screen.getByRole('textbox'),{target:{value:'250.000'}});fireEvent.click(screen.getByRole('button',{name:'Consultar'}));
  expect(screen.getByRole('status')).toHaveTextContent('$40.000');expect(screen.getByRole('status')).toHaveTextContent('$210.000');

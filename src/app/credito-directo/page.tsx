@@ -10,12 +10,13 @@ export const metadata = pageMetadata(seoPages.creditoDirecto);
 
 export default async function DirectCreditPage() {
   await connection();
-  let start: CustomerProfile["tier"] | null = null;
-  try { start = (await getCustomerTiers()).find(level => level.code === "start") ?? null; }
+  let tiers: CustomerProfile["tier"][] = [];
+  try { tiers = await getCustomerTiers(); }
   catch { console.error("No se pudieron consultar los beneficios públicos del nivel Start."); }
+  const start=tiers.find(level=>level.code==="start")??null;
   return (
     <SiteShell active="Crédito directo">
-      <FinancingIntroduction />
+      <FinancingIntroduction tiers={tiers}/>
       <FinancingProcess start={start} />
       <VisitSection financing />
     </SiteShell>

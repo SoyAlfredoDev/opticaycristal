@@ -10,3 +10,5 @@
 .sideBell .dropdown :is(button,a):focus-visible,.drawerBell .dropdown :is(button,a):focus-visible{outline-color:#007f5f}
 
 .sideBell{margin-bottom:8px}
+
+.category{display:grid;gap:6px;font-size:12px;color:#536574}.category select{min-height:44px;padding:8px 12px;border:1px solid #dbe9e1;border-radius:11px;background:#fff;color:#164735;font:inherit;font-size:14px;max-width:100%}.category select:focus-visible{outline:3px solid #007f5f;outline-offset:3px}

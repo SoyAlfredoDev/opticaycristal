@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { FinancingExplanation } from "@/components/clients/FinancingExplanation";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, FileText, Glasses, IdCard, MapPin, MessageCircle, UserRoundPlus } from "lucide-react";
 import { whatsappUrl } from "@/components/site/content";
@@ -9,7 +10,9 @@ import styles from "./FinancingSections.module.css";
 
 const financingMessage = "Hola, quiero conocer el crédito para mis lentes";
 
-export function FinancingIntroduction() {
+export function FinancingIntroduction({ tiers=[] }: { tiers?: CustomerProfile["tier"][] }) {
+  const maximumPercent=tiers.length?Math.max(...tiers.map(t=>t.maxPercent)):null;
+  const maximumInstallments=tiers.length?Math.max(...tiers.map(t=>t.maxInstallments)):null;
   return (
     <section id="financiamiento" aria-labelledby="financing-title" className={`${styles.introduction} ${editorialFont.variable}`}>
       <div className={styles.scene}>
@@ -20,13 +23,13 @@ export function FinancingIntroduction() {
       <div className={`${site.container} ${styles.introGrid}`}>
         <div className={styles.copy}>
           <p className={styles.eyebrow}><span aria-hidden="true" />Crédito directo de tu óptica</p>
-          <h1 id="financing-title">Crédito de hasta el <strong>70%</strong><span>de tus lentes.</span></h1>
+          <h1 id="financing-title">{maximumPercent?<>Financiamos hasta el <strong>{maximumPercent}%</strong><span>del precio de tus lentes.</span></>:<>Financia una parte<span>de tus lentes.</span></>}</h1>
           <p className={styles.description}>Tus próximos lentes, con crédito directo<br className={styles.desktopBreak} /> y sin tarjeta de crédito.</p>
           <div className={styles.actions}>
             <Link className={styles.primary} href="/mi-cuenta/registro">Conocer mi cupo<ArrowRight size={20} aria-hidden="true" /></Link>
             <a className={styles.secondary} href={whatsappUrl(financingMessage)} target="_blank" rel="noopener noreferrer"><MessageCircle size={21} aria-hidden="true" />Consultar por WhatsApp</a>
           </div>
-          <p className={styles.conditions}>Regístrate para conocer tu cupo disponible.<br />El crédito depende de tu nivel. Siempre con pie. Compra presencial.</p>
+          <p className={styles.conditions}>Regístrate para conocer tu cupo disponible.<br />El porcentaje y el tope de crédito dependen de tu nivel. Pagas un pie y devuelves el crédito en cuotas. Compra presencial.</p>
         </div>
         <div className={styles.visual}>
           <p className={styles.signature}>Confiamos en<br />nuestros clientes.</p>
@@ -35,7 +38,7 @@ export function FinancingIntroduction() {
       </div>
       </div>
       <ul className={`${site.container} ${styles.benefits}`}>
-        <li><CalendarDays aria-hidden="true" /><span>Hasta 4 cuotas<br />mensuales</span></li>
+        <li><CalendarDays aria-hidden="true" /><span>{maximumInstallments?<>Hasta {maximumInstallments} cuotas<br />según tu nivel</>:<>Cuotas mensuales<br />según tu nivel</>}</span></li>
         <li><FileText aria-hidden="true" /><span>Sin liquidaciones<br />de sueldo</span></li>
         <li><IdCard aria-hidden="true" /><span>Revisión presencial<br />de cédula</span></li>
       </ul>
@@ -70,8 +73,8 @@ export function FinancingProcess({ start }: { start: CustomerProfile["tier"] | n
             <h3 id="start-title">Tu punto de partida <span>Start</span></h3>
             <p className={styles.startLead}>Tu nivel al registrarte.</p>
             {start ? <ul className={styles.limits}>
-              <li><strong>{start.maxPercent}%</strong><span>Hasta el {start.maxPercent}% de tu compra</span></li>
-              <li><strong>{clp(start.maxAmount)}</strong><span>Tope de crédito</span></li>
+              <li><strong>{start.maxPercent}%</strong><span>Hasta el {start.maxPercent}% del precio</span></li>
+              <li><strong>{clp(start.maxAmount)}</strong><span>Tope del monto a crédito</span></li>
               <li><strong>{start.maxInstallments} {start.maxInstallments === 1 ? "cuota" : "cuotas"}</strong><span>{start.maxInstallments === 1 ? "mensual" : "mensuales"}</span></li>
             </ul> : <p className={styles.startConditions}>Consulta los beneficios vigentes de tu nivel al crear tu cuenta o en la óptica.</p>}
             <p className={styles.startConditions}>Siempre con pie. El monto efectivo puede ser menor según la compra y tu cupo.</p>
@@ -79,6 +82,7 @@ export function FinancingProcess({ start }: { start: CustomerProfile["tier"] | n
             <Link className={styles.primary} href="/mi-cuenta/registro">Crear mi cuenta<ArrowRight size={21} aria-hidden="true" /></Link>
           </aside>
         </div>
+        {start&&<FinancingExplanation tier={start} publicStyle/>}
         <p className={styles.location}><MapPin size={20} aria-hidden="true" />Compra presencial · Huérfanos 713 · Galería Cohen · Local 18 · Santiago Centro</p>
       </div>
     </section>

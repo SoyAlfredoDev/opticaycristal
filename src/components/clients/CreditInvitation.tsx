@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FinancingExplanation } from "./FinancingExplanation";
 import { BadgeCheck, ShoppingBag } from "lucide-react";
 import type { CustomerProfile } from "@/lib/clients/types";
 import { clp } from "@/lib/clients/types";
@@ -15,7 +16,7 @@ export function CreditInvitation({ customer, installmentsOnly }: { customer: Cre
       <p className={styles.muted}>{installmentsOnly ? "No tienes cuotas pendientes." : "Aún no registras compras. Aprovecha tu cupo aprobado."}</p>
       <p className={styles.balanceLabel}>Cupo disponible</p>
       <div className={styles.money}>{clp(credit.capacity)}</div>
-      <p className={styles.invitationTerms}>Hasta el {tier.maxPercent}% de tu compra · Siempre con pie.</p>
+      <p className={styles.invitationTerms}>Financiamos hasta el {tier.maxPercent}% del precio · Siempre con pie.</p><FinancingExplanation tier={tier} compact/>
       {credit.enabled ? (
         <><p className={styles.small}>Disfruta tu crédito en la óptica.</p><Link className={`${styles.button} ${styles.primary}`} href="/credito-directo#visita">Visítanos en la óptica</Link></>
       ) : (

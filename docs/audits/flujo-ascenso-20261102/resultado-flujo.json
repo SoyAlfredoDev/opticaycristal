@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "level": "premium",
+  "tier": {
+    "code": "premium",
+    "name": "Premium",
+    "maxPercent": 60,
+    "maxAmount": 80000,
+    "maxInstallments": 3
+  },
+  "history": [
+    {
+      "id": "00ef8d9e-490c-4e6f-bcc3-655b092224ea",
+      "from": "Start",
+      "to": "Premium",
+      "actor": "administrador.demo",
+      "source": "manual",
+      "mailState": "accepted",
+      "createdAt": "2026-11-03T00:21:14.949Z"
+    }
+  ],
+  "metrics": {
+    "handoff": true,
+    "capturedCount": 1,
+    "historyCount": 1,
+    "jobs": [
+      {
+        "id": "53b57e2c-eba9-4e70-84e8-e66bf2cf2345",
+        "change_id": "00ef8d9e-490c-4e6f-bcc3-655b092224ea",
+        "state": "accepted",
+        "attempts": 1,
+        "provider_id": "01a19ec9-47b8-771f-acba-44b3cbc87916"
+      }
+    ],
+    "pending": false
+  },
+  "correctAmounts": true,
+  "errors": []
+}

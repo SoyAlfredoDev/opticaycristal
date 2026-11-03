@@ -15,3 +15,13 @@ it('ofrece filtros y no presenta los fallos de conexión como una bandeja vacía
 it('permite salir desde los avisos del menú móvil sin dejar el menú abierto',async()=>{
  vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({items:[],unreadCount:0,hasMore:false,asOf:'2026-11-02T15:00:00Z'})})));const onNavigate=vi.fn();render(<AdminNotificationBell variant="drawer" onNavigate={onNavigate}/>);fireEvent.click(screen.getByText('Avisos'));const all=screen.getByRole('link',{name:'Ver todas'});all.addEventListener('click',event=>event.preventDefault());fireEvent.click(all);expect(onNavigate).toHaveBeenCalledTimes(1);expect(document.querySelector('details')).not.toHaveAttribute('open');
 });
+
+it('filtra eventos comerciales sin confundir pedidos recibidos con ventas pagadas',async()=>{
+ const events=[{...base,id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',kind:'order_received',label:'Nuevo pedido web',folio:'PED-demo',href:'/admin/pedidos#pedido-demo'},{...base,id:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',kind:'sale_created',label:'Nueva venta registrada',folio:'VEN-demo',href:'/admin/clientes/demo#venta-demo'}];
+ const fetcher=vi.fn(async(url:string)=>({ok:true,json:async()=>({items:url.includes('category=orders')?[events[0]]:events,unreadCount:url.includes('category=orders')?1:2,hasMore:false,asOf:'2026-11-02T15:00:00Z'})}));vi.stubGlobal('fetch',fetcher);
+ render(<AdminNotificationsPage/>);await screen.findByRole('link',{name:'Nueva venta registrada · VEN-demo'});
+ fireEvent.change(screen.getByLabelText('Tipo de aviso'),{target:{value:'orders'}});
+ await screen.findByRole('button',{name:'Sin leer (1)'});
+ expect(screen.getByRole('link',{name:'Nuevo pedido web · PED-demo'})).toHaveAttribute('href','/admin/pedidos#pedido-demo');
+ expect(screen.queryByRole('link',{name:'Nueva venta registrada · VEN-demo'})).not.toBeInTheDocument();
+});

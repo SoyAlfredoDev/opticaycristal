@@ -12,12 +12,12 @@ describe("Cupo en Cuotas y Compras", () => {
   it("invita al cliente sin deuda con su cupo real", () => {
     render(<SalesHistory sales={[]} installmentsOnly customer={customer} />);
     expect(screen.getByRole("heading", { name: "¡Estás al día!" })).toBeVisible();
-    expect(screen.getByText("$40.000")).toBeVisible();
+    expect(screen.getByText("$40.000",{selector:"div"})).toBeVisible();
     expect(screen.getByRole("link", { name: "Visítanos en la óptica" })).toHaveAttribute("href", "/credito-directo#visita");
   });
   it("promueve la primera compra y distingue cupo asignado de crédito habilitado", () => {
     render(<SalesHistory sales={[]} customer={{ ...customer, credit: { ...customer.credit, available: 0, enabled: false } }} />);
-    expect(screen.getByText("$40.000")).toBeVisible();
+    expect(screen.getByText("$40.000",{selector:"div"})).toBeVisible();
     expect(screen.getByText("Tu cupo está asignado. Verifica tu correo para usarlo.")).toBeVisible();
     expect(screen.getByRole("link", { name: "Verificar mi correo" })).toHaveAttribute("href", "/mi-cuenta/perfil");
     expect(screen.queryByText("Disfruta tu crédito en la óptica.")).not.toBeInTheDocument();

@@ -134,5 +134,5 @@ it("actualiza cupo y nivel de Inicio con la nueva información del servidor", as
   await act(async () => window.dispatchEvent(new Event("focus")));
   expect(screen.getByRole("button", { name: /tu nivel es VIP/ })).toBeVisible();
   expect(screen.getByLabelText("Cupo")).toHaveTextContent("80000");
-  expect(screen.getByText(/Hasta el 40% de tu compra · 2 cuotas/)).toBeVisible();
+  expect(screen.getByText(/Financiamos hasta el 40% del precio de tus lentes · 2 cuotas/)).toBeVisible();
 });

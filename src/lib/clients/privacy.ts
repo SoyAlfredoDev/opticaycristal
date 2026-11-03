@@ -6,7 +6,7 @@ function dataKey() {
   if (key.length !== 32) throw new Error("CLIENT_DATA_KEY debe contener 32 bytes codificados en base64.");
   return key;
 }
-type ProtectedPurpose = "rut" | "whatsapp" | "support-subject" | "support-message" | "support-email" | "contract-settings" | "contract-document" | "profile-change";
+type ProtectedPurpose = "rut" | "whatsapp" | "support-subject" | "support-message" | "support-email" | "contract-settings" | "contract-document" | "profile-change" | "level-email";
 export function protectClientValue(value: string, purpose: ProtectedPurpose) {
   const iv = randomBytes(12), cipher = createCipheriv("aes-256-gcm", dataKey(), iv);
   cipher.setAAD(Buffer.from(`oc-client-v1:${purpose}`));

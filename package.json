@@ -19,7 +19,10 @@
     "db:clients:commitments": "node scripts/migrate-commitments.mjs",
     "db:clients:prepare": "node scripts/prepare-clients.mjs",
     "test:clients": "node node_modules/vitest/vitest.mjs run src/lib/clients src/app/api/clientes src/app/api/admin/clientes src/components/clients",
-    "db:clients:levels": "node scripts/migrate-level-benefits.mjs"
+    "db:clients:levels": "node scripts/migrate-level-benefits.mjs",
+    "db:notifications:dev": "node scripts/migrate-business-notifications-dev.mjs",
+    "dev:notifications": "node scripts/dev-notifications.mjs",
+    "db:clients:level-mail:dev": "node scripts/migrate-level-mail-dev.mjs"
   },
   "dependencies": {
     "@neon/config": "^1.8.6",
@@ -70,6 +73,7 @@
     "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vite": "8.3.5",
     "vitest": "^4.1.12"
   },
   "overrides": {
