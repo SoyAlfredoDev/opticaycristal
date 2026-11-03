@@ -1,3 +1,4 @@
+import { BRAND_SLOGAN } from "@/lib/brand";
 import "server-only";
 import { enviarConResend } from "@/lib/mail/resend";
 import { CONTACTO_EMAIL } from "@/lib/solicitudes/types";
@@ -33,7 +34,7 @@ export function corporateEmailHtml({title,heading,purpose,action,url,eyebrow,sec
 <tr><td align="left" style="padding:28px">${code?`<div aria-label="Código de verificación" style="padding:20px;border-radius:8px;background:#f2ffe3;color:#681c30;font-family:monospace;font-size:32px;font-weight:bold;letter-spacing:12px;text-align:center">${escape(code)}</div>`:`<table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="#c9ff73" style="border-radius:8px;background:#c9ff73"><a href="${escape(url)}" style="display:inline-block;min-height:20px;padding:15px 24px;border:1px solid #b9eb62;border-radius:8px;font-size:14px;line-height:20px;font-weight:bold;text-decoration:none;color:#183e29">${escape(action)}</a></td></tr></table>`}<p style="margin:16px 0 0;font-size:12px;line-height:1.7;color:#6e6264">${expiry ? `${code?"El código":"El enlace"} es válido durante <strong>${escape(expiry)}</strong>.` : escape(note || "Consulte y responda desde el portal de la óptica.")}</p></td></tr>
 <tr><td style="padding:0 28px 28px"><p style="margin:0;padding:16px;border:1px solid #e5ece8;border-radius:8px;background:#f8faf9;font-size:12px;line-height:1.8;color:#566b62">${escape(security)}</p></td></tr>
 <tr><td style="padding:22px 28px;border-top:1px solid #eee4db;background:#fdfaf7;border-radius:0 0 12px 12px"><p style="margin:0;font-size:12px;line-height:1.9;color:#62565a"><strong style="color:#6b1f3a">${escape(company.name)}</strong><br>RUT ${company.rut}<br>${escape(company.address)}<br><a href="mailto:${CONTACTO_EMAIL}" style="color:#245c4a;text-decoration:none">${CONTACTO_EMAIL}</a> · <a href="${whatsappUrl()}" style="color:#245c4a;text-decoration:none">WhatsApp ${company.phone}</a><br><a href="${company.website}" style="color:#245c4a;text-decoration:none">opticaycristal.cl</a></p></td></tr>
-</table><p style="margin:18px 0 0;font-size:10px;letter-spacing:.3px;color:#8a7d7e">Tu mirada, nuestra prioridad.</p>
+</table><p style="margin:18px 0 0;font-size:10px;letter-spacing:.3px;color:#8a7d7e">${BRAND_SLOGAN}</p>
 </td></tr></table></body></html>`;
 }
 export async function sendClientMail(message: ClientMail) {

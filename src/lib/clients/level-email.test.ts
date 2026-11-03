@@ -19,7 +19,7 @@ it('mantiene los tokens corporativos, el logo original y los canales oficiales d
  expect(mail.html).not.toMatch(/#c9ed9a|#142b3a|#00674d|#536574/);
  expect(mail.html).toContain('cid:logo-opticaycristal');
  expect(mail.html).toContain('mailto:contacto@opticaycristal.cl');expect(mail.html).toContain('https://wa.me/');
- expect(mail.html).toContain('Tu mirada, nuestra prioridad.');expect(mail.text).toContain('Tu mirada, nuestra prioridad.');
+ expect(mail.html).toContain('Ver bien, sentirse bien');expect(mail.text).toContain('Ver bien, sentirse bien');
  expect(mail.html).toContain('<!--[if mso]>');expect(mail.html).toContain('width="580"');
 });
 it('mantiene un disponible de cero y la explicación de la deuda sin presentar el máximo como utilizable',async()=>{

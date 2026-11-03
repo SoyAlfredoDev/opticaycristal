@@ -1,10 +1,11 @@
+import { BRAND_SLOGAN } from "@/lib/brand";
 import type { Metadata } from "next";
 import { brand, store } from "@/components/site/content";
 import { CONVENIO } from "@/lib/convenios";
 
 export const SITE_NAME = brand.name;
 export const SITE_URL = "https://opticaycristal.cl";
-export const SLOGAN = "Tu mirada, nuestra prioridad";
+export const SLOGAN = BRAND_SLOGAN;
 
 export const AI_CRAWLERS = [
   "*",

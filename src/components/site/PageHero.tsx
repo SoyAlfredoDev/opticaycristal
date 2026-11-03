@@ -1,3 +1,4 @@
+import { BRAND_SLOGAN } from "@/lib/brand";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { DepthMedia } from "./DepthMedia";
@@ -13,7 +14,7 @@ export function PageHero({ title, description, image, alt, cta, href, compact = 
         <h1 id="page-title">{title}</h1><p>{description}</p>
         {children}
         {cta && href ? <LinkButton href={href} arrow>{cta}</LinkButton> : null}
-        {audience ? null : <div className={styles.values}><span />Visión · Estilo · Bienestar</div>}
+        {audience ? null : <div className={styles.values}><span />{BRAND_SLOGAN}</div>}
       </div>
       <DepthMedia className={`${styles.heroMedia} ${cutout ? styles.heroCutout : ""}`} intensity={3}>
         <Image className={styles.heroImage} src={image} alt={alt} fill preload sizes="(min-width: 900px) 58vw, 100vw" quality={90} />

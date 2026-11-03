@@ -1,4 +1,6 @@
 "use client";
+import { BRAND_SLOGAN } from "@/lib/brand";
+
 
 import { Suspense, useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
@@ -116,7 +118,7 @@ export default function CharacterScene({ characters }: { characters: readonly He
       <Canvas camera={{ position: [0, .03, 3.8], fov: 35 }} dpr={economy ? 1 : [1, 1.5]}
         frameloop={visible ? "demand" : "never"} gl={{ antialias: economy, powerPreference: "low-power" }}
         onCreated={({ invalidate: redraw }) => { invalidate.current = redraw; }}
-        fallback={<div className={styles.loading}>Tu mirada, nuestra prioridad.</div>}>
+        fallback={<div className={styles.loading}>{BRAND_SLOGAN}</div>}>
         <color attach="background" args={["#efe4d9"]} />
         <mesh position={[0, -.94, 0]}>
           <cylinderGeometry args={[.54, .57, .24, 64]} />

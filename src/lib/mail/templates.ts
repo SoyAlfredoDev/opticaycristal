@@ -1,3 +1,4 @@
+import { BRAND_SLOGAN } from "@/lib/brand";
 import { readFileSync } from "fs";
 import path from "path";
 import { getMesLabel } from "@/lib/jornada-form";
@@ -65,7 +66,7 @@ function shell(title: string, bodyHtml: string) {
             </tr>
           </table>
           <p style="margin:18px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:#62565A;">
-            Óptica &amp; Cristal · Tu mirada, nuestra prioridad<br />
+            Óptica &amp; Cristal · ${BRAND_SLOGAN}<br />
             ${ADDRESS}<br />
             <a href="mailto:${CONTACTO_EMAIL}" style="color:#6B1F3A;">${CONTACTO_EMAIL}</a><br />
             <a href="https://opticaycristal.cl/" style="color:#6B1F3A;">opticaycristal.cl</a> ·

@@ -1,4 +1,6 @@
 "use client";
+import { BRAND_SLOGAN_LINES } from "@/lib/brand";
+
 
 import dynamic from "next/dynamic";
 import { Component, type ReactNode } from "react";
@@ -12,7 +14,7 @@ const CharacterScene = dynamic(() => import("./CharacterScene"), {
 
 function Editorial() {
   return <div className={styles.editorial}>
-    <p>Tu mirada,<br />nuestra prioridad.</p>
+    <p>{BRAND_SLOGAN_LINES[0]}<br />{BRAND_SLOGAN_LINES[1]}</p>
     <span>Óptica &amp; Cristal</span>
   </div>;
 }

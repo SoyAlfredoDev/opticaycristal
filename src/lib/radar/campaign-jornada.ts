@@ -1,3 +1,4 @@
+import { BRAND_SLOGAN } from "@/lib/brand";
 import type { CampaignEmailInput } from "./campaign-render";
 import { campaignTemplate } from "./campaign-templates";
 import { escapeEmail } from "./email-escape";
@@ -32,6 +33,6 @@ ${blocks}
 <p style="margin:26px 0 0">Saludos cordiales,<br><strong>Alfredo Hurtado</strong><br><span style="color:#62565A;font-size:14px">Encargado comercial · Óptica &amp; Cristal</span></p></td></tr>
 <tr><td style="padding:22px 26px;background:#FBF7F2;border-top:1px solid #E9D8C8;font:12px/1.8 Arial,sans-serif;color:#62565A"><a href="https://opticaycristal.cl/" style="color:#6B1F3A">Conozcan nuestra óptica · opticaycristal.cl</a><br>${escapeEmail(input.address)}<br>WhatsApp: +56 9 2245 2080 · <a href="https://www.instagram.com/opticaycristal.cl/" style="color:#6B1F3A">Instagram</a><p style="margin:14px 0 6px">Invitación comercial de Óptica &amp; Cristal. Puedes dejar de recibir estos mensajes desde el enlace de baja.</p><a href="https://opticaycristal.cl/privacidad" style="color:#62565A">Privacidad</a> · <a href="${escapeEmail(input.unsubscribeUrl)}" style="color:#62565A">Darme de baja</a><p style="margin:12px 0 0">© ${new Date().getUTCFullYear()} Óptica &amp; Cristal. Todos los derechos reservados.</p></td></tr>
 </table></td></tr></table></body></html>`;
-  const text = `Óptica & Cristal\nRegala a tu equipo un chequeo visual 100% gratuito.\nVer bien. Sentirse bien.\n\n${body.replaceAll("**", "")}\n\n${input.variant.label}: ${input.ctaUrl}\n\nAlfredo Hurtado\nEncargado comercial · Óptica & Cristal\n${input.address}\nhttps://opticaycristal.cl/\nWhatsApp: +56 9 2245 2080\nInstagram: https://www.instagram.com/opticaycristal.cl/\nInvitación comercial de Óptica & Cristal. Puedes darte de baja en el enlace siguiente.\nDarme de baja: ${input.unsubscribeUrl}\nPrivacidad: https://opticaycristal.cl/privacidad`;
+  const text = `Óptica & Cristal\nRegala a tu equipo un chequeo visual 100% gratuito.\n${BRAND_SLOGAN}\n\n${body.replaceAll("**", "")}\n\n${input.variant.label}: ${input.ctaUrl}\n\nAlfredo Hurtado\nEncargado comercial · Óptica & Cristal\n${input.address}\nhttps://opticaycristal.cl/\nWhatsApp: +56 9 2245 2080\nInstagram: https://www.instagram.com/opticaycristal.cl/\nInvitación comercial de Óptica & Cristal. Puedes darte de baja en el enlace siguiente.\nDarme de baja: ${input.unsubscribeUrl}\nPrivacidad: https://opticaycristal.cl/privacidad`;
   return { subject, html, text };
 }

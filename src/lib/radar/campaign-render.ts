@@ -1,3 +1,4 @@
+import { BRAND_SLOGAN } from "@/lib/brand";
 import { renderJornadaCampaign } from "./campaign-jornada";
 import { campaignTemplate } from "./campaign-templates";
 import { escapeEmail } from "./email-escape";
@@ -46,7 +47,7 @@ export function renderCampaignEmail(input: CampaignEmailInput) {
 <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all">${e(template.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${ivory}"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #E9D8C8">
-<tr><td style="padding:28px 28px 22px;border-top:5px solid ${wine}"><img src="https://opticaycristal.cl/images/home/oc-logo-oficial.png" width="156" alt="Óptica &amp; Cristal" style="display:block;width:156px;max-width:100%;height:auto;border:0"><p style="margin:14px 0 0;font:12px/1.6 Arial,sans-serif;color:#62565A">Tu mirada, nuestra prioridad</p></td></tr>
+<tr><td style="padding:28px 28px 22px;border-top:5px solid ${wine}"><img src="https://opticaycristal.cl/images/home/oc-logo-oficial.png" width="156" alt="Óptica &amp; Cristal" style="display:block;width:156px;max-width:100%;height:auto;border:0"><p style="margin:14px 0 0;font:12px/1.6 Arial,sans-serif;color:#62565A">${BRAND_SLOGAN}</p></td></tr>
 <tr><td style="padding:30px 28px;background:#E9D8C8;color:#421326"><p style="margin:0 0 12px;font:bold 11px/1.6 Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase">${e(template.eyebrow)}</p><h1 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:500;line-height:1.2">${e(template.headline)}</h1></td></tr>
 <tr><td style="padding:28px 28px 10px">${paragraphs}</td></tr>
 <tr><td style="padding:0 28px 22px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${ivory}">${highlights}</table></td></tr>
@@ -56,6 +57,6 @@ export function renderCampaignEmail(input: CampaignEmailInput) {
   return {
     subject,
     html,
-    text: `Óptica & Cristal · Tu mirada, nuestra prioridad\n\n${subject}\n\n${body}\n\n${input.variant.label}: ${input.ctaUrl}\n\nSolicitar información no firma un contrato ni confirma una reserva.\nÓptica & Cristal · ${input.address}\nWeb: https://opticaycristal.cl\nInstagram: @opticaycristal.cl\nWhatsApp: +56 9 2245 2080\nInvitación comercial de Óptica & Cristal. Puedes darte de baja en el enlace siguiente.\nDarme de baja: ${input.unsubscribeUrl}\nPrivacidad: https://opticaycristal.cl/privacidad\n© ${year} Óptica & Cristal.`,
+    text: `Óptica & Cristal · ${BRAND_SLOGAN}\n\n${subject}\n\n${body}\n\n${input.variant.label}: ${input.ctaUrl}\n\nSolicitar información no firma un contrato ni confirma una reserva.\nÓptica & Cristal · ${input.address}\nWeb: https://opticaycristal.cl\nInstagram: @opticaycristal.cl\nWhatsApp: +56 9 2245 2080\nInvitación comercial de Óptica & Cristal. Puedes darte de baja en el enlace siguiente.\nDarme de baja: ${input.unsubscribeUrl}\nPrivacidad: https://opticaycristal.cl/privacidad\n© ${year} Óptica & Cristal.`,
   };
 }

@@ -1,3 +1,4 @@
+import { BRAND_SLOGAN, BRAND_SLOGAN_LINES } from "@/lib/brand";
 import Image from "next/image";
 import Link from "next/link";
 import { Globe, Instagram, MapPin, MessageCircle } from "lucide-react";
@@ -23,7 +24,7 @@ export function SiteFooter({ showContact = true }: { showContact?: boolean }) {
             <Image src={brand.logo} alt={brand.name} width={180} height={92} />
           </Link>
           <div className={styles.footerStatement}>
-            <p>Ver bien.<br /><span>Sentirse bien.</span></p><span>Visión · Estilo · Bienestar</span>
+            <p>{BRAND_SLOGAN_LINES[0]}<br /><span>{BRAND_SLOGAN_LINES[1]}</span></p>
           </div>
           <nav aria-label="Navegación del pie de página">
             {siteNavigation.map((item) => <Link key={item.href} href={item.href}>{item.footerLabel}</Link>)}
@@ -36,7 +37,7 @@ export function SiteFooter({ showContact = true }: { showContact?: boolean }) {
           </address>
         </div>
         <div className={`${styles.container} ${styles.footerBottom}`}>
-          <span>Óptica & Cristal · Tu mirada, nuestra prioridad.</span>
+          <span>Óptica &amp; Cristal · {BRAND_SLOGAN}</span>
           <div className={styles.footerUtilityLinks}>
             <Link href="/privacidad">Privacidad</Link>
             <Link href="/admin/login">Ingreso ejecutivos</Link>

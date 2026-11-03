@@ -1,3 +1,4 @@
+import { BRAND_SLOGAN_LINES } from "@/lib/brand";
 import { MessageCircle } from "lucide-react";
 import { HeroPortraits } from "./HeroPortraits";
 import hero from "./HomeHero.module.css";
@@ -12,7 +13,7 @@ export function HomeHero() {
         <div className={hero.layout}>
           <div className={hero.copy}>
             <span className={hero.eyebrow}>Lentes para tu día a día</span>
-            <h1 id="home-title">Ver bien.<br /><em>Sentirse bien.</em></h1>
+            <h1 id="home-title">{BRAND_SLOGAN_LINES[0]}<br /><em>{BRAND_SLOGAN_LINES[1]}</em></h1>
             <p>Encuentra los lentes que van contigo.<br />Te acompañamos a elegir.</p>
             <div className={hero.actions}>
               <LinkButton href="/optica" arrow>Explorar lentes</LinkButton>

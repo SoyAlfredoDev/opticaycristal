@@ -19,7 +19,7 @@ describe('Cinta mensual de Inicio', () => {
   it('conserva la cabecera institucional de las páginas interiores', () => {
     render(<SiteHeader active="Óptica" />);
     expect(screen.queryByRole('note', { name: 'Novedades del mes' })).not.toBeInTheDocument();
-    expect(screen.getByText('Tu mirada, nuestra prioridad')).toBeInTheDocument();
+    expect(screen.getByText('Ver bien, sentirse bien')).toBeInTheDocument();
   });
   it('evita dejar un mes desactualizado en HTML generado o cacheado por el servidor', () => {
     expect(renderToString(<MonthlyNotice />)).toContain('Este mes, encuentra tu próxima mirada');
