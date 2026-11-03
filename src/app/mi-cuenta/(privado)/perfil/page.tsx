@@ -7,11 +7,11 @@ import { ProfileVerification } from "@/components/clients/ProfileVerification";
 import styles from "@/components/clients/ClientSpace.module.css";
 
 export default function CustomerProfilePage() {
-  const { customer: c } = useCustomerData();
+  const { customer: c,refresh } = useCustomerData();
   return <>
     <h1>Mi perfil</h1>
     {c ? <>
-    <ProfileVerification customer={c} />
+    <ProfileVerification customer={c} onWhatsappVerified={refresh} />
     <details className={`${styles.panel} ${styles.section} ${styles.personalDetails}`}>
       <summary className={styles.detailsSummary}><span className={styles.iconLabel}><UserRound size={20} aria-hidden="true" />Mis datos personales</span><ChevronDown size={20} aria-hidden="true" /></summary>
       <div className={`${styles.profileGrid} ${styles.section}`}>

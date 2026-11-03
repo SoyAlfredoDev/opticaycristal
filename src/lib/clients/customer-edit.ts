@@ -75,7 +75,7 @@ export async function updateCustomerDetails(customerId: string, raw: unknown, ac
             await db.query(`DELETE FROM ${t("oc_client_email_reservations")} WHERE expires_at<now()`);
             await db.query(`INSERT INTO ${t("oc_client_email_reservations")}(email,customer_id,expires_at) VALUES($1,$2,now()+$3*interval '1 second') ON CONFLICT(email) DO UPDATE SET customer_id=EXCLUDED.customer_id,expires_at=EXCLUDED.expires_at`, [current.email, customerId, CUSTOMER_OLD_EMAIL_HOLD_SECONDS]);
         }
-        const updated = await db.query<Row>(`UPDATE ${t("oc_client_user")} SET "firstName"=$2,"lastName"=$3,name=$2||' '||$3,email=$4,"whatsappCipher"=$5,"whatsappVerified"=CASE WHEN $6 THEN false ELSE "whatsappVerified" END,"updatedAt"=now() WHERE id=$1 RETURNING ${fields}`, [customerId, contact.firstName, contact.lastName, contact.email, protectClientValue(contact.whatsapp, "whatsapp"), contact.whatsapp !== current.whatsapp]);
+        const updated = await db.query<Row>(`UPDATE ${t("oc_client_user")} SET "firstName"=$2,"lastName"=$3,name=$2||' '||$3,email=$4,"whatsappCipher"=$5,"whatsappVerified"=CASE WHEN $6 THEN false ELSE "whatsappVerified" END,"updatedAt"=now() WHERE id=$1 RETURNING ${fields}`, [customerId, contact.firstName, contact.lastName, contact.email, contact.whatsapp === current.whatsapp ? found.rows[0].whatsappCipher : protectClientValue(contact.whatsapp, "whatsapp"), contact.whatsapp !== current.whatsapp]);
         if (emailChanged) {
             // Recovery links identify the user, so revoke links sent to the old address.
             await db.query(`DELETE FROM ${t("oc_client_session")} WHERE "userId"=$1`, [customerId]);

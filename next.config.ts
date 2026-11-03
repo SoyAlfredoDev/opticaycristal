@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const privateHeaders = [{ key: "Cache-Control", value: "private, no-store" }, { key: "Referrer-Policy", value: "no-referrer" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "X-Frame-Options", value: "DENY" }, { key: "X-Content-Type-Options", value: "nosniff" }];
-    return [{ source: "/mi-cuenta/:path*", headers: privateHeaders }, { source: "/admin/clientes/:path*", headers: privateHeaders }, { source: "/api/clientes/:path*", headers: privateHeaders }, { source: "/api/admin/clientes/:path*", headers: privateHeaders }];
+    return [{ source: "/api/integraciones/:path*", headers: privateHeaders }, { source: "/mi-cuenta/:path*", headers: privateHeaders }, { source: "/admin/clientes/:path*", headers: privateHeaders }, { source: "/api/clientes/:path*", headers: privateHeaders }, { source: "/api/admin/clientes/:path*", headers: privateHeaders }];
   },
   images: {
     qualities: [75, 90],

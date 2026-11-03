@@ -1,7 +1,7 @@
 import type { CustomerSale } from "./sales-types";
 export type RegistrationWelcome = { tierName: string; maxAmount: number; maxPercent: number; maxInstallments: number };
 export type CustomerProfile = {
-  id: string; firstName: string; lastName: string; email: string; emailVerified: boolean; whatsapp: string; whatsappVerified: boolean;
+  id: string; firstName: string; lastName: string; email: string; emailVerified: boolean; whatsapp: string; whatsappVerified: boolean; whatsappVerificationAvailable?: boolean;
   rut: string; identityVerified: boolean; createdAt: string;
   tier: { code: string; name: string; maxPercent: number; maxAmount: number; maxInstallments: number };
   credit: { principalOutstanding: number; capacity: number; available: number; enabled: boolean; needsIdentity: boolean };

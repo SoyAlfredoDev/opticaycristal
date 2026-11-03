@@ -1,0 +1,12 @@
+// @vitest-environment node
+import {beforeEach,it,expect,vi,afterEach} from "vitest";
+import {createHmac} from "node:crypto";
+const m=vi.hoisted(()=>({accept:vi.fn()}));
+vi.mock("@/lib/integrations/kapso-verification",async original=>({...await original<typeof import("@/lib/integrations/kapso-verification")>(),acceptKapsoVerification:m.accept}));
+import {POST} from "./route";
+const secret="s".repeat(64);const payload={phone_number_id:"1368248166370894",message:{id:"wamid.qa",timestamp:String(Math.floor(Date.now()/1000)),from:"56912345678",type:"text",text:{body:"OC-VERIFICAR "+"A".repeat(32)},kapso:{direction:"inbound",status:"received"}}};
+const req=(body=JSON.stringify(payload),signature=createHmac("sha256",secret).update(body).digest("hex"),event="whatsapp.message.received")=>new Request("https://opticaycristal.cl/api/integraciones/kapso/webhook",{method:"POST",headers:{"Content-Type":"application/json","x-webhook-signature":signature,"x-webhook-event":event},body});
+beforeEach(()=>{vi.stubEnv("WHATSAPP_VERIFICATION_ENABLED","true");vi.stubEnv("KAPSO_WEBHOOK_SECRET",secret);vi.stubEnv("KAPSO_PHONE_NUMBER_ID","1368248166370894");m.accept.mockResolvedValue(true);});afterEach(()=>vi.unstubAllEnvs());
+it("rechaza firmas ausentes, falsas o cuerpos alterados antes de tocar la base",async()=>{expect((await POST(req(undefined,""))).status).toBe(401);expect((await POST(req(undefined,"f".repeat(64)))).status).toBe(401);const raw=JSON.stringify(payload);expect((await POST(req(raw+" ",createHmac("sha256",secret).update(raw).digest("hex")))).status).toBe(401);expect(m.accept).not.toHaveBeenCalled();});
+it("procesa solamente mensajes firmados de entrada y responde sin datos de cuenta",async()=>{const response=await POST(req());expect(response.status).toBe(200);expect(await response.json()).toEqual({ok:true});expect(m.accept).toHaveBeenCalledTimes(1);m.accept.mockClear();await POST(req(undefined,undefined,"whatsapp.message.sent"));expect(m.accept).not.toHaveBeenCalled();});
+it("falla cerrado sin configuración, limita tamaño y no revela errores internos",async()=>{vi.stubEnv("WHATSAPP_VERIFICATION_ENABLED","false");expect((await POST(req())).status).toBe(503);vi.stubEnv("WHATSAPP_VERIFICATION_ENABLED","true");expect((await POST(req(" ".repeat(65537)))).status).toBe(413);m.accept.mockRejectedValue(Error("database secrets"));const response=await POST(req());expect(response.status).toBe(503);expect(await response.text()).not.toContain("database secrets");});

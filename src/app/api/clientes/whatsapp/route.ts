@@ -1,0 +1,6 @@
+import {customerSession} from "@/lib/clients/auth";
+import {privateJson,sameClientOrigin,readClientBody} from "@/lib/clients/http";
+import {WhatsappVerificationError,whatsappVerificationStatus,createWhatsappChallenge} from "@/lib/integrations/kapso-verification";
+export const runtime="nodejs";
+export async function GET(){try{const session=await customerSession();if(!session)return privateJson({error:"Inicia sesión."},401);return privateJson(await whatsappVerificationStatus(session.user.id));}catch{return privateJson({error:"No pudimos consultar la verificación."},503);}}
+export async function POST(request:Request){try{const session=await customerSession();if(!session)return privateJson({error:"Inicia sesión."},401);if(!sameClientOrigin(request))return privateJson({error:"Origen no permitido."},403);const raw=await readClientBody(request,256);if(!raw||typeof raw!=="object"||Array.isArray(raw)||Object.keys(raw).length)return privateJson({error:"No se admiten datos de otra cuenta."},400);return privateJson(await createWhatsappChallenge(session.user.id));}catch(e){return privateJson({error:e instanceof WhatsappVerificationError?e.message:"No pudimos iniciar la verificación."},e instanceof WhatsappVerificationError?e.status:503);}}
