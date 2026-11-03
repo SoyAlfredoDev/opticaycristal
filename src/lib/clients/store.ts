@@ -56,3 +56,12 @@ export async function getCustomerSnapshot(userId: string): Promise<CustomerSnaps
   activity: { purchaseCount:Number(row.purchase_count), creditCount:Number(row.credit_count), nextInstallment:row.next_installment ?? null } },
   tiers:row.tiers ?? [], historyVersion:String(row.history_version) };
 }
+
+/** Private integration lookup. Never return contact data directly from an API. */
+export async function getCustomerIntegrationContact(rut: string) {
+ const normalized = normalizeClientRut(rut);
+ if (!validClientRut(normalized)) return null;
+ const result = await clientPool().query(`${select(true)} WHERE u."rutHash"=$1`, [clientFingerprint(normalized,"rut")]);
+ const row = result.rows[0];
+ return row ? { customer:summary(row), whatsapp:revealClientValue(row.whatsappCipher,"whatsapp") } : null;
+}
