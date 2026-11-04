@@ -1,0 +1,77 @@
+{
+  "reviewDate": "2026-11-04",
+  "implementationCommit": "885d1866cd9d2fd424905901c183ea2be8171781",
+  "reviewBranch": "codex/cris-api-review-20261104",
+  "productionBaseline": {
+    "commit": "fbff703a7adc21ffc7d3b1aedbf0e8f7b607d0dd",
+    "deploymentId": "dpl_37k9Ah67Ck8j6FQcG2rMBVX3tYGY",
+    "environment": "production",
+    "lastVerifiedStatus": "READY",
+    "verificationContext": "Previous Users release in this chat; no positive personal credit call made in this review"
+  },
+  "newCapabilities": {
+    "localImplemented": true,
+    "previewDeployed": false,
+    "productionDeployed": false,
+    "pushed": false,
+    "flagDefault": false,
+    "productionMigrationApplied": false
+  },
+  "validation": {
+    "typecheck": "PASS",
+    "eslintScoped": "PASS",
+    "fullSuite": {
+      "files": 132,
+      "tests": 604,
+      "status": "PASS"
+    },
+    "focusedAfterReceiptUiRefinement": {
+      "files": 2,
+      "tests": 8,
+      "status": "PASS"
+    },
+    "build": "PASS; final committed build rechecked during packaging",
+    "openapiExamplesAndHandlerResponses": "PASS",
+    "legacyContractSourceDiff": "UNCHANGED",
+    "productionHttpWithoutCredentials": [
+      {
+        "action": "whatsapp/consultar-condiciones",
+        "status": 401
+      },
+      {
+        "action": "whatsapp/consultar-credito",
+        "status": 401
+      },
+      {
+        "action": "cris/consultar-resumen",
+        "status": 404
+      }
+    ],
+    "npmAuditProduction": {
+      "total": 0
+    },
+    "developmentAuditNotFullyTriaged": {
+      "moderateReported": 8
+    }
+  },
+  "safety": {
+    "realCustomerMutations": 0,
+    "realMessagesSent": 0,
+    "realChargesActivated": 0,
+    "trackingActivated": false,
+    "newProductionSecretsConfigured": false
+  },
+  "pending": [
+    "OT source and owner mapping",
+    "Commercial policies not present in canonical source",
+    "Kapso trusted-event and media adapter review",
+    "Production positive personal lookup authorized by owner",
+    "Neon branch concurrency and cold/p95 measurement",
+    "Malware analysis and operational retention cleanup"
+  ],
+  "migration": {
+    "path": "sql/integrations/003-cris-capabilities.sql",
+    "sha256": "515f748a3e67a6555380357d17ea8eb549ead5b53973eea2e1f33400fd55d676",
+    "isolatedPGliteAppliedTwice": true
+  }
+}
