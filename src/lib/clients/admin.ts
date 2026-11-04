@@ -1,8 +1,9 @@
 import "server-only";
 import { getSession } from "@/lib/auth";
-export async function customerAdminSession() {
-  const session = await getSession();
+export async function customerAdminSession(allowSeller=false) {
+  const session = await getSession({allowSeller});
   if (!session) return null;
+  if (session.staffId && (session.role === "administrator" || (allowSeller && session.role === "seller"))) return session;
   // Never grant staff permissions from a public customer's email or request body.
   const allowlist = process.env.CLIENT_ADMIN_USERS?.split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
   if (allowlist?.length && !allowlist.includes(session.u.toLowerCase())) return null;

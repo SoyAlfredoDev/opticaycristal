@@ -2,7 +2,6 @@ import { allowStaffLogin } from "@/lib/clients/staff-access";
 import { NextResponse } from "next/server";
 import {
   ADMIN_COOKIE,
-  adminCredentialsConfigured,
   adminCookieOptions,
   clientIp,
   createSessionToken,
@@ -36,15 +35,15 @@ export async function POST(request: Request) {
   const usuario = typeof record.usuario === "string" ? record.usuario.trim() : "";
   const password = typeof record.password === "string" ? record.password : "";
 
-  if (!adminCredentialsConfigured()) {
-    return NextResponse.json(
-      { error: "El acceso interno todavía no está configurado en el servidor." },
-      { status: 500 }
-    );
-  }
-
   if (!credentialsMatch(usuario, password)) {
-    return NextResponse.json({ error: "Usuario o contraseña incorrectos." }, { status: 401 });
+    if (usuario.includes("@") && password.length >= 8 && password.length <= 128) {
+      try {
+        const {staffAuth}=await import("@/lib/staff/auth");
+        const login=await staffAuth().api.signInEmail({body:{email:usuario.toLowerCase(),password},headers:request.headers,asResponse:true});
+        if(login.ok){const response=NextResponse.json({ok:true});for(const cookie of login.headers.getSetCookie())response.headers.append("Set-Cookie",cookie);return response;}
+      } catch { /* Keep credential errors indistinguishable. */ }
+    }
+    return NextResponse.json({error:"Usuario o contraseña incorrectos."},{status:401});
   }
 
   const token = createSessionToken(usuario);

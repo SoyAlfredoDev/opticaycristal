@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHash, createHmac, timingSafeEqual } from "crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export const ADMIN_COOKIE = "oc_admin";
 const SESSION_MS = 1000 * 60 * 60 * 12;
@@ -10,6 +10,8 @@ type SessionPayload = {
   u: string;
   exp: number;
   v: string;
+  staffId?: string;
+  role?: "administrator"|"seller";
 };
 
 const attempts = new Map<string, { count: number; reset: number }>();
@@ -124,7 +126,10 @@ export function readSessionToken(token: string | undefined | null) {
   }
 }
 
-export async function getSession() {
+export async function getSession(options: {allowSeller?:boolean} = {}) {
   const jar = await cookies();
-  return readSessionToken(jar.get(ADMIN_COOKIE)?.value);
+  const legacy = readSessionToken(jar.get(ADMIN_COOKIE)?.value);
+  if (legacy) return legacy;
+  if (!jar.has("oc_staff.session_token") && !jar.has("__Secure-oc_staff.session_token")) return null;
+  try { const {staffSession}=await import("@/lib/staff/auth"); const session=await staffSession(await headers()); return session?.role==="seller"&&!options.allowSeller?null:session; } catch { return null; }
 }

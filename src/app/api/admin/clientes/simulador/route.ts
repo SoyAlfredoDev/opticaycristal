@@ -3,7 +3,7 @@ import { privateJson,readClientBody,sameClientOrigin } from "@/lib/clients/http"
 import { SimulationError,lookupSimulationCustomer,calculateAdminSimulation } from "@/lib/clients/admin-simulation";
 export const runtime="nodejs";
 export async function POST(request:Request){
- if(!await customerAdminSession())return privateJson({error:"Acceso restringido."},401);
+ if(!await customerAdminSession(true))return privateJson({error:"Acceso restringido."},401);
  if(!sameClientOrigin(request))return privateJson({error:"Origen no permitido."},403);
  let body:Record<string,unknown>;try{const raw=await readClientBody(request);if(!raw||typeof raw!=="object"||Array.isArray(raw))throw new Error();body=raw as Record<string,unknown>;}catch{return privateJson({error:"Datos no válidos."},400);}
  try{

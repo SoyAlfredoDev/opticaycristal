@@ -62,6 +62,7 @@ export default function LoginForm({supportTicketId}:{supportTicketId?:string}={}
         >
           <Input
             label="Usuario"
+            placeholder="Correo electrónico o usuario"
             name="usuario"
             autoComplete="username"
             required
@@ -84,6 +85,7 @@ export default function LoginForm({supportTicketId}:{supportTicketId?:string}={}
             {pending ? "Entrando..." : "Entrar"}
           </Button>
         </form>
+        <p className="mt-4 text-sm"><a href="/admin/recuperar">Recuperar acceso del equipo</a></p>
       </div>
     </main>
   );

@@ -7,7 +7,7 @@ export async function GET(_r: Request, { params }: {
     params: Promise<{
         id: string;
     }>;
-}) { if (!await customerAdminSession())
+}) { if (!await customerAdminSession(true))
     return privateJson({ error: "Acceso restringido." }, 401); try {
     return privateJson({ customer: await editableCustomer((await params).id) });
 }
@@ -18,7 +18,7 @@ export async function POST(request: Request, { params }: {
     params: Promise<{
         id: string;
     }>;
-}) { const staff = await customerAdminSession(); if (!staff)
+}) { const staff = await customerAdminSession(true); if (!staff)
     return privateJson({ error: "Acceso restringido." }, 401); if (!sameClientOrigin(request))
     return privateJson({ error: "Origen no permitido." }, 403); let raw; try {
     raw = await readClientBody(request);

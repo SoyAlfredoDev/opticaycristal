@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ADMIN_COOKIE, adminCookieOptions, getSession } from "@/lib/auth";
 import { sendSolicitudCorreos } from "@/lib/mail/solicitud";
@@ -9,6 +9,12 @@ import { getSolicitud, updateCorreoEstado } from "@/lib/solicitudes/store";
 
 export async function logoutAction() {
   const jar = await cookies();
+  if(jar.has("oc_staff.session_token")||jar.has("__Secure-oc_staff.session_token")) {
+    const {staffAuth}=await import("@/lib/staff/auth");
+    await staffAuth().api.signOut({headers:await headers()});
+    jar.set("oc_staff.session_token","",adminCookieOptions(0));
+    jar.set("__Secure-oc_staff.session_token","",{...adminCookieOptions(0),secure:true});
+  }
   jar.set(ADMIN_COOKIE, "", adminCookieOptions(0));
   redirect("/admin/login");
 }

@@ -6,7 +6,7 @@ export async function POST(request: Request, { params }: {
     params: Promise<{
         id: string;
     }>;
-}) { const staff = await customerAdminSession(); if (!staff)
+}) { const staff = await customerAdminSession(true); if (!staff)
     return privateJson({ error: "Acceso restringido." }, 401); if (!sameClientOrigin(request))
     return privateJson({ error: "Origen no permitido." }, 403); try {
     const raw = await readClientBody(request);

@@ -9,7 +9,7 @@ export async function GET(_r: Request, { params }: {
         id: string;
     }>;
 }) {
-    if (!await customerAdminSession())
+    if (!await customerAdminSession(true))
         return privateJson({ error: "Acceso restringido." }, 401);
     const { id } = await params;
     if (!/^[a-f0-9-]{36}$/i.test(id))

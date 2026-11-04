@@ -1,0 +1,6 @@
+import {StrictMode} from "react";
+import {render,screen,waitFor,fireEvent} from "@testing-library/react";
+import {it,expect,vi,afterEach} from "vitest";
+import {StaffAccess} from "./StaffAccess";
+afterEach(()=>{vi.unstubAllGlobals();history.replaceState(null,"","/");});
+it("conserva el enlace durante StrictMode, lo elimina de la URL y bloquea contraseñas diferentes",async()=>{history.replaceState(null,"","/admin/registro#token="+"a".repeat(64));const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({email:"staff@example.com",rutEnding:"678-5",role:"administrator"})});vi.stubGlobal("fetch",fetcher);render(<StrictMode><StaffAccess mode="register"/></StrictMode>);expect(await screen.findByText(/staff@example.com/)).toBeInTheDocument();expect(location.hash).toBe("");expect(JSON.parse(fetcher.mock.calls[0][1].body).token).toBe("a".repeat(64));fireEvent.change(screen.getByLabelText("Nombre completo"),{target:{value:"Equipo Prueba"}});fireEvent.change(screen.getByLabelText("Contraseña"),{target:{value:"Password primero"}});fireEvent.change(screen.getByLabelText("Repetir contraseña"),{target:{value:"Password segundo"}});fireEvent.click(screen.getByRole("button",{name:"Crear mi acceso"}));await waitFor(()=>expect(screen.getByRole("alert")).toHaveTextContent("no coinciden"));expect(fetcher).toHaveBeenCalledTimes(1);});

@@ -7,9 +7,10 @@ import type { Solicitud } from "@/lib/solicitudes/types";
 export const dynamic = "force-dynamic";
 
 export default async function AdminSolicitudesPage() {
-  const session = await getSession();
+  const session = await getSession({allowSeller:true});
   if (!session) redirect("/admin/login");
 
+  if (session.role === "seller") redirect("/admin/clientes/ventas");
   const infra = infraStatus();
   let solicitudes: Solicitud[] = [];
   let errorCarga: string | null = null;

@@ -7,16 +7,17 @@ import { saleInterestQuote,CommitmentError } from "@/lib/clients/commitments";
 import { todayChile } from "@/lib/clients/sales";
 export const runtime = "nodejs";
 export async function GET() {
- if (!await customerAdminSession()) return privateJson({error:"Acceso restringido."},401);
+ if (!await customerAdminSession(true)) return privateJson({error:"Acceso restringido."},401);
  try { return privateJson({products:await listSaleProducts()}); } catch { return privateJson({error:"No se pudieron cargar los productos."},503); }
 }
 export async function POST(request: Request) {
- const staff = await customerAdminSession();
+ const staff = await customerAdminSession(true);
  if (!staff) return privateJson({error:"Acceso restringido."},401);
  if (!sameClientOrigin(request)) return privateJson({error:"Origen no permitido."},403);
  let body: Record<string,unknown>;
  try { const raw = await readClientBody(request); if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error(); body=raw as Record<string,unknown>; }
  catch { return privateJson({error:"Datos no válidos."},400); }
+ if(staff.role==="seller" && ["product","cancel","reverse"].includes(String(body.action)))return privateJson({error:"Esta acción requiere un administrador."},403);
  try {
   switch(body.action) {
    case "interest": return privateJson({interest:await saleInterestQuote(body.saleId,typeof body.paidOn==="string"?body.paidOn:todayChile())});

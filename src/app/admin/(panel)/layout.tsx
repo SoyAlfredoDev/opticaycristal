@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { customerAdminSession } from "@/lib/clients/admin";
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
+  const session = await getSession({allowSeller:true});
   if (!session) redirect("/admin/login");
-  return <AdminShell allowCustomers={Boolean(await customerAdminSession())}>{children}</AdminShell>;
+  return <AdminShell seller={session.role==="seller"} allowCustomers={Boolean(await customerAdminSession(true))}>{children}</AdminShell>;
 }
