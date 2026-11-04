@@ -1,4 +1,5 @@
 "use client";
+import {CrisTicketReceipt} from "./CrisTicketReceipt";
 import {useAdminMemory} from "@/components/admin/AdminMemory";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -81,6 +82,7 @@ export function SupportDesk({admin=false,initialTicketId=""}:{admin?:boolean;ini
           <h2 ref={threadRef} tabIndex={-1}>{selected.subject}</h2>
           {selected.customer&&<p className={styles.customer}><Link className={ui.textLink} href={`/admin/clientes/${encodeURIComponent(selected.customer.id)}`}>{selected.customer.name}</Link><br/>{selected.customer.email}</p>}
           {admin&&selected.notification&&<p className={ui.small} role="status">Aviso {selected.notification.kind==="staff_reply"?"al cliente":"al equipo"}: {({pending:"pendiente de envío",processing:"enviando",sent:"enviado",failed:"sin confirmar; requiere revisión",unverified:"correo sin verificar; la respuesta está disponible en el portal"})[selected.notification.state]}.</p>}
+          {admin&&<CrisTicketReceipt ticketId={selected.id} ticketStatus={selected.status}/>}
           <div className={styles.messages}>{selected.messages.map(item=><article className={styles.message} data-role={item.role} key={item.id}><div className={styles.meta}><strong>{item.role==="admin"?"Equipo Óptica & Cristal":admin?"Cliente":"Tú"}</strong><time dateTime={item.createdAt}>{date(item.createdAt)}</time></div><p>{item.body}</p></article>)}</div>
           {selected.status==="resuelto"&&<p className={ui.small}>Si respondes, el ticket se reabrirá.</p>}
           <form className={styles.form} aria-label="Responder ticket" onSubmit={event=>update("reply",event)}><label className={ui.field}><span>{admin?"Respuesta al cliente":"Tu respuesta"}</span><textarea className={ui.input} value={reply} onChange={e=>{setReply(e.target.value);replyKey.current="";}} maxLength={2000} required disabled={busy}/></label><div className={styles.formActions}><button className={`${ui.button} ${ui.primary}`} disabled={busy}>{busy?"Guardando…":"Enviar respuesta"}</button>{selected.status!=="resuelto"&&<button type="button" className={ui.button} disabled={busy} onClick={()=>update("resolve")}>Marcar resuelto</button>}</div></form>

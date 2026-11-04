@@ -47,3 +47,6 @@ export const siteNavigation = [
   { label: "Jornadas", footerLabel: "Jornadas oftalmológicas", href: "/jornadas" },
   { label: "Mi cuenta", footerLabel: "Mi espacio de cliente", href: "/mi-cuenta" },
 ] as const;
+
+/** Published in the customer portal; exceptional dates are not configured. */
+export const storeHours = [{days:[1,2,3,4,5],opens:"10:00",closes:"18:00"},{days:[6],opens:"10:00",closes:"15:00"}] as const;

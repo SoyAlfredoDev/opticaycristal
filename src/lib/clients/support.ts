@@ -48,7 +48,7 @@ export async function listSupportTickets(actor: SupportActor, options: { status?
   const result = await clientPool().query<TicketRow>(`SELECT t.*,u.name,u.email FROM ${tickets()} t JOIN ${users()} u ON u.id=t.customer_id WHERE ($1::text IS NULL OR t.customer_id=$1) AND ($2='todos' OR t.status=$2) AND ($3='' OR u.name ILIKE '%'||$3||'%' OR u.email ILIKE '%'||$3||'%' OR ('AYU-'||lpad(t.folio::text,greatest(5,length(t.folio::text)),'0')) ILIKE '%'||$3||'%') ORDER BY t.updated_at DESC,t.id DESC LIMIT 51 OFFSET $4`, [actor.kind === "customer" ? actor.id : null, status, actor.kind === "admin" ? q : "", offset]);
   return { tickets: result.rows.slice(0,50).map(row => summary(row,actor)), hasMore: result.rows.length > 50 };
 }
-export async function getSupportTicket(actor: SupportActor, id: string): Promise<TicketDetail> {
+export async function getSupportTicket(actor: SupportActor, id: string, page?:{offset:number;limit:number}): Promise<TicketDetail> {
   // Check ownership and read the conversation in the same transaction as its status.
   return transaction(async db => {
     const row = await ownedTicket(db,actor,id,true);
@@ -56,7 +56,7 @@ export async function getSupportTicket(actor: SupportActor, id: string): Promise
       const person = await db.query<{name:string;email:string}>(`SELECT name,email FROM ${users()} WHERE id=$1`, [row.customer_id]);
       Object.assign(row,person.rows[0]);
     }
-    const thread = await db.query<{id:string;actor_kind:"customer"|"admin";body_cipher:string;created_at:Date|string}>(`SELECT id,actor_kind,body_cipher,created_at FROM ${messages()} WHERE ticket_id=$1 ORDER BY position`, [id]);
+    const thread = await db.query<{id:string;actor_kind:"customer"|"admin";body_cipher:string;created_at:Date|string}>(`SELECT id,actor_kind,body_cipher,created_at FROM ${messages()} WHERE ticket_id=$1 ORDER BY position LIMIT $2 OFFSET $3`, [id,page?.limit??2147483647,page?.offset??0]);
     const notification=actor.kind==="admin"?await db.query<{kind:"ticket_created"|"staff_reply";state:"pending"|"processing"|"sent"|"failed"|"unverified"}>(`SELECT n.kind,n.state FROM ${clientTable("oc_client_support_mail")} n JOIN ${messages()} m ON m.id=n.message_id WHERE n.ticket_id=$1 ORDER BY m.position DESC LIMIT 1`,[id]):null;
     return { ...summary(row,actor), ...(notification?.rows[0]?{notification:notification.rows[0]}:{}), messages: thread.rows.map(item => ({ id:item.id, role:item.actor_kind, body:revealClientValue(item.body_cipher,"support-message"), createdAt:iso(item.created_at) })) };
   });
@@ -66,9 +66,14 @@ async function messageRate(db: PoolClient, actor: SupportActor) {
   if (Number(count.rows[0].count) >= (actor.kind === "admin" ? 120 : 20)) throw new SupportError("Has enviado varios mensajes. Inténtalo más tarde.",429);
 }
 export async function createSupportTicket(actor: SupportActor, raw: unknown) {
+  const id = await transaction(db => createSupportTicketInTransaction(db, actor, raw));
+  return getSupportTicket(actor,id);
+}
+
+/** Internal adapter: keeps ownership, encryption and limits in the existing support domain. */
+export async function createSupportTicketInTransaction(db: PoolClient, actor: SupportActor, raw: unknown, notify = true) {
   if (actor.kind !== "customer") throw new SupportError("Los tickets los inicia el cliente.",403);
   const input=object(raw), key=supportId(input.requestKey), subject=text(input.subject,"Asunto",100), body=text(input.message,"Mensaje",2000);
-  const id = await transaction(async db => {
     // Serialize creation per customer so parallel requests cannot evade the limits.
     const customer=await db.query(`SELECT id FROM ${users()} WHERE id=$1 FOR UPDATE`,[actor.id]);
     if (!customer.rows.length) throw new SupportError("Cuenta no disponible.",401);
@@ -85,10 +90,8 @@ export async function createSupportTicket(actor: SupportActor, raw: unknown) {
     await db.query(`INSERT INTO ${tickets()}(id,customer_id,subject_cipher,request_key) VALUES($1,$2,$3,$4)`,[ticketId,actor.id,protectClientValue(subject,"support-subject"),key]);
     const messageId=randomUUID();
     await db.query(`INSERT INTO ${messages()}(id,ticket_id,actor_kind,author_id,body_cipher,request_key) VALUES($1,$2,'customer',$3,$4,$5)`,[messageId,ticketId,actor.id,protectClientValue(body,"support-message"),key]);
-    await queueSupportMail(db,{ticketId,messageId,kind:"ticket_created"});
+    if(notify) await queueSupportMail(db,{ticketId,messageId,kind:"ticket_created"});
     return ticketId;
-  });
-  return getSupportTicket(actor,id);
 }
 export async function updateSupportTicket(actor: SupportActor, id: string, raw: unknown) {
   const input=object(raw), key=supportId(input.requestKey);

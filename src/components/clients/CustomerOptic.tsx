@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { ArrowUpRight, Camera, Clock3, Instagram, Mail, MapPin, MessageCircle, Navigation } from "lucide-react";
-import { brand, store, storeMapUrl, storePhotos, whatsappUrl } from "@/components/site/content";
+import { brand, storeHours, store, storeMapUrl, storePhotos, whatsappUrl } from "@/components/site/content";
 import { CONTACTO_EMAIL } from "@/lib/solicitudes/types";
 import ui from "./ClientSpace.module.css";
 import styles from "./CustomerOptic.module.css";
@@ -12,7 +12,7 @@ export function CustomerOptic() {
     <span className={styles.icon}><MapPin size={23} aria-hidden="true"/></span>
     <p className={styles.kicker}>ÓPTICA &amp; CRISTAL</p><h2 id="optic-location">{store.street}</h2>
     <address><strong className={styles.unit}>{store.unit}</strong> · {store.locality}<br/><span>Galería Cohen</span></address>
-    <div className={styles.hours}><h3><Clock3 size={17} aria-hidden="true"/>Horario de atención</h3><dl><div><dt>Lunes a viernes</dt><dd>10:00 a 18:00</dd></div><div><dt>Sábado</dt><dd>10:00 a 15:00</dd></div></dl></div>
+    <div className={styles.hours}><h3><Clock3 size={17} aria-hidden="true"/>Horario de atención</h3><dl><div><dt>Lunes a viernes</dt><dd>{storeHours[0].opens} a {storeHours[0].closes}</dd></div><div><dt>Sábado</dt><dd>{storeHours[1].opens} a {storeHours[1].closes}</dd></div></dl></div>
     <div className={styles.actions}><a href={storeMapUrl("directions")} target="_blank" rel="noopener noreferrer" className={`${ui.button} ${ui.primary}`}><Navigation size={17} aria-hidden="true"/>Cómo llegar</a><a href={whatsappUrl("Hola, quiero visitar la óptica en Huérfanos 713, local 18.")} target="_blank" rel="noopener noreferrer" className={ui.button}>Consultar por WhatsApp</a></div>
    </div>
    <figure className={styles.map}><iframe title={`Mapa de ${brand.name}, ${store.fullAddress}`} src={storeMapUrl("embed",15)} loading="lazy" referrerPolicy="no-referrer" allowFullScreen/><figcaption><a href={storeMapUrl("search")} target="_blank" rel="noopener noreferrer">Abrir en Google Maps<ArrowUpRight size={15} aria-hidden="true"/></a></figcaption></figure>
