@@ -1,0 +1,39 @@
+WEBPAY PLUS - VERIFICACION LOCAL - 2026-11-05
+Base: 99a8ec4275d4fc1d1d181e6e1294103e47b8dddb
+Rama: codex/webpay-plus-20261105
+
+npm run check: PASS
+  ESLint: PASS
+  TypeScript --noEmit: PASS
+  Vitest: 136 archivos, 637 pruebas PASS
+  33 pruebas nuevas de Webpay y componentes.
+
+npm run build -- --webpack: PASS
+  Incluye /admin/webpay, /mi-cuenta/pagos y rutas API de Webpay.
+  No se modifico el comando de build configurado del proyecto.
+
+git diff --check: PASS
+npm audit --omit=dev tras instalar SDK: 0 vulnerabilidades.
+SDK oficial instalado: transbank-sdk 6.1.1.
+
+SDK real contra sandbox Transbank: PASS
+  Creacion sintetica: OK
+  URL oficial de checkout: OK
+  Token 64 caracteres: OK (no registrado en este informe)
+  Cobro efectuado: NO
+
+PostgreSQL aislado PGlite: PASS
+  Migracion 023 aplicada dos veces.
+  Propiedad de venta, monto servidor, idempotencia, pago unico.
+  Rechazos/cancelaciones, monto alterado, saldo cambiado, pago manual simultaneo.
+  Token cifrado, recuperacion por status y retorno interrumpido.
+  Catalogo confirmado no modifica deuda de credito.
+
+Capturas: componente real + API sintetica, sin cuentas ni pagos reales.
+Anchos 390 / 1440 px: sin desborde horizontal.
+Modal de confirmacion: visible y funcional.
+
+PRODUCCION: NO MODIFICADA por este trabajo.
+Migracion productiva: NO EJECUTADA.
+Credenciales productivas Transbank: NO CONFIGURADAS.
+Checkout bancario completo: PENDIENTE, integrar y verificar antes de activar.

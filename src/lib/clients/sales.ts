@@ -132,7 +132,7 @@ export async function createSale(input: SaleInput, actor: string) {
   return id;
  });
 }
-export async function recordSalePayment(raw: unknown, actor: string) {
+export async function recordSalePayment(raw: unknown, actor: string, existingTransaction?: PoolClient) {
  const b = raw as Record<string,unknown>;
  if (!b || typeof b !== "object") throw new SaleError("Pago no válido.");
  const saleId = textValue(b.saleId,"Venta"), key = requestKey(b.requestKey), amount = whole(b.amount,"Capital pagado",0);
@@ -142,7 +142,7 @@ export async function recordSalePayment(raw: unknown, actor: string) {
  if(waiverReason&&waiverReason.length<3)throw new SaleError("Indica el motivo de la condonación.");
  const paidOn = validDate(b.paidOn), reference = textValue(b.reference,"Referencia del pago",160);
  if (paidOn > todayChile()) throw new SaleError("La fecha del pago no puede estar en el futuro.");
- return transaction(async db => {
+ const save = async (db: PoolClient) => {
   const owner = (await db.query(`SELECT user_id FROM ${t("oc_client_sales")} WHERE id=$1`,[saleId])).rows[0];
   if (!owner) throw new SaleError("Venta no encontrada.");
   await db.query(`SELECT id FROM ${t("oc_client_user")} WHERE id=$1 FOR UPDATE`,[owner.user_id]);
@@ -178,7 +178,8 @@ export async function recordSalePayment(raw: unknown, actor: string) {
   await db.query(`UPDATE ${t("oc_client_sales")} SET remaining=remaining-$2 WHERE id=$1`,[saleId,amount]);
   await db.query(`UPDATE ${t("oc_client_credit_balances")} SET principal_outstanding=principal_outstanding-$2,updated_at=now() WHERE user_id=$1`,[owner.user_id,amount]);
   return id;
- });
+ };
+ return existingTransaction ? save(existingTransaction) : transaction(save);
 }
 /** Explicit public projection: costs, request payloads and staff identifiers never reach customers. */
 export async function listCustomerSales(userId: string): Promise<CustomerSale[]> {
