@@ -324,3 +324,7 @@ Implementación nueva solo en desarrollo, sin migraciones productivas ni publica
 ### Ascensos y felicitaciones en desarrollo
 
 La migración 018 y el correo de ascenso están preparados únicamente para evaluación local. No se activaron reglas automáticas ni envíos reales. Detalle, decisiones confirmadas y revisión: [ASCENSOS-Y-FINANCIAMIENTO-DESARROLLO.md](ASCENSOS-Y-FINANCIAMIENTO-DESARROLLO.md).
+
+### Encuestas de satisfacción
+
+Requiere migración `024-satisfaction-surveys.sql`, las variables existentes de correo/base/cifrado y `CRON_SECRET`. Activación explícita con `CLIENT_SURVEYS_ENABLED=true`. La tarea diaria a las 15:00 UTC programa el envío del siguiente día calendario de Santiago. Ver límites de cola, reintentos y comprobaciones previas en `docs/ENCUESTAS-SATISFACCION.md`; no se han configurado ni enviado correos productivos en esta implementación.

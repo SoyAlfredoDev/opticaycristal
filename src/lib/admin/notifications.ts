@@ -4,15 +4,16 @@ import {NOTIFICATION_FILTERS,type AdminNotification,type AdminNotificationFeed,t
 export class NotificationError extends Error{constructor(message:string,public status=400){super(message);}}
 function actorName(actor:string){if(!actor.trim()||actor.length>200)throw new NotificationError('Acceso restringido.',403);return actor.trim().toLowerCase();}
 const publicKinds = ['order_received','request_received'];
-const groups:Record<NotificationFilter,readonly NotificationKind[]>={all:[],customers:['customer_registered'],sales:['sale_created','payment_received'],orders:['order_received'],requests:['request_received'],support:['ticket_created','customer_reply','mail_failed']};
-const labels:Record<NotificationKind,string>={ticket_created:'Nuevo ticket',customer_reply:'El cliente respondió',mail_failed:'Correo de soporte sin confirmar',customer_registered:'Nuevo cliente registrado',sale_created:'Nueva venta registrada',payment_received:'Pago recibido',order_received:'Nuevo pedido web',request_received:'Nueva solicitud'};
+const groups:Record<NotificationFilter,readonly NotificationKind[]>={all:[],customers:['customer_registered','survey_received'],sales:['sale_created','payment_received'],orders:['order_received'],requests:['request_received'],support:['ticket_created','customer_reply','mail_failed']};
+const labels:Record<NotificationKind,string>={survey_received:'Nueva encuesta respondida',ticket_created:'Nuevo ticket',customer_reply:'El cliente respondió',mail_failed:'Correo de soporte sin confirmar',customer_registered:'Nuevo cliente registrado',sale_created:'Nueva venta registrada',payment_received:'Pago recibido',order_received:'Nuevo pedido web',request_received:'Nueva solicitud'};
 type Row={id:string;kind:NotificationKind;ticket_id:string|null;entity_id:string|null;customer_id:string|null;sale_id:string|null;reference:string|null;folio:string|number|null;created_at:string;read:boolean};
 function notification(item:Row):AdminNotification{
  const ticket=item.ticket_id;
  const entity=item.entity_id;
  const customer=item.customer_id;
  let href='/admin/notificaciones';
- if(ticket)href=`/admin/clientes/soporte?ticket=${encodeURIComponent(ticket)}`;
+ if(item.kind==='survey_received')href='/admin/encuestas';
+ else if(ticket)href=`/admin/clientes/soporte?ticket=${encodeURIComponent(ticket)}`;
  else if(item.kind==='customer_registered'&&entity)href=`/admin/clientes/${encodeURIComponent(entity)}`;
  else if((item.kind==='sale_created'||item.kind==='payment_received')&&customer&&item.sale_id)href=`/admin/clientes/${encodeURIComponent(customer)}#venta-${encodeURIComponent(item.sale_id)}`;
  else if(item.kind==='order_received'&&entity)href=`/admin/pedidos#pedido-${encodeURIComponent(entity)}`;

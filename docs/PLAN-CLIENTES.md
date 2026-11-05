@@ -135,3 +135,7 @@ El usuario confirmó que se limita el monto a crédito, no el precio total: se p
 - Las páginas se conservan únicamente en memoria de la cuenta actual y se invalidan al cambiar la versión financiera o cerrar sesión. La próxima cuota se calcula sobre toda la cuenta.
 - El formulario comercial de jornadas se importa al abrirlo; no forma parte de la carga inicial del portal.
 - Pruebas con historiales sintéticos en PostgreSQL aislado, navegación con cuenta real sin modificar ventas y compilación local. Despliegue y migración de índices pendientes.
+
+## Encuestas de satisfacción (2026-11-05)
+
+Implementación aislada en `codex/satisfaction-surveys-20261105`. Plan, rutas, calendario, privacidad, límites y activación en `docs/ENCUESTAS-SATISFACCION.md`. No publicada ni activada. Incluye tres preguntas (atención, plataforma, calidad del producto), comentario opcional y aviso administrativo al responder.

@@ -1,0 +1,9 @@
+Encuestas - 2026-11-05
+Base: 097bef6c417043e39a948d40c678eeab8cc84e33
+139 archivos / 656 pruebas PASS; 19 pruebas nuevas.
+ESLint y TypeScript: PASS.
+Next.js build --webpack: PASS; rutas pública, API, cron y administración incluidas.
+Migración 024 ejecutada dos veces en PGlite aislado.
+Pruebas: venta crédito/contado, siguiente día Chile, flag desactivado, proveedor simulado, correo corporativo, token cifrado, pixel separado, visita, vencimiento, validación, respuesta idempotente, notificación única y enlace de bandeja, promedios y comentarios cifrados, cancelación antes del envío, reintento con clave estable, envío incierto antiguo, autorización administrativa/origen/cron.
+UI navegador: componentes reales con API sintética; formulario, selección 1-5 y no usado, envío y agradecimiento; bandeja administrativa con métricas y comentarios. Móvil 390 px sin overflow horizontal. Capturas sintéticas.
+Sin datos productivos modificados. Sin correos reales enviados. Sin migración ni despliegue productivos. La recepción real en un buzón queda pendiente de prueba controlada al publicar.

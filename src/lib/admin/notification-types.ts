@@ -1,4 +1,4 @@
-export const NOTIFICATION_KINDS = ['ticket_created','customer_reply','mail_failed','customer_registered','sale_created','payment_received','order_received','request_received'] as const;
+export const NOTIFICATION_KINDS = ['survey_received','ticket_created','customer_reply','mail_failed','customer_registered','sale_created','payment_received','order_received','request_received'] as const;
 export type NotificationKind = typeof NOTIFICATION_KINDS[number];
 export const NOTIFICATION_FILTERS = ['all','customers','sales','orders','requests','support'] as const;
 export type NotificationFilter = typeof NOTIFICATION_FILTERS[number];

@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   serverExternalPackages: ["mysql2"],
   outputFileTracingIncludes: {
+    "/api/cron/encuestas": ["./public/images/home/oc-logo-oficial.png"],
     "/api/admin/clientes/*/categoria": ["./public/images/home/oc-logo-oficial.png"],
     "/api/admin/clientes/nivel-correos": ["./public/images/home/oc-logo-oficial.png"],
     "/api/clientes/compras/*/compromiso/pdf": ["./public/images/home/oc-logo-oficial.png"],
@@ -18,7 +19,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const privateHeaders = [{ key: "Cache-Control", value: "private, no-store" }, { key: "Referrer-Policy", value: "no-referrer" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "X-Frame-Options", value: "DENY" }, { key: "X-Content-Type-Options", value: "nosniff" }];
-    return [{ source: "/api/integraciones/:path*", headers: privateHeaders }, { source: "/mi-cuenta/:path*", headers: privateHeaders }, { source: "/admin/clientes/:path*", headers: privateHeaders }, { source: "/api/clientes/:path*", headers: privateHeaders }, { source: "/api/admin/clientes/:path*", headers: privateHeaders }];
+    return [{source:"/admin/encuestas",headers:privateHeaders},{source:"/encuesta/:path*",headers:privateHeaders},{source:"/api/encuestas/:path*",headers:privateHeaders},{source:"/api/admin/encuestas",headers:privateHeaders},{ source: "/api/integraciones/:path*", headers: privateHeaders }, { source: "/mi-cuenta/:path*", headers: privateHeaders }, { source: "/admin/clientes/:path*", headers: privateHeaders }, { source: "/api/clientes/:path*", headers: privateHeaders }, { source: "/api/admin/clientes/:path*", headers: privateHeaders }];
   },
   images: {
     qualities: [75, 90],
