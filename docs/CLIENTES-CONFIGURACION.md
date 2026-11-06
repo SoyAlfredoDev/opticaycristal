@@ -22,7 +22,7 @@ El esquema tiene unicidad de correo y HMAC del RUT, restricciones de categoría 
 ## Reglas vigentes
 Start desde inscripción, hasta30%/40000CLP/1cuota. VIP40%/60000/1, Premium60%/80000/2, Elite70%/150000/2. No se implementan ascensos automáticos aún.
 
-La cuenta es accesible aunque el correo esté pendiente. El máximo se asigna al registrar. Para utilizar financiamiento, se requiere correo verificado. WhatsApp es opcional por decisión del usuario del 29/10/2026; su verificación no está implementada. Por eso puede existir un máximo de40000 y un disponible para uso de0. No implementar un bypass que marque WhatsApp verificado por un checkbox del cliente o del navegador. La revisión presencial de cédula no sustituye estas verificaciones.
+La cuenta es accesible aunque el correo esté pendiente. El máximo se asigna al registrar. Para utilizar financiamiento, se requiere correo verificado. WhatsApp sigue siendo opcional para el crédito. Existe un flujo de verificación por mensaje entrante firmado de Kapso; su disponibilidad depende de la configuración del receptor. Véase `integraciones/VERIFICACION-WHATSAPP-KAPSO.md` para el estado auditado y los límites. Por eso puede existir un máximo de40000 y un disponible para uso de0. No implementar un bypass que marque WhatsApp verificado por un checkbox del cliente o del navegador. La revisión presencial de cédula no sustituye estas verificaciones.
 
 ## Protección y pruebas
 - Better Auth1.7 gestiona hash scrypt, sesiones HttpOnly/SameSite, tokens de recuperación de30minutos, correo de24horas, identificadores de tokens hash y revocación de sesiones al cambiar contraseña. Inicio sin auto-login después de reset.
@@ -328,3 +328,12 @@ La migración 018 y el correo de ascenso están preparados únicamente para eval
 ### Encuestas de satisfacción
 
 Requiere migración `024-satisfaction-surveys.sql`, las variables existentes de correo/base/cifrado y `CRON_SECRET`. Activación explícita con `CLIENT_SURVEYS_ENABLED=true`. La tarea diaria a las 15:00 UTC programa el envío del siguiente día calendario de Santiago. Ver límites de cola, reintentos y comprobaciones previas en `docs/ENCUESTAS-SATISFACCION.md`; no se han configurado ni enviado correos productivos en esta implementación.
+
+
+## Auditoría de verificación de WhatsApp — 5 de noviembre de 2026
+
+La base publicada contiene el receptor Kapso y la migración 002; la auditoría productiva comprobó sus tres tablas y un HTTP 503 del receptor, por lo que aún no estaba operativo. El trabajo de seguridad se prepara aislado sobre el commit de producción `733c584`; no requiere migraciones nuevas ni modifica clientes reales.
+
+La emisión y recepción usan la tabla existente `oc_client_registration_limit` con claves HMAC separadas. Cuenta y teléfono: 3 desafíos/hora y 6/24 horas; mínimo 60 segundos entre códigos. IP: 10/hora y 30/24 horas; global: 120/hora y 500/24 horas. Estado: 30/minuto por cuenta y 120/minuto por IP. Recepción firmada: 300/minuto global y, para desafíos candidatos, 10/minuto y 30/hora por teléfono. Las ventanas comienzan en la primera solicitud; no son límites de Meta ni del bot Cris.
+
+No hay envíos automáticos de la óptica en este flujo, clave API saliente ni OTP enviado por texto libre. La activación exige configurar un webhook de número en Kapso, custodiar el mismo secreto en el servidor y habilitar `WHATSAPP_VERIFICATION_ENABLED` solo después de comprobar la entrega. No confundir migración aplicada, código publicado, banderas de entorno y entrega real.
