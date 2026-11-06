@@ -1,69 +1,113 @@
-# Verificación de WhatsApp del cliente — auditoría y operación
+# Verificación de WhatsApp mediante código saliente
 
-Revisión: 5 de noviembre de 2026. Base: producción `733c584ea8a8061665fa15083a9d8ab5877c45d6`. El refuerzo de seguridad se prepara en una rama aislada; no se publica automáticamente con esta auditoría.
+Revisión: 6 de noviembre de 2026. Sustituye el flujo entrante `OC-VERIFICAR`.
+WhatsApp sigue siendo **opcional para el crédito**; el correo continúa obligatorio.
+No cambia categorías, cupos, pagos ni ventas.
 
-## Qué existe y qué falta
+## Recorrido
 
-- La versión publicada ya contiene el receptor `/api/integraciones/kapso/webhook`, la API privada de Perfil `/api/clientes/whatsapp` y un desafío aleatorio. La base productiva tiene `oc_client_whatsapp_challenges`, `oc_client_whatsapp_receipts` y `oc_client_registration_limit`; se comprobaron sin leer fichas personales ni modificarlas.
-- La comprobación productiva del receptor devolvió HTTP 503 «Servicio no disponible». El código deshabilita el proceso si falta la bandera, el identificador del número o el secreto. La presencia de las tablas no demuestra que el webhook esté conectado.
-- Kapso muestra el número de la óptica conectado, un aviso «Payment issue» y ninguna plantilla en su lista. La sincronización desde Meta no se ejecutó: fue rechazada por revisión automática por ser una mutación externa. No se afirma que la cuenta nunca haya tenido plantillas aprobadas.
-- Poder responder conversaciones de WhatsApp no equivale a tener una plantilla de autenticación aprobada. No se implementa un código saliente en texto libre fuera de la ventana de atención ni se cambia la facturación para eludir requisitos.
-- Se mantiene el flujo de mensaje entrante: evita que un clic en la web provoque miles de envíos de la óptica. Cero llamadas a envío de WhatsApp en este módulo. Esto no configura ni limita por sí solo las respuestas externas del bot Cris.
+1. Con sesión de cliente, en Perfil pulsa **Enviar código por WhatsApp**.
+2. El servidor resuelve el teléfono cifrado de esa cuenta. No admite otro teléfono,
+   RUT, identificador de cliente ni una bandera `whatsappVerified` en el cuerpo.
+3. Kapso envía una plantilla AUTHENTICATION aprobada con un código de **cuatro
+   caracteres que combina letras y números**, por ejemplo `A7K2` (ejemplo ficticio).
+   Se omiten I/O/0/1 para reducir confusiones.
+4. El cliente escribe el código en Perfil y pulsa **Validar código**. `a7k2` y
+   `A7K2` se consideran iguales. Se aceptan únicamente cuatro caracteres ASCII.
+5. Si coincide con la solicitud vigente, cuenta, teléfono y plazo, se registra
+   la verificación y un recibo de auditoría en una transacción. Enviar o abrir un
+   mensaje no verifica el número.
 
-## Experiencia del cliente
+## APIs privadas del portal
 
-1. Inicia sesión y abre Perfil. El teléfono se resuelve desde su cuenta; el navegador no aporta otro RUT, teléfono, usuario ni bandera de verificación.
-2. Pulsa «Verificar por WhatsApp». Se crea un desafío de 128 bits, vinculado a la cuenta y al teléfono registrado, válido por 10 minutos. En la base solo queda su HMAC.
-3. Pulsa «Abrir WhatsApp y enviar». El mensaje preparado contiene únicamente `OC-VERIFICAR` y el código. Debe enviarlo desde el mismo número registrado; abrir el enlace no verifica nada.
-4. El receptor valida firma, número de negocio, evento de entrada, remitente, código, fecha y vigencia. Solo entonces guarda la verificación y un recibo de auditoría en una transacción.
-5. Perfil consulta el resultado con espera progresiva y al volver a la pestaña. No hay sondeo oculto, solicitudes simultáneas ni sondeo indefinido después de vencer el código. Un fallo de red nunca cambia el estado a verificado.
+Todas requieren sesión propia; JSON privado sin caché. Los POST exigen mismo
+origen y cuerpo máximo de 256 bytes. No son APIs públicas para Cris.
 
-El correo continúa siendo obligatorio para utilizar crédito; WhatsApp sigue siendo opcional. Esta función prueba control del número en ese momento, no identidad civil ni titularidad permanente de la línea. No cambia categoría, cupo, deuda, pagos ni ventas. Cambiar el teléfono cancela desafíos y revoca la verificación mediante el trigger existente.
+- `GET /api/clientes/whatsapp`: `{available,verified,pending}`. `pending` es null
+  o `{requestId,expiresAt,resendAfterSeconds}`; permite retomar el formulario sin
+  nuevo envío ni sondeo continuo.
+- `POST /api/clientes/whatsapp`, cuerpo `{}`: inicia **un** envío. Devuelve
+  `{verified:false,requestId,expiresAt,resendAfterSeconds}` o `{verified:true}`
+  si la cuenta ya estaba verificada. Nunca devuelve el código ni el teléfono.
+- `POST /api/clientes/whatsapp/confirmar`, cuerpo `{requestId,code}`: confirma.
+  Devuelve `{verified:true}` exclusivamente tras comprobarlo en el servidor.
 
-## Límites del refuerzo
+Errores: 400 entrada inválida/código incorrecto o vencido, 401 sesión ausente,
+403 origen no permitido, 429 límite, 503 configuración/proveedor no disponible.
+Los límites incluyen `Retry-After`; no se reflejan errores privados de Kapso.
 
-Los límites son de nuestra aplicación, independientes de los de Meta. Persisten en PostgreSQL y funcionan entre instancias del servidor; no dependen de memoria o del botón deshabilitado.
+El receptor antiguo `/api/integraciones/kapso/webhook` conserva autenticación y
+acuse de recibo para compatibilidad, pero **ningún mensaje entrante verifica
+cuentas**. Los desafíos históricos no se usan en las rutas de Perfil.
 
-| Operación | Límite |
-| --- | --- |
-| Generar otro código para la misma cuenta | Espera mínima de 60 segundos |
-| Generar códigos por cuenta y por teléfono | 3/hora y 6/24 horas |
-| Generar códigos desde una IP | 10/hora y 30/24 horas |
-| Generar códigos en toda la aplicación | 120/hora y 500/24 horas |
-| Consultar estado autenticado | 30/minuto por cuenta; 120/minuto por IP |
-| Procesar mensajes de verificación firmados | 300/minuto global; para candidatos válidos, 10/minuto y 30/hora por número |
+## Seguridad y límites persistentes
 
-Ventanas fijas desde la primera solicitud, no días calendario. Los códigos anteriores quedan inválidos al emitir uno nuevo. Los rechazos de la API privada son HTTP 429 con `Retry-After`; la interfaz espera antes de permitir otro intento. La IP solo es una señal adicional: se agrupa IPv6 por /64 y se siguen aplicando cuenta, teléfono y corte global aunque falte o se falsee una cabecera fuera del proxy confiable.
+- Aleatoriedad criptográfica; un único código vigente por cuenta. HMAC del código
+  ligado al UUID de solicitud, cuenta y huella del número. Nunca código plano en
+  base, logs, URL, respuestas API o almacenamiento persistente del navegador.
+- Vigencia **5 minutos**, **5 intentos** por código. El quinto fallo borra el hash.
+  Los fallos se confirman en base, no se deshacen mediante rollback.
+- Reenvío mínimo **60 segundos**. El nuevo envío invalida la solicitud anterior.
+- Por cuenta **y** teléfono: **3/hora, 6/24 horas**; por IP **10/hora, 30/24 horas**;
+  global **120/hora, 500/24 horas**. Ventanas fijas desde la primera solicitud.
+- Confirmaciones, incluso con solicitud inválida: **15/15 min por cuenta,
+  60/15 min por IP, 600/min global**. Además se aplica el máximo de cinco intentos.
+- Estado: 30/min por cuenta y 120/min por IP. IPv6 agrupada por /64.
+- Los contadores PostgreSQL funcionan entre instancias. La IP es señal adicional;
+  no sustituye cuenta, teléfono ni corte global. No se guardan IP en texto plano.
+- Reserva y consumo del presupuesto se confirman **antes** de llamar al proveedor.
+  Un fallo o timeout consume presupuesto; jamás se reenvía automáticamente.
+  Una entrega incierta no verifica nada y exige una nueva acción tras la espera.
+- Cambio de teléfono: trigger revoca verificación y cancela tanto desafíos
+  antiguos como códigos nuevos. Un cambio mientras se envía también impide
+  confirmar ese código. Bloqueo de filas y recibo único evitan doble consumo.
+- Solo se envían a Kapso teléfono y código, nunca RUT, correo, saldo o contraseña.
+  El mensaje puede quedar en el historial normal de Kapso/WhatsApp.
+- No se usan conversaciones, IA ni texto libre como alternativa a una plantilla
+  no aprobada. Estos límites no gobiernan otras automatizaciones de Cris ni
+  garantizan que Meta nunca aplique sus propios límites o bloqueos.
 
-El receptor acusa recibo sin datos de cuenta y sin responder WhatsApp. El exceso de eventos firmados se descarta con HTTP 200 para no amplificarlo con reintentos del proveedor. Durante una saturación puede ser necesario repetir la verificación después; el límite nunca habilita un número por defecto. Los mensajes desconocidos no crean una fila de límite por cada teléfono arbitrario.
+## Configuración y migración
 
-La protección de aplicación no garantiza ausencia de bloqueo de Meta, no sustituye el WAF de la plataforma y no limita conversaciones o automatizaciones ajenas a este receptor. Antes de introducir OTP saliente: plantilla `AUTHENTICATION` aprobada, requisitos de la cuenta comprobados, consentimiento explícito, límites por destino y globales, cupo de gasto, manejo de errores y ninguna repetición ciega ante entrega incierta.
+Requiere las tablas de clientes, límites y migración 002 de integración. La nueva
+`sql/integrations/004-whatsapp-otp.sql` es aditiva e idempotente. Crea una tabla
+OTP por cuenta y extiende el trigger existente; no verifica clientes, no genera
+mensajes y no elimina historial.
 
-## Protección de datos
+Ejecutar con conexión de clientes y esquema **explícito distinto de public**:
 
-- Sesión propia, mismo origen en POST y JSON vacío limitado a 256 bytes. Cambios y verificación siempre se autorizan en servidor.
-- HMAC SHA-256 de bytes originales con comparación constante. Se rechazan firmas mal formadas antes de leer el cuerpo. Se admite v2; cuerpo máximo 64 KB y lotes de hasta diez mensajes.
-- Solo `whatsapp.message.received` del número de negocio configurado, texto `inbound/received`, teléfono válido y fecha compatible con el desafío. Un BSUID sin teléfono no verifica una línea.
-- Códigos de un solo uso, bloqueo de filas, recibo único por huella del mensaje y transacción: si falla la actualización se revierte el consumo. Fechas antiguas o futuras se rechazan antes de consultas costosas.
-- RUT y teléfono siguen cifrados; límites usan HMAC. No se guardan códigos, teléfonos ni IP en texto plano en los contadores. El recibo de verificación contiene huella, identificador interno y fecha; no mensaje completo.
-- No enviar RUT, saldos, contraseñas o datos de pago en el mensaje de verificación. El mensaje viaja por WhatsApp/Kapso y puede formar parte de su historial normal; no se promete borrarlo de esos servicios.
-- Respuestas sin caché privada compartida; errores genéricos, `nosniff` y `no-referrer`. La bandera de entorno permite desactivar el proceso de inmediato en una nueva versión de configuración.
-- Revisar y acotar aparte el bot Cris antes de habilitar respuestas de verificación: el prefijo `OC-VERIFICAR` debe excluirse de IA, campañas y seguimientos. Este cambio no debe duplicar la respuesta del bot ni producir una confirmación automática de compra o crédito.
+```sh
+WHATSAPP_OTP_MIGRATION_CONFIRM=004 node scripts/migrate-whatsapp-otp.mjs
+```
 
-## Activación controlada
+Variables exclusivamente de servidor (nunca `NEXT_PUBLIC_*`):
 
-1. Revisar/publicar la rama de seguridad sobre la producción vigente. No requiere una migración nueva: reutiliza las tablas existentes.
-2. En Kapso, configurar un webhook **del número** +56 9 2245 2080 (`1368248166370894`), tipo Kapso, formato v2, evento `whatsapp.message.received`, sin buffering, URL `https://opticaycristal.cl/api/integraciones/kapso/webhook`. No usar un webhook de eventos de proyecto ni modificar receptores de otros sistemas.
-3. Generar y custodiar un secreto exclusivo de al menos 32 caracteres. Guardar el mismo valor solo en Kapso y `KAPSO_WEBHOOK_SECRET` del servidor; además `KAPSO_PHONE_NUMBER_ID`. No confundirlo con el token privado de Cris. El flujo no necesita una clave API de envío en la web.
-4. Habilitar `WHATSAPP_VERIFICATION_ENABLED=true` cuando el receptor y la entrega estén configurados. Verificar en una cuenta/número expresamente autorizados, sin marcar manualmente `whatsappVerified` para simular el éxito.
-5. Comprobar evento firmado, recibo único y Perfil actualizado; repetir el mismo evento y probar un número diferente. Un HTTP 200 del webhook solo es acuse de recibo, no prueba de verificación.
+- `WHATSAPP_OTP_ENABLED=true` solo cuando la integración esté preparada.
+- `KAPSO_API_KEY`: clave de envío del proyecto, distinta de los tokens de Cris.
+- `KAPSO_PHONE_NUMBER_ID`: número de negocio conectado.
+- `KAPSO_OTP_TEMPLATE_NAME=oc_verificacion_whatsapp_v1`.
+- `KAPSO_OTP_TEMPLATE_LANGUAGE=es_CL`.
+- `CLIENT_DATA_KEY`: clave existente; no rotarla con esta migración.
 
-La prueba local usa componentes y rutas reales con sesión, mensajes y base sintéticos, sin llamadas de envío ni modificaciones de clientes productivos. La prueba real desde el teléfono del cliente y la configuración externa siguen pendientes hasta la activación autorizada.
+Desactivación: publicar configuración `WHATSAPP_OTP_ENABLED=false`. Esto no activa
+el antiguo flujo inverso. La cuenta y el crédito siguen funcionando con sus
+reglas vigentes. No retroceder al código antiguo con el webhook activo.
 
-## Fuentes oficiales consultadas
+## Estado comprobado y límites de evidencia
 
-- Kapso, autenticación: https://docs.kapso.ai/docs/whatsapp/templates/authentication
-- Kapso, firmas y secretos: https://docs.kapso.ai/docs/platform/webhooks/security
-- Kapso, eventos v2: https://docs.kapso.ai/docs/platform/webhooks/message-events
-- Kapso, recepción y reintentos: https://docs.kapso.ai/docs/platform/webhooks/overview
-- OWASP, códigos de un solo uso, caducidad y límites: https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html
+- Kapso: plantilla `oc_verificacion_whatsapp_v1`, AUTHENTICATION, es_CL, observada
+  **Approved** el 6 de noviembre de 2026.
+- La pantalla API keys de ese proyecto indica **No API keys yet**. Falta conectar
+  una credencial de envío antes de habilitarlo en producción. No se ha cambiado
+  facturación ni contratado un plan.
+- Migración 004 aplicada en producción: tabla creada y trigger ampliado; sin modificar fichas ni enviar mensajes.
+- Código y pruebas preparados en `codex/whatsapp-otp-20261105`, sobre `ab89c15`.
+- 704 pruebas automáticas, lint, TypeScript y compilación Next.js con webpack aprobados. Recorrido local con componentes, APIs y PostgreSQL sintético: código ingresado en minúsculas, estado verificado persistido y un recibo único.
+  No confundir pruebas sintéticas, aceptación de API, entrega al teléfono y
+  confirmación por el cliente. La prueba real sigue pendiente hasta configurar
+  la credencial y publicar la versión exacta.
+
+## Fuentes oficiales
+
+- [Kapso: plantillas AUTHENTICATION y envío](https://docs.kapso.ai/docs/whatsapp/templates/authentication)
+- [OWASP: OTP, vigencia, intentos y almacenamiento](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html)

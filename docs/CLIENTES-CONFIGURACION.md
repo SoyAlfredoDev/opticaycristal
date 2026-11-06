@@ -22,7 +22,7 @@ El esquema tiene unicidad de correo y HMAC del RUT, restricciones de categoría 
 ## Reglas vigentes
 Start desde inscripción, hasta30%/40000CLP/1cuota. VIP40%/60000/1, Premium60%/80000/2, Elite70%/150000/2. No se implementan ascensos automáticos aún.
 
-La cuenta es accesible aunque el correo esté pendiente. El máximo se asigna al registrar. Para utilizar financiamiento, se requiere correo verificado. WhatsApp sigue siendo opcional para el crédito. Existe un flujo de verificación por mensaje entrante firmado de Kapso; su disponibilidad depende de la configuración del receptor. Véase `integraciones/VERIFICACION-WHATSAPP-KAPSO.md` para el estado auditado y los límites. Por eso puede existir un máximo de40000 y un disponible para uso de0. No implementar un bypass que marque WhatsApp verificado por un checkbox del cliente o del navegador. La revisión presencial de cédula no sustituye estas verificaciones.
+La cuenta es accesible aunque el correo esté pendiente. El máximo se asigna al registrar. Para utilizar financiamiento, se requiere correo verificado. WhatsApp sigue siendo opcional para el crédito. La verificación usa un código alfanumérico saliente de cuatro caracteres; su disponibilidad depende de la plantilla y credencial de envío de Kapso. Véase `integraciones/VERIFICACION-WHATSAPP-KAPSO.md` para el estado auditado y los límites. Por eso puede existir un máximo de40000 y un disponible para uso de0. No implementar un bypass que marque WhatsApp verificado por un checkbox del cliente o del navegador. La revisión presencial de cédula no sustituye estas verificaciones.
 
 ## Protección y pruebas
 - Better Auth1.7 gestiona hash scrypt, sesiones HttpOnly/SameSite, tokens de recuperación de30minutos, correo de24horas, identificadores de tokens hash y revocación de sesiones al cambiar contraseña. Inicio sin auto-login después de reset.
@@ -337,3 +337,18 @@ La base publicada contiene el receptor Kapso y la migración 002; la auditoría 
 La emisión y recepción usan la tabla existente `oc_client_registration_limit` con claves HMAC separadas. Cuenta y teléfono: 3 desafíos/hora y 6/24 horas; mínimo 60 segundos entre códigos. IP: 10/hora y 30/24 horas; global: 120/hora y 500/24 horas. Estado: 30/minuto por cuenta y 120/minuto por IP. Recepción firmada: 300/minuto global y, para desafíos candidatos, 10/minuto y 30/hora por teléfono. Las ventanas comienzan en la primera solicitud; no son límites de Meta ni del bot Cris.
 
 No hay envíos automáticos de la óptica en este flujo, clave API saliente ni OTP enviado por texto libre. La activación exige configurar un webhook de número en Kapso, custodiar el mismo secreto en el servidor y habilitar `WHATSAPP_VERIFICATION_ENABLED` solo después de comprobar la entrega. No confundir migración aplicada, código publicado, banderas de entorno y entrega real.
+
+
+## Sustitución por OTP saliente — 6 de noviembre de 2026
+
+La solicitud vigente sustituye el mensaje entrante por un código alfanumérico de
+cuatro caracteres, sin distinguir mayúsculas/minúsculas, enviado al número ya
+registrado. El cliente lo introduce en Perfil. La sección histórica del 5 de
+noviembre anterior describe el flujo retirado, no la operación vigente.
+
+Aplicar `sql/integrations/004-whatsapp-otp.sql` con el runner explícito
+`scripts/migrate-whatsapp-otp.mjs`; no modifica clientes ni envía mensajes.
+Configurar exclusivamente en servidor `WHATSAPP_OTP_ENABLED`, `KAPSO_API_KEY`,
+`KAPSO_PHONE_NUMBER_ID`, `KAPSO_OTP_TEMPLATE_NAME` y
+`KAPSO_OTP_TEMPLATE_LANGUAGE`. La guía completa, límites y estado de entrega
+están en `integraciones/VERIFICACION-WHATSAPP-KAPSO.md`.

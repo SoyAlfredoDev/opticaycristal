@@ -1,5 +1,5 @@
 import "server-only";
-import {kapsoVerificationEnabled} from "@/lib/integrations/kapso-config";
+import {whatsappOtpConfigured} from "@/lib/integrations/kapso-config";
 import { listCustomerSales } from "./sales";
 import { clientPool, clientTable } from "./db";
 import { normalizeClientRut,validClientRut } from "./validation";
@@ -12,7 +12,7 @@ function summary(r: Row): CustomerSummary {
   const emailVerified = r.emailVerified === true, identityVerified = r.identityVerified === true;
   const needsIdentity = false; // Identity is reviewed in person; it does not replace the required contact verifications.
   const enabled = emailVerified; // WhatsApp is optional by the user’s decision on 2026-10-29.
-  return { id: String(r.id), firstName: String(r.firstName), lastName: String(r.lastName), email: String(r.email), emailVerified, identityVerified, whatsappVerified: r.whatsappVerified === true,whatsappVerificationAvailable:kapsoVerificationEnabled(),
+  return { id: String(r.id), firstName: String(r.firstName), lastName: String(r.lastName), email: String(r.email), emailVerified, identityVerified, whatsappVerified: r.whatsappVerified === true,whatsappVerificationAvailable:whatsappOtpConfigured(),
     createdAt: new Date(String(r.createdAt)).toISOString(),
     tier: { code: String(r.code), name: String(r.tier_name), maxAmount: Number(r.max_amount), maxPercent: Number(r.max_percent), maxInstallments: Number(r.max_installments) },
     credit: { principalOutstanding: Number(r.outstanding), ...availableCredit(Number(r.max_amount), Number(r.outstanding), enabled && Number(r.outstanding) === 0), enabled, needsIdentity },

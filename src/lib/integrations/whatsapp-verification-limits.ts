@@ -70,3 +70,13 @@ export async function allowWhatsappReceipt(db:PoolClient,phoneHash?:string){
     {value:phoneHash,purpose:"receipt-phone-hour",seconds:3600,max:30}
   ]:[{value:"all",purpose:"receipt-global",seconds:60,max:300}]);
 }
+
+// Separate durable budget for guesses, including malformed or stale requests.
+export async function limitWhatsappConfirmation(userId:string,ip:string){
+  const retry=await consume(clientPool(),[
+    {value:"all",purpose:"confirm-global",seconds:60,max:600},
+    {value:userId,purpose:"confirm-account",seconds:900,max:15},
+    {value:ip,purpose:"confirm-ip",seconds:900,max:60}
+  ]);
+  if(retry)throw new WhatsappVerificationError("Demasiados intentos. Inténtalo más tarde.",429,retry);
+}

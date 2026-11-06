@@ -1,12 +1,12 @@
 // @vitest-environment node
 import {beforeEach,afterEach,it,expect,vi} from "vitest";
 const m=vi.hoisted(()=>({session:vi.fn(),create:vi.fn(),status:vi.fn(),limit:vi.fn()}));
-vi.mock("@/lib/clients/auth",()=>({customerSession:m.session}));vi.mock("@/lib/integrations/kapso-verification",async original=>({...await original<typeof import("@/lib/integrations/kapso-verification")>(),createWhatsappChallenge:m.create,whatsappVerificationStatus:m.status}));
+vi.mock("@/lib/clients/auth",()=>({customerSession:m.session}));vi.mock("@/lib/integrations/whatsapp-otp",async original=>({...await original<typeof import("@/lib/integrations/whatsapp-otp")>(),sendWhatsappOtp:m.create,whatsappOtpStatus:m.status}));
 vi.mock("@/lib/integrations/whatsapp-verification-limits",async original=>({...await original<typeof import("@/lib/integrations/whatsapp-verification-limits")>(),limitWhatsappStatus:m.limit}));
 import {GET,POST} from "./route";
-import {WhatsappVerificationError} from "@/lib/integrations/kapso-verification";
+import {WhatsappVerificationError} from "@/lib/integrations/whatsapp-otp";
 const req=(body:unknown={},origin="https://opticaycristal.cl")=>new Request(origin+"/api/clientes/whatsapp",{method:"POST",headers:{"Content-Type":"application/json",Origin:origin},body:JSON.stringify(body)});
-beforeEach(()=>{m.limit.mockResolvedValue(undefined);vi.stubEnv("CLIENT_APP_URL","https://opticaycristal.cl");m.session.mockResolvedValue({user:{id:"owner"}});m.create.mockResolvedValue({verified:false,url:"https://wa.me/56922452080"});m.status.mockResolvedValue({available:true,verified:false});});afterEach(()=>vi.unstubAllEnvs());
+beforeEach(()=>{m.limit.mockResolvedValue(undefined);vi.stubEnv("CLIENT_APP_URL","https://opticaycristal.cl");m.session.mockResolvedValue({user:{id:"owner"}});m.create.mockResolvedValue({verified:false,requestId:"00000000-0000-4000-8000-000000000001"});m.status.mockResolvedValue({available:true,verified:false});});afterEach(()=>vi.unstubAllEnvs());
 it("exige sesión y origen, y rechaza identidades aportadas por el navegador",async()=>{m.session.mockResolvedValue(null);expect((await GET(new Request("https://opticaycristal.cl/api/clientes/whatsapp"))).status).toBe(401);expect((await POST(req())).status).toBe(401);m.session.mockResolvedValue({user:{id:"owner"}});expect((await POST(req({},"https://external.example"))).status).toBe(403);expect((await POST(req({userId:"other",whatsappVerified:true}))).status).toBe(400);expect(m.create).not.toHaveBeenCalled();});
 it("resuelve la cuenta desde su sesión y no permite confirmación desde el frontend",async()=>{expect((await POST(req())).status).toBe(200);expect(m.create).toHaveBeenCalledWith("owner","unknown");expect((await GET(new Request("https://opticaycristal.cl/api/clientes/whatsapp"))).headers.get("cache-control")).toContain("no-store");});
 
