@@ -97,9 +97,8 @@ reglas vigentes. No retroceder al código antiguo con el webhook activo.
 
 - Kapso: plantilla `oc_verificacion_whatsapp_v1`, AUTHENTICATION, es_CL, observada
   **Approved** el 6 de noviembre de 2026.
-- La pantalla API keys de ese proyecto indica **No API keys yet**. Falta conectar
-  una credencial de envío antes de habilitarlo en producción. No se ha cambiado
-  facturación ni contratado un plan.
+- Credencial de envío guardada como secreto en Production. Consulta autenticada a Kapso: HTTP 200 y plantilla APPROVED. No se ha cambiado facturación ni contratado un plan.
+- La plantilla aprobada devuelve un botón `URL`; se envía `sub_type: url` con el mismo código en cuerpo y botón. `OTP` es el tipo al crear la plantilla, no el botón persistido que se comprobó para este envío. La revisión automática impidió activar la versión que enviaba `otp`; se corrigió antes de publicar.
 - Migración 004 aplicada en producción: tabla creada y trigger ampliado; sin modificar fichas ni enviar mensajes.
 - Código y pruebas preparados en `codex/whatsapp-otp-20261105`, sobre `ab89c15`.
 - 704 pruebas automáticas, lint, TypeScript y compilación Next.js con webpack aprobados. Recorrido local con componentes, APIs y PostgreSQL sintético: código ingresado en minúsculas, estado verificado persistido y un recibo único.
@@ -111,3 +110,5 @@ reglas vigentes. No retroceder al código antiguo con el webhook activo.
 
 - [Kapso: plantillas AUTHENTICATION y envío](https://docs.kapso.ai/docs/whatsapp/templates/authentication)
 - [OWASP: OTP, vigencia, intentos y almacenamiento](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html)
+
+- [Vonage: ejemplo oficial del payload WhatsApp AUTHENTICATION con sub_type url](https://developer.vonage.com/en/messages/code-snippets/whatsapp/send-authentication-template)

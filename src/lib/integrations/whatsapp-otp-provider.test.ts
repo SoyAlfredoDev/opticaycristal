@@ -7,7 +7,7 @@ it('envía una plantilla de autenticación con el mismo código en cuerpo y bot�
  const fetcher=vi.fn().mockResolvedValue(Response.json({messages:[{id:'wamid.synthetic'}]}));vi.stubGlobal('fetch',fetcher);
  expect(await sendWhatsappOtpMessage('+56912345678','A7K2')).toEqual({accepted:true,id:'wamid.synthetic',uncertain:false});
  expect(fetcher).toHaveBeenCalledTimes(1);const [url,options]=fetcher.mock.lastCall!;expect(url).toBe('https://api.kapso.ai/meta/whatsapp/v24.0/1368248166370894/messages');expect(options.redirect).toBe('error');
- const body=JSON.parse(options.body);expect(body.to).toBe('56912345678');expect(body.type).toBe('template');expect(body.template.language.code).toBe('es_CL');expect(body.template.components).toEqual([{type:'body',parameters:[{type:'text',text:'A7K2'}]},{type:'button',sub_type:'otp',index:'0',parameters:[{type:'text',text:'A7K2'}]}]);
+ const body=JSON.parse(options.body);expect(body.to).toBe('56912345678');expect(body.type).toBe('template');expect(body.template.language.code).toBe('es_CL');expect(body.template.components).toEqual([{type:'body',parameters:[{type:'text',text:'A7K2'}]},{type:'button',sub_type:'url',index:'0',parameters:[{type:'text',text:'A7K2'}]}]);
  expect(Object.keys(body).sort()).toEqual(['messaging_product','recipient_type','template','to','type']);
 });
 it.each([400,401,429,500])('rechaza HTTP %s sin reflejar errores privados ni reintentar',async status=>{const fetcher=vi.fn().mockResolvedValue(Response.json({error:'private provider details'},{status}));vi.stubGlobal('fetch',fetcher);expect(await sendWhatsappOtpMessage('+56912345678','A7K2')).toEqual({accepted:false,id:null,uncertain:status>=500||status===429});expect(fetcher).toHaveBeenCalledTimes(1);});
