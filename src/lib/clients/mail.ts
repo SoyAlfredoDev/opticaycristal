@@ -4,15 +4,15 @@ import { enviarConResend } from "@/lib/mail/resend";
 import { CONTACTO_EMAIL } from "@/lib/solicitudes/types";
 import { emailLogoHtml } from "@/lib/mail/templates";
 import { whatsappUrl } from "@/components/site/content";
-export type ClientMail = { to: string; url: string; kind: "verify" | "reset" };
+export type ClientMail = { to: string; url: string; kind: "verify" | "reset" | "setup" };
 export const CLIENT_MAIL_COMPANY={name:"Óptica y Cristal Limitada",rut:"77.068.257-6",address:"Huérfanos 713, local 18, Santiago Centro",phone:"+56 9 2245 2080",website:"https://opticaycristal.cl"};
 function escape(value: string) { return value.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!); }
 export function clientEmailContent({ url, kind }: ClientMail) {
- const verify=kind==="verify";
- const title=verify?"Verifique su correo · Óptica & Cristal":"Recupere su acceso · Óptica & Cristal";
- const heading=verify?"Bienvenido a su espacio":"Recuperación de acceso";
- const purpose=verify?"Para completar el registro de su cuenta en Óptica & Cristal, confirme su correo electrónico.":"Recibimos una solicitud para restablecer la contraseña de su cuenta en Óptica & Cristal.";
- const action=verify?"Verificar mi correo":"Crear nueva contraseña";
+ const verify=kind==="verify",setup=kind==="setup";
+ const title=setup?"Cree su acceso · Óptica & Cristal":verify?"Verifique su correo · Óptica & Cristal":"Recupere su acceso · Óptica & Cristal";
+ const heading=setup?"Su cuenta está lista":verify?"Bienvenido a su espacio":"Recuperación de acceso";
+ const purpose=setup?"Registramos su ficha durante la atención en Óptica & Cristal. Cree su contraseña para consultar su cuenta de forma segura.":verify?"Para completar el registro de su cuenta en Óptica & Cristal, confirme su correo electrónico.":"Recibimos una solicitud para restablecer la contraseña de su cuenta en Óptica & Cristal.";
+ const action=setup?"Crear mi contraseña":verify?"Verificar mi correo":"Crear nueva contraseña";
  const expiry=verify?"24 horas":"30 minutos";
  const company=CLIENT_MAIL_COMPANY;
  const security="Por su seguridad, no comparta este enlace ni su contraseña. Si no solicitó esta acción, puede ignorar este mensaje.";

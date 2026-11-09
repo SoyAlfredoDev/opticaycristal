@@ -1,7 +1,7 @@
 import 'server-only';
 import {randomUUID,timingSafeEqual} from 'node:crypto';
 import {clientPool,clientTable as t} from '@/lib/clients/db';
-import {clientFingerprint,revealClientValue} from '@/lib/clients/privacy';
+import {clientFingerprint,revealClientValue,protectClientValue} from '@/lib/clients/privacy';
 import {normalizeIntegrationWhatsapp} from './whatsapp-number';
 import {whatsappOtpConfigured} from './kapso-config';
 import {limitWhatsappIssue,limitWhatsappConfirmation,WhatsappVerificationError} from './whatsapp-verification-limits';
@@ -43,7 +43,7 @@ export async function sendWhatsappOtp(userId:string,ip:string){
  if(!result.accepted||!saved.rows.length)throw new WhatsappVerificationError('No pudimos confirmar el envío. Espera un minuto antes de intentarlo otra vez.',503,60);
  return{verified:false,requestId,expiresAt,resendAfterSeconds:60};
 }
-export async function confirmWhatsappOtp(userId:string,raw:unknown,ip:string){
+export async function confirmWhatsappOtp(userId:string,raw:unknown,ip:string,actor?:string){
  if(!whatsappOtpConfigured())throw new WhatsappVerificationError('La verificación no está disponible en este momento.',503);
  await limitWhatsappConfirmation(userId,ip);
  if(!raw||typeof raw!=='object'||Array.isArray(raw)||Object.keys(raw).some(k=>!['requestId','code'].includes(k)))throw new WhatsappVerificationError('Solicitud no válida.');
@@ -63,6 +63,7 @@ export async function confirmWhatsappOtp(userId:string,raw:unknown,ip:string){
    await db.query(`UPDATE ${t('oc_client_user')} SET "whatsappVerified"=true,"updatedAt"=now() WHERE id=$1`,[userId]);
    await db.query(`UPDATE ${t('oc_client_whatsapp_otps')} SET code_hash=NULL,consumed_at=now() WHERE user_id=$1`,[userId]);
    await db.query(`INSERT INTO ${t('oc_client_whatsapp_receipts')}(message_hash,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,[clientFingerprint(b.requestId,'whatsapp-otp-receipt'),userId]);
+   if(actor)await db.query(`INSERT INTO ${t('oc_client_profile_changes')}(id,customer_id,actor,payload_enc) VALUES($1,$2,$3,$4) ON CONFLICT(id) DO NOTHING`,[b.requestId,userId,actor,protectClientValue(JSON.stringify({action:'staff-whatsapp-verified'}),'profile-change')]);
   }
   // Failed attempts MUST persist. Rolling them back permits unlimited guesses.
   await db.query('COMMIT');
