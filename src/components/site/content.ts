@@ -29,7 +29,15 @@ export type StorePhoto = {
  * Fotos reales del local. Para publicar una, guarda el archivo en
  * public/images/local/ y agrega aquí { src: "/images/local/archivo.jpg", alt: "qué se ve" }.
  */
-export const storePhotos: readonly StorePhoto[] = [];
+export const storePhotos: readonly StorePhoto[] = [
+  { src: "/images/local/interior-huerfanos-713-local-18.webp", alt: "Interior de Óptica & Cristal, Huérfanos 713, local 18" },
+];
+
+export const storeVideo = {
+  src: "/videos/recorrido-optica-local-18.mp4",
+  poster: "/images/local/recorrido-optica-poster.webp",
+  title: "Un recorrido por nuestra óptica",
+} as const;
 
 const encodedStoreQuery = encodeURIComponent(store.mapsQuery);
 

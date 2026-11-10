@@ -1,3 +1,4 @@
+import { StoreVideo } from "@/components/site/StoreVideo";
 import theme from "@/components/site/PublicTheme.module.css";
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight, MapPin, MessageCircle, Truck } from "lucide-react";
@@ -35,6 +36,7 @@ export default function OpticaPage() {
           <a className={styles.primary} href={whatsappUrl("Hola, necesito asesoría para elegir mis lentes.")} target="_blank" rel="noopener noreferrer"><MessageCircle size={20} aria-hidden="true" />Hablar con un asesor</a>
         </div>
       </section>
+      <div className={site.container}><StoreVideo /></div>
       <section id="visita" className={styles.visit} aria-labelledby="visit-title">
         <div className={`${site.container} ${styles.visitGrid}`}><div>
           <h2 id="visit-title">Visítanos en Huérfanos 713</h2>

@@ -1,3 +1,4 @@
+import { StoreVideo } from "@/components/site/StoreVideo";
 import theme from "@/components/site/PublicTheme.module.css";
 import { editorialFont } from "@/components/home/editorial-font";
 import { displayFont as display, bodyFont as body } from "@/components/site/fonts";
@@ -26,6 +27,7 @@ export default function Home() {
         <ServiceRibbon />
         <CollectionsSection />
         <PhotoGallery />
+        <div className={styles.container}><StoreVideo /></div>
         <HomeVisitSection />
         <BusinessSection />
       </main>

@@ -1,3 +1,4 @@
+import { StoreVideo } from "@/components/site/StoreVideo";
 import Image from "next/image";
 import { ArrowUpRight, Camera, Clock3, Instagram, Mail, MapPin, MessageCircle, Navigation } from "lucide-react";
 import { brand, storeHours, store, storeMapUrl, storePhotos, whatsappUrl } from "@/components/site/content";
@@ -25,5 +26,6 @@ export function CustomerOptic() {
   <section className={styles.photosSection} aria-labelledby="optic-photos"><div className={styles.photosHeading}><h2 id="optic-photos">Fotos y novedades</h2>{storePhotos.length>0&&<a href={brand.instagram} target="_blank" rel="noopener noreferrer" className={ui.textLink}>Ver Instagram<ArrowUpRight size={15} aria-hidden="true"/></a>}</div>
    {storePhotos.length>0?<div className={styles.photos}>{storePhotos.map(photo=><figure key={photo.src}><a href={photo.src} target="_blank" rel="noopener noreferrer" aria-label={`Ampliar foto: ${photo.alt}`}><Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 1100px) 30vw, (min-width: 650px) 45vw, 95vw"/></a><figcaption>{photo.alt}</figcaption></figure>)}</div>:<div className={`${ui.panel} ${styles.photoInvitation}`}><span className={styles.icon}><Camera size={26} aria-hidden="true"/></span><div><h3>Conoce nuestro día a día</h3><p>Descubre las fotos y novedades de la óptica en Instagram.</p></div><a href={brand.instagram} target="_blank" rel="noopener noreferrer" className={ui.button}>Explorar fotos<ArrowUpRight size={16} aria-hidden="true"/></a></div>}
   </section>
+  <StoreVideo />
  </>;
 }
