@@ -16,7 +16,7 @@ La carpeta principal antigua permanecía en `0f7029e` con modificaciones pendien
 
 Una respuesta 401 sin token acredita existencia/protección HTTP, no una consulta financiera positiva. No se utilizaron credenciales personales, sesiones administrativas compartidas ni datos reales para las pruebas nuevas.
 
-## Rutas existentes: sin cambios de contrato
+## Rutas existentes y transición de seguridad
 
 Base: `https://opticaycristal.cl/api/integraciones/v1/whatsapp`.
 
@@ -30,12 +30,17 @@ Bearer existente, verificado por SHA-256 en `WHATSAPP_API_TOKEN_HASHES`. Se cons
 
 No se exige la nueva firma ni se añaden scopes a los consumidores actuales. No se ha cambiado el comportamiento de sus errores, paginación, tamaño o límites.
 
-## Capacidades nuevas: rutas implementadas solo en revisión
+Las consultas personales antiguas devuelven `403 SIGNED_ROUTE_REQUIRED` por defecto. Sustituirlas por `POST /api/integraciones/v1/cris/consultar-credito` y `POST /api/integraciones/v1/cris/validar-whatsapp`: ambas usan `finance:read`, el esquema `IdentityRequest` y la firma descrita abajo. El campo `data` conserva el significado y la estructura anterior. `consultar-condiciones` se mantiene con el token anterior y sin datos personales.
+
+Si la migración del adaptador no está lista, conservar temporalmente `WHATSAPP_LEGACY_PERSONAL_ENABLED=true` al publicar, comprobar el remitente firmado en Kapso y retirarla enseguida. La configuración nueva no se ha aplicado a producción.
+
+## Rutas firmadas
 
 Base local sugerida: `http://localhost:3048/api/integraciones/v1/cris`. Misma base canónica en producción únicamente después de revisión, migración y despliegue. Todas usan POST y JSON; nunca poner datos personales o tokens en URL.
 
 | Acción | Scope | Campos adicionales a identidad | Datos devueltos / alcance |
 |---|---|---|---|
+| `consultar-credito` / `validar-whatsapp` | `finance:read` | Ninguno | Cupo y categoría, o coincidencia del número, con firma del remitente. |
 | `consultar-resumen` | `finance:read` | Ninguno | Capital pendiente, capital vencido, fecha impaga más antigua y capacidad/habilitación actual. No suma mora. |
 | `consultar-cuotas` | `finance:read` | `cursor?` | Ventas con crédito, cuotas, vencimientos y capital pagado/restante; incluye estado activa/anulada. |
 | `consultar-saldo` | `finance:read` | `saleId` | Capital, mora y total de una venta activa propia, calculados por la lógica del compromiso existente. |

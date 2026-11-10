@@ -19,7 +19,14 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const privateHeaders = [{ key: "Cache-Control", value: "private, no-store" }, { key: "Referrer-Policy", value: "no-referrer" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "X-Frame-Options", value: "DENY" }, { key: "X-Content-Type-Options", value: "nosniff" }];
-    return [{source:"/admin/encuestas",headers:privateHeaders},{source:"/encuesta/:path*",headers:privateHeaders},{source:"/api/encuestas/:path*",headers:privateHeaders},{source:"/api/admin/encuestas",headers:privateHeaders},{ source: "/api/integraciones/:path*", headers: privateHeaders }, { source: "/mi-cuenta/:path*", headers: privateHeaders }, { source: "/admin/clientes/:path*", headers: privateHeaders }, { source: "/api/clientes/:path*", headers: privateHeaders }, { source: "/api/admin/clientes/:path*", headers: privateHeaders }];
+    return [
+      { source: "/:path*", headers: [{ key: "X-Content-Type-Options", value: "nosniff" }, { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" }] },
+      ...["/admin/:path*", "/api/admin/:path*", "/encuesta/:path*", "/api/encuestas/:path*", "/api/integraciones/:path*", "/mi-cuenta/:path*", "/api/clientes/:path*"].map(source => ({ source, headers: privateHeaders })),
+      ...(process.env.NODE_ENV === "production" ? [{ source: "/admin/:path*", headers: [{
+        key: "Content-Security-Policy-Report-Only",
+        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
+      }] }] : []),
+    ];
   },
   images: {
     qualities: [75, 90],

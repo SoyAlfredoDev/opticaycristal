@@ -16,6 +16,7 @@ type Row = {
     whatsappCipher: string;
     whatsappVerified: boolean;
     rutCipher: string;
+    hasCredential: boolean;
 };
 export type EditableCustomer = {
     id: string;
@@ -23,6 +24,7 @@ export type EditableCustomer = {
     lastName: string;
     email: string;
     emailVerified: boolean;
+    emailEditable: boolean;
     whatsapp: string;
     whatsappVerified: boolean;
     rut: string;
@@ -30,9 +32,10 @@ export type EditableCustomer = {
 };
 function id(value: string) { if (!value || value.length > 120)
     throw new CustomerEditError("Cliente no válido."); return value; }
+const hasCredential = () => `EXISTS (SELECT 1 FROM ${t("oc_client_account")} a WHERE a."userId"=u.id AND a."providerId"='credential')`;
 const fields = 'id,"firstName","lastName",email,"emailVerified","whatsappCipher","whatsappVerified","rutCipher"';
-function decode(r: Row): EditableCustomer { const whatsapp = revealClientValue(r.whatsappCipher, "whatsapp"); return { id: r.id, firstName: r.firstName, lastName: r.lastName, email: r.email, emailVerified: r.emailVerified, whatsapp, whatsappVerified: r.whatsappVerified, rut: revealClientValue(r.rutCipher, "rut"), version: clientFingerprint(JSON.stringify([r.id, r.firstName, r.lastName, r.email, r.emailVerified, whatsapp, r.whatsappVerified]), "profile-version") }; }
-export async function editableCustomer(customerId: string) { const r = await clientPool().query<Row>(`SELECT ${fields} FROM ${t("oc_client_user")} WHERE id=$1`, [id(customerId)]); if (!r.rows[0])
+function decode(r: Row): EditableCustomer { const whatsapp = revealClientValue(r.whatsappCipher, "whatsapp"); return { id: r.id, firstName: r.firstName, lastName: r.lastName, email: r.email, emailVerified: r.emailVerified, emailEditable: !r.emailVerified && !r.hasCredential, whatsapp, whatsappVerified: r.whatsappVerified, rut: revealClientValue(r.rutCipher, "rut"), version: clientFingerprint(JSON.stringify([r.id, r.firstName, r.lastName, r.email, r.emailVerified, r.hasCredential, whatsapp, r.whatsappVerified]), "profile-version") }; }
+export async function editableCustomer(customerId: string) { const r = await clientPool().query<Row>(`SELECT ${fields},${hasCredential()} AS "hasCredential" FROM ${t("oc_client_user")} u WHERE id=$1`, [id(customerId)]); if (!r.rows[0])
     throw new CustomerEditError("Cliente no encontrado.", 404); return decode(r.rows[0]); }
 export async function updateCustomerDetails(customerId: string, raw: unknown, actor: string) {
     id(customerId);
@@ -53,13 +56,15 @@ export async function updateCustomerDetails(customerId: string, raw: unknown, ac
     const db = await clientPool().connect();
     try {
         await db.query("BEGIN");
-        const found = await db.query<Row>(`SELECT ${fields} FROM ${t("oc_client_user")} WHERE id=$1 FOR UPDATE`, [customerId]);
+        const found = await db.query<Row>(`SELECT ${fields},${hasCredential()} AS "hasCredential" FROM ${t("oc_client_user")} u WHERE id=$1 FOR NO KEY UPDATE OF u`, [customerId]);
         if (!found.rows[0])
             throw new CustomerEditError("Cliente no encontrado.", 404);
         const current = decode(found.rows[0]);
         const emailChanged = contact.email !== current.email;
         if (emailChanged && current.emailVerified)
             throw new CustomerEditError("El correo ya está verificado y no se puede modificar.");
+        if (emailChanged && !current.emailEditable)
+            throw new CustomerEditError("La cuenta ya tiene acceso. El correo no se puede modificar desde el panel.", 409);
         const changed = contact.firstName !== current.firstName || contact.lastName !== current.lastName || contact.whatsapp !== current.whatsapp || emailChanged;
         if (!changed) {
             await db.query("COMMIT");
@@ -68,6 +73,12 @@ export async function updateCustomerDetails(customerId: string, raw: unknown, ac
         if (b.expectedVersion !== current.version)
             throw new CustomerEditError("Los datos cambiaron. Cierra y vuelve a abrir la edición.", 409);
         if (emailChanged) {
+            // Reset consumes its token and writes the credential in the same transaction.
+            // Revoke first; if a concurrent reset won, recheck after its commit.
+            await db.query(`DELETE FROM ${t("oc_client_verification")} WHERE value=$1`, [customerId]);
+            const access = await db.query<{ hasCredential: boolean }>(`SELECT ${hasCredential()} AS "hasCredential" FROM ${t("oc_client_user")} u WHERE id=$1`, [customerId]);
+            if (access.rows[0]?.hasCredential)
+                throw new CustomerEditError("La cuenta ya tiene acceso. El correo no se puede modificar desde el panel.", 409);
             // Serialize old/new addresses with the database registration guard.
             // Hold the old address until every previously issued verification JWT expires.
             for (const email of [current.email, contact.email].sort())
@@ -75,11 +86,10 @@ export async function updateCustomerDetails(customerId: string, raw: unknown, ac
             await db.query(`DELETE FROM ${t("oc_client_email_reservations")} WHERE expires_at<now()`);
             await db.query(`INSERT INTO ${t("oc_client_email_reservations")}(email,customer_id,expires_at) VALUES($1,$2,now()+$3*interval '1 second') ON CONFLICT(email) DO UPDATE SET customer_id=EXCLUDED.customer_id,expires_at=EXCLUDED.expires_at`, [current.email, customerId, CUSTOMER_OLD_EMAIL_HOLD_SECONDS]);
         }
-        const updated = await db.query<Row>(`UPDATE ${t("oc_client_user")} SET "firstName"=$2,"lastName"=$3,name=$2||' '||$3,email=$4,"whatsappCipher"=$5,"whatsappVerified"=CASE WHEN $6 THEN false ELSE "whatsappVerified" END,"updatedAt"=now() WHERE id=$1 RETURNING ${fields}`, [customerId, contact.firstName, contact.lastName, contact.email, contact.whatsapp === current.whatsapp ? found.rows[0].whatsappCipher : protectClientValue(contact.whatsapp, "whatsapp"), contact.whatsapp !== current.whatsapp]);
+        const updated = await db.query<Row>(`UPDATE ${t("oc_client_user")} AS u SET "firstName"=$2,"lastName"=$3,name=$2||' '||$3,email=$4,"whatsappCipher"=$5,"whatsappVerified"=CASE WHEN $6 THEN false ELSE "whatsappVerified" END,"updatedAt"=now() WHERE id=$1 RETURNING ${fields},${hasCredential()} AS "hasCredential"`, [customerId, contact.firstName, contact.lastName, contact.email, contact.whatsapp === current.whatsapp ? found.rows[0].whatsappCipher : protectClientValue(contact.whatsapp, "whatsapp"), contact.whatsapp !== current.whatsapp]);
         if (emailChanged) {
-            // Recovery links identify the user, so revoke links sent to the old address.
+            // Invalidate any open customer session after correcting the address.
             await db.query(`DELETE FROM ${t("oc_client_session")} WHERE "userId"=$1`, [customerId]);
-            await db.query(`DELETE FROM ${t("oc_client_verification")} WHERE value=$1`, [customerId]);
         }
         await db.query(`INSERT INTO ${t("oc_client_profile_changes")}(id,customer_id,actor,payload_enc) VALUES($1,$2,$3,$4)`, [randomUUID(), customerId, actor, protectClientValue(JSON.stringify({ before: { firstName: current.firstName, lastName: current.lastName, email: current.email, whatsapp: current.whatsapp }, after: contact }), "profile-change")]);
         await db.query("COMMIT");

@@ -46,7 +46,10 @@ export async function queryWhatsappCustomer(contact:{rut:string;whatsapp:string}
  const record=await getCustomerIntegrationContact(contact.rut);
  let registered="";if(record)try{registered=normalizeIntegrationWhatsapp(record.whatsapp);}catch{/* Corrupt contact data must not disclose RUT existence. */}
  if(!record||registered!==contact.whatsapp)throw new IntegrationError("CONTACT_NOT_MATCHED","No pudimos vincular estos datos. Contacta a la óptica para revisarlos.",404);
- const c=record.customer;
+ return whatsappCustomerResult(record.customer,action);
+}
+
+export function whatsappCustomerResult(c:NonNullable<Awaited<ReturnType<typeof getCustomerIntegrationContact>>>["customer"],action:"consultar-credito"|"validar-whatsapp"){
  const whatsapp={formatValid:true,matchesRegistered:true,ownershipVerified:c.whatsappVerified,activeAccountChecked:false};
  if(action==="validar-whatsapp")return{whatsapp};
  const reason=!c.emailVerified?"EMAIL_VERIFICATION_REQUIRED":c.credit.principalOutstanding>0?"ACTIVE_CREDIT":c.credit.available<=0?"NO_AVAILABLE_CREDIT":"AVAILABLE";

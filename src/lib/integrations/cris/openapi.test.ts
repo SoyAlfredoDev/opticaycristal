@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import Ajv from 'ajv';
 it('resuelve todos los esquemas y valida ejemplos de consumo y respuestas',async()=>{
  const spec=JSON.parse(await readFile('docs/integraciones/openapi-cris.json','utf8'));
- expect(spec.openapi).toBe('3.1.0');expect(Object.keys(spec.paths)).toHaveLength(17);
+ expect(spec.openapi).toBe('3.1.0');expect(Object.keys(spec.paths)).toHaveLength(19);
  for(const operations of Object.values(spec.paths)){
   const operation=(operations as {post?:{requestBody?:{content:Record<string,{schema:object;example:unknown}>};responses:Record<string,{content?:Record<string,{schema:object;example?:unknown}>}>}}).post;
   if(!operation)continue;

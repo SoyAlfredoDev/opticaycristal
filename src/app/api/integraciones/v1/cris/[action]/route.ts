@@ -1,7 +1,7 @@
 import {randomUUID} from 'node:crypto';
 import {clientPool,clientTable} from '@/lib/clients/db';
 import {privateJson} from '@/lib/clients/http';
-import {IntegrationError,limitIntegration} from '@/lib/integrations/whatsapp';
+import {IntegrationError,limitIntegration,whatsappCustomerResult} from '@/lib/integrations/whatsapp';
 import {SupportError} from '@/lib/clients/support';
 import {InvalidHistoryCursor} from '@/lib/clients/private-read';
 import {authenticate,digest,fail,object,owner,lockOwner,verifySenderEnvelope,type Scope} from '@/lib/integrations/cris/security';
@@ -11,6 +11,8 @@ import {transaction,idempotency,receiveAttachment,receiveRequest,customerTickets
 export const runtime='nodejs';
 export const maxDuration=30;
 const actions:Record<string,{scope:Scope;fields:string[];write?:boolean}>={
+ 'consultar-credito':{scope:'finance:read',fields:[]},
+ 'validar-whatsapp':{scope:'finance:read',fields:[]},
  'consultar-resumen':{scope:'finance:read',fields:[]},
  'consultar-cuotas':{scope:'finance:read',fields:['cursor']},
  'consultar-saldo':{scope:'finance:read',fields:['saleId']},
@@ -48,6 +50,7 @@ export async function POST(request:Request,{params}:{params:Promise<{action:stri
  }else{
   switch(action){
    case 'consultar-comercial':data=commercialInformation();break;
+   case 'consultar-credito':case 'validar-whatsapp':data=whatsappCustomerResult(person!.customer,action);break;
    case 'consultar-resumen':data=await financeSummary(person!.customer);break;
    case 'consultar-cuotas':data=await installments(person!.customer.id,body);break;
    case 'consultar-saldo':data=await balance(person!.customer.id,body);break;

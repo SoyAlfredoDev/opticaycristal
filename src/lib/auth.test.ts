@@ -35,3 +35,13 @@ describe("revocación de sesiones del personal",()=>{
   const fresh=createSessionToken("seller");vi.stubEnv("ADMIN_SESSION_VERSION","2");expect(readSessionToken(fresh)).toBeNull();
  });
 });
+
+it("deshabilita credenciales y revoca sesiones heredadas con el mismo control",()=>{
+  vi.stubEnv("SESSION_SECRET","s".repeat(48));vi.stubEnv("ADMIN_USER","demo");vi.stubEnv("ADMIN_PASSWORD","synthetic-test-password");
+  const existing=createSessionToken("demo");
+  expect(readSessionToken(existing)).not.toBeNull();
+  vi.stubEnv("ADMIN_LEGACY_LOGIN_ENABLED","false");
+  expect(credentialsMatch("demo","synthetic-test-password")).toBe(false);
+  expect(createSessionToken("demo")).toBeNull();
+  expect(readSessionToken(existing)).toBeNull();
+});

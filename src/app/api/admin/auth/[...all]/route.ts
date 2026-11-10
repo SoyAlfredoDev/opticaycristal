@@ -1,5 +1,7 @@
 import {staffAuth,staffOrigin} from "@/lib/staff/auth";
 import {privateJson,readClientBody,sameClientOrigin} from "@/lib/clients/http";
+import {clientIp} from "@/lib/auth";
+import {staffLoginGate} from "@/lib/clients/staff-access";
 export const runtime="nodejs";
 async function handle(request:Request){
  const path=new URL(request.url).pathname.replace(/^\/api\/admin\/auth\//,"");
@@ -8,6 +10,11 @@ async function handle(request:Request){
  try{if(request.method==="POST"){
   if(!sameClientOrigin(request))return privateJson({error:"Origen no permitido."},403);
   const body=await readClientBody(request.clone());
+  if(path==="sign-in/email"){
+   const account=body&&typeof body==="object"&&"email" in body&&typeof body.email==="string"?body.email:"";
+   const limited=await staffLoginGate(clientIp(request),account);
+   if(limited)return limited;
+  }
   if(path==="request-password-reset"){
    const email=body&&typeof body==="object"&&"email" in body?body.email:"";
    const headers=new Headers(request.headers);headers.delete("content-length");

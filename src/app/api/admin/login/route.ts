@@ -1,4 +1,5 @@
-import { allowStaffLogin } from "@/lib/clients/staff-access";
+import { staffLoginGate } from "@/lib/clients/staff-access";
+import { privateJson, readClientBody, sameClientOrigin } from "@/lib/clients/http";
 import { NextResponse } from "next/server";
 import {
   ADMIN_COOKIE,
@@ -11,29 +12,17 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  let allowed=false;
-  try { allowed=await allowStaffLogin(clientIp(request)); } catch { return NextResponse.json({error:"Acceso temporalmente no disponible."},{status:503}); }
-  if (!allowed) {
-    return NextResponse.json(
-      { error: "Demasiados intentos. Espera unos minutos." },
-      { status: 429 }
-    );
-  }
-
-  const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (contentLength > 4_096) return NextResponse.json({ error: "La solicitud supera el tamaño permitido." }, { status: 413 });
+  if (!sameClientOrigin(request)) return privateJson({error:"Origen no permitido."},403);
   let body: unknown;
-  try {
-    const rawBody = await request.text();
-    if (rawBody.length > 4_096) return NextResponse.json({ error: "La solicitud supera el tamaño permitido." }, { status: 413 });
-    body = JSON.parse(rawBody) as unknown;
-  } catch {
-    return NextResponse.json({ error: "No se pudo leer el acceso." }, { status: 400 });
-  }
+  try { body = await readClientBody(request, 4096); }
+  catch { return privateJson({error:"No se pudo leer el acceso."},400); }
 
   const record = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   const usuario = typeof record.usuario === "string" ? record.usuario.trim() : "";
   const password = typeof record.password === "string" ? record.password : "";
+
+  const limited = await staffLoginGate(clientIp(request), usuario);
+  if (limited) return limited;
 
   if (!credentialsMatch(usuario, password)) {
     if (usuario.includes("@") && password.length >= 8 && password.length <= 128) {

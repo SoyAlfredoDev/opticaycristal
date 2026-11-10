@@ -18,6 +18,7 @@ export async function POST(request:Request,{params}:{params:Promise<{action:stri
    if(!raw||typeof raw!=="object"||Array.isArray(raw)||Object.keys(raw).length)throw new IntegrationError("INVALID_INPUT","Esta consulta no admite datos personales.");
    data=await queryWhatsappConditions();
   }else{
+   if(process.env.WHATSAPP_LEGACY_PERSONAL_ENABLED!=="true")throw new IntegrationError("SIGNED_ROUTE_REQUIRED","Usa la ruta firmada de Cris para consultas personales.",403);
    const contact=parseIntegrationContact(raw);await limitIntegration(keyId,contact);
    data=await queryWhatsappCustomer(contact,action as "consultar-credito"|"validar-whatsapp");
   }

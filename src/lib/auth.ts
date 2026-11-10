@@ -39,7 +39,13 @@ export function adminCookieOptions(maxAge: number) {
   };
 }
 
+// Keep existing owners connected until individual staff access has been verified.
+export function legacyAdminEnabled() {
+  return process.env.ADMIN_LEGACY_LOGIN_ENABLED !== "false";
+}
+
 export function credentialsMatch(usuario: string, password: string) {
+  if (!legacyAdminEnabled()) return false;
   const accounts = [
     { user: process.env.ADMIN_USER?.trim() ?? "", password: process.env.ADMIN_PASSWORD ?? "" },
     { user: process.env.ADMIN_USER_2?.trim() ?? "", password: process.env.ADMIN_PASSWORD_2 ?? "" },
@@ -55,7 +61,7 @@ export function credentialsMatch(usuario: string, password: string) {
 }
 
 export function adminCredentialsConfigured() {
-  return Boolean(
+  return legacyAdminEnabled() && Boolean(
     (process.env.ADMIN_USER?.trim() && process.env.ADMIN_PASSWORD) ||
     (process.env.ADMIN_USER_2?.trim() && process.env.ADMIN_PASSWORD_2)
   );
@@ -93,6 +99,7 @@ function credentialVersion(usuario: string) {
  return account.length && secret ? createHmac("sha256",secret).update(JSON.stringify([account,process.env.ADMIN_SESSION_VERSION || "1"])).digest("hex") : null;
 }
 export function createSessionToken(usuario: string) {
+  if (!legacyAdminEnabled()) return null;
   const secret = sessionSecret();
   if (!secret) return null;
   const version=credentialVersion(usuario);
@@ -106,7 +113,7 @@ export function createSessionToken(usuario: string) {
 
 export function readSessionToken(token: string | undefined | null) {
   const secret = sessionSecret();
-  if (!secret || !token) return null;
+  if (!legacyAdminEnabled() || !secret || !token) return null;
   const [body, signature] = token.split(".");
   if (!body || !signature) return null;
 

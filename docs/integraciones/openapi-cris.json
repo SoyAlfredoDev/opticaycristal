@@ -303,7 +303,7 @@
       "post": {
         "operationId": "legacy_consultar_credito",
         "summary": "consultar-credito",
-        "description": "Contrato productivo conservado. ",
+        "description": "Contrato productivo conservado.  Las consultas personales anteriores están desactivadas por defecto. Usa la ruta firmada de Cris.",
         "security": [
           {
             "legacyBearer": []
@@ -575,14 +575,15 @@
               }
             }
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/api/integraciones/v1/whatsapp/validar-whatsapp": {
       "post": {
         "operationId": "legacy_validar_whatsapp",
         "summary": "validar-whatsapp",
-        "description": "Contrato productivo conservado. ",
+        "description": "Contrato productivo conservado.  Las consultas personales anteriores están desactivadas por defecto. Usa la ruta firmada de Cris.",
         "security": [
           {
             "legacyBearer": []
@@ -832,7 +833,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/api/integraciones/v1/cris/consultar-resumen": {
@@ -5557,6 +5559,752 @@
           }
         }
       }
+    },
+    "/api/integraciones/v1/cris/consultar-credito": {
+      "post": {
+        "operationId": "cris_consultar_credito",
+        "summary": "consultar-credito",
+        "description": "Consulta personal con alcance finance:read, firma del remitente y coincidencia del contacto registrado.",
+        "security": [
+          {
+            "crisBearer": []
+          }
+        ],
+        "x-required-scope": "finance:read",
+        "parameters": [
+          {
+            "name": "X-Cris-Timestamp",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{10}$"
+            },
+            "description": "Epoch segundos; tolerancia ±300 s."
+          },
+          {
+            "name": "X-Cris-Nonce",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{22,128}$"
+            },
+            "description": "Aleatorio nuevo en cada intento, incluido el reintento idempotente."
+          },
+          {
+            "name": "X-Cris-Signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "description": "HMAC SHA-256 hexadecimal sobre timestamp\\nnonce\\nPOST\\npathname\\nsha256(bytes JSON)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityRequest"
+              },
+              "example": {
+                "document": {
+                  "type": "RUT",
+                  "number": "12.345.678-5"
+                },
+                "sender": {
+                  "source": "kapso",
+                  "whatsapp": "+56912345678",
+                  "messageId": "wamid.synthetic-only"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respuesta actual del servidor.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditSignedEnvelope"
+                },
+                "example": {
+                  "data": {
+                    "currency": "CLP",
+                    "category": {
+                      "code": "synthetic",
+                      "name": "synthetic",
+                      "maximumCredit": 0,
+                      "maximumPercent": 0,
+                      "maximumMonthlyInstallments": 1
+                    },
+                    "credit": {
+                      "capacity": 0,
+                      "usableNow": 0,
+                      "hasCapacity": false,
+                      "canUseNow": false,
+                      "reason": "AVAILABLE"
+                    },
+                    "requirements": {
+                      "emailVerified": false,
+                      "whatsappVerificationRequired": false,
+                      "inPersonIdentityReview": true,
+                      "paymentAgreementRequired": true,
+                      "inStorePurchase": true
+                    },
+                    "whatsapp": {
+                      "formatValid": true,
+                      "matchesRegistered": true,
+                      "ownershipVerified": false,
+                      "activeAccountChecked": false
+                    }
+                  },
+                  "requestId": "10000000-0000-4000-8000-000000000001",
+                  "queriedAt": "2026-11-04T12:00:00.000Z",
+                  "apiVersion": "1.1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada/cursor/documento no válido.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer inválido.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Scope insuficiente, Origin o prueba de remitente inválida.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Datos no vinculados/recurso ajeno o inexistente, sin enumeración.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Replay o conflicto de idempotencia.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Adjunto vencido.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Límite de bytes superado.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Se requiere application/json.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Límite persistente excedido.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Segundos: 900; esperar antes de reintentar."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Desactivado, fuente pendiente o servicio no disponible.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integraciones/v1/cris/validar-whatsapp": {
+      "post": {
+        "operationId": "cris_validar_whatsapp",
+        "summary": "validar-whatsapp",
+        "description": "Consulta personal con alcance finance:read, firma del remitente y coincidencia del contacto registrado.",
+        "security": [
+          {
+            "crisBearer": []
+          }
+        ],
+        "x-required-scope": "finance:read",
+        "parameters": [
+          {
+            "name": "X-Cris-Timestamp",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{10}$"
+            },
+            "description": "Epoch segundos; tolerancia ±300 s."
+          },
+          {
+            "name": "X-Cris-Nonce",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{22,128}$"
+            },
+            "description": "Aleatorio nuevo en cada intento, incluido el reintento idempotente."
+          },
+          {
+            "name": "X-Cris-Signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "description": "HMAC SHA-256 hexadecimal sobre timestamp\\nnonce\\nPOST\\npathname\\nsha256(bytes JSON)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityRequest"
+              },
+              "example": {
+                "document": {
+                  "type": "RUT",
+                  "number": "12.345.678-5"
+                },
+                "sender": {
+                  "source": "kapso",
+                  "whatsapp": "+56912345678",
+                  "messageId": "wamid.synthetic-only"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respuesta actual del servidor.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchSignedEnvelope"
+                },
+                "example": {
+                  "data": {
+                    "whatsapp": {
+                      "formatValid": true,
+                      "matchesRegistered": true,
+                      "ownershipVerified": false,
+                      "activeAccountChecked": false
+                    }
+                  },
+                  "requestId": "10000000-0000-4000-8000-000000000001",
+                  "queriedAt": "2026-11-04T12:00:00.000Z",
+                  "apiVersion": "1.1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada/cursor/documento no válido.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer inválido.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Scope insuficiente, Origin o prueba de remitente inválida.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Datos no vinculados/recurso ajeno o inexistente, sin enumeración.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Replay o conflicto de idempotencia.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Adjunto vencido.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Límite de bytes superado.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Se requiere application/json.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Límite persistente excedido.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Segundos: 900; esperar antes de reintentar."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Desactivado, fuente pendiente o servicio no disponible.",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlación saneada. No reusar como Idempotency-Key."
+              },
+              "Server-Timing": {
+                "description": "Duración total saneada, sin identificadores personales.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7387,6 +8135,60 @@
         "required": [
           "receipt",
           "attachments"
+        ]
+      },
+      "CreditSignedEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Credit"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "queriedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "apiVersion": {
+            "type": "string",
+            "const": "1.1"
+          }
+        },
+        "required": [
+          "data",
+          "requestId",
+          "queriedAt",
+          "apiVersion"
+        ]
+      },
+      "MatchSignedEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Match"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "queriedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "apiVersion": {
+            "type": "string",
+            "const": "1.1"
+          }
+        },
+        "required": [
+          "data",
+          "requestId",
+          "queriedAt",
+          "apiVersion"
         ]
       }
     }

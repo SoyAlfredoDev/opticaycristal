@@ -158,4 +158,10 @@ describe.sequential("Recuperación y correcciones trazables",()=>{
   const row=(await db.query<{key:string;count:number}>("SELECT key,count FROM oc_client_admin_login_limits")).rows[0];expect(row.count).toBe(9);expect(row.key).toMatch(/^[a-f0-9]{64}$/);
   await db.query("UPDATE oc_client_admin_login_limits SET reset_at=now()-interval '1 minute'");expect(await allowStaffLogin("198.51.100.99")).toBe(true);
  });
+ it("limita una cuenta de personal aunque cambie de IP",async()=>{
+  vi.stubEnv("SESSION_SECRET","synthetic-staff-secret-with-more-than-32-characters");
+  for(let i=1;i<=12;i++)expect(await allowStaffLogin(`192.0.2.${i}`," Staff@example.invalid ")).toBe(true);
+  expect(await allowStaffLogin("192.0.2.13","staff@example.invalid")).toBe(false);
+  expect(await allowStaffLogin("192.0.2.13","other@example.invalid")).toBe(true);
+ });
 });
