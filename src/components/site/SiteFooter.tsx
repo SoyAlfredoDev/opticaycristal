@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Globe, Instagram, MapPin, MessageCircle } from "lucide-react";
 import { brand, siteNavigation, store, storeMapUrl, whatsappUrl } from "./content";
+import { FloatingWhatsapp } from "./FloatingWhatsapp";
 import { LinkButton } from "./LinkButton";
 import { SectionReveal } from "./SectionReveal";
 import styles from "./Site.module.css";
@@ -44,6 +45,7 @@ export function SiteFooter({ showContact = true }: { showContact?: boolean }) {
           </div>
         </div>
       </footer>
+      <FloatingWhatsapp />
     </>
   );
 }
