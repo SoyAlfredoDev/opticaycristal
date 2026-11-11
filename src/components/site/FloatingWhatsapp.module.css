@@ -22,12 +22,24 @@
   text-decoration: none;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
+.notification {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  width: 13px;
+  height: 13px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #e53935;
+  box-shadow: 0 1px 5px #0003;
+}
 .button svg { width: 27px; height: 27px; flex-shrink: 0; }
 .button:hover { transform: translateY(-3px); box-shadow: 0 14px 35px #063f3440; }
 .button:focus-visible { outline: 3px solid #9bcb5a; outline-offset: 4px; }
 @media (max-width: 640px) {
-  .button { right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); padding: 15px; }
-  .button span { display: none; }
+  .button { right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); min-height: 54px; gap: 8px; padding: 12px 16px; font-size: 13px; }
+  .button svg { width: 23px; height: 23px; }
+  .notification { top: 0; right: 0; width: 12px; height: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .button { transition: none; }
