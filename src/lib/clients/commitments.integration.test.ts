@@ -1,23 +1,40 @@
 // @vitest-environment node
 import { expect,it,vi } from "vitest";
 import { readFile } from "node:fs/promises";
+import { PDFDocument } from "pdf-lib";
 import { PGlite } from "@electric-sql/pglite";
-const mock=vi.hoisted(()=>({query:vi.fn()}));
+const mock=vi.hoisted(()=>({query:vi.fn(),send:vi.fn()}));
+vi.mock("./mail",async importOriginal=>({...await importOriginal<typeof import("./mail")>(),sendAgreementMail:mock.send}));
 vi.mock("./db",()=>({clientTable:(name:string)=>name,clientPool:()=>({query:mock.query,connect:async()=>({query:mock.query,release:()=>{}})})}));
+import { DIGITAL_AGREEMENT_PROPOSAL } from "./agreement-model";
+import { createAgreementModel,transitionAgreementModel,modelHash } from "./agreement-registry";
 import { protectClientValue } from "./privacy";
-import { recordSalePayment,reverseSalePayment,createSale } from "./sales";
+import { createSale } from "./sales";
 import { saveContractSettings,prepareCommitment,getStoredCommitment } from "./commitments";
+import { authorizeDigitalAgreement, digitalAgreementStatus, requestAgreementCode, sendDigitalAgreementCopy, signDigitalAgreement } from "./digital-agreement";
+import { signedAgreement } from "./agreement-acceptance";
+import { storedAgreementPdf } from "./commitments";
 it("verifica migración y generación inmutable en PostgreSQL local de memoria",async()=>{
  const db=new PGlite();vi.stubEnv("CLIENT_DATA_KEY",Buffer.alloc(32,7).toString("base64"));
  try{
-  for(const migration of ["001-customers","002-sales","003-audit","007-installments","010-payment-commitments","010-payment-commitments"]){await db.exec(await readFile(`sql/clients/${migration}.sql`,"utf8"));}
+  for(const migration of ["001-customers","002-sales","003-audit","007-installments","010-payment-commitments","019-agreement-models","020-digital-agreements"]){await db.exec(await readFile(`sql/clients/${migration}.sql`,"utf8"));}
   mock.query.mockImplementation((sql:string,values?:unknown[])=>db.query(sql,values));
   await db.query(`INSERT INTO oc_client_user(id,name,email,"firstName","lastName","rutCipher","rutHash","whatsappCipher") VALUES('qa-customer','Cliente Prueba','qa@example.invalid','Cliente','Prueba',$1,'qa-hash',$2)`,[protectClientValue("123456785","rut"),protectClientValue("+56911111111","whatsapp")]);
   await db.query("INSERT INTO oc_client_products(id,name,protected_cost,updated_by) VALUES('qa-product','Lente de prueba',20000,'qa-owner')");
   await db.query(`INSERT INTO oc_client_sales(id,user_id,request_key,request_data,product_id,product_name,quantity,protected_cost,total,net,vat,deposit,credit,remaining,tier_code,max_percent,max_amount,installment_count,identity_checked,commitment_version,created_by) VALUES('qa-sale','qa-customer','qa-key','{}','qa-product','Lente de prueba',1,20000,45000,37815,7185,31500,13500,13500,'start',30,40000,1,true,'legacy','qa-owner')`);
   await db.query("INSERT INTO oc_client_installments(id,sale_id,number,due_date,amount) VALUES('qa-installment','qa-sale',1,'2026-12-02',13500)");
   await expect(db.query("INSERT INTO oc_client_payments(id,sale_id,request_key,amount,interest_waived,paid_on,reference,created_by) VALUES('qa-invalid-reason','qa-sale','qa-invalid-request',0,1,'2026-11-02','QA','qa-owner')")).rejects.toThrow(/oc_client_payments_capital_check/);
-  await saveContractSettings({representativeName:"Representante Prueba",representativeRut:"12345678-5",paymentMethod:"both",signature:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6NwAAAABJRU5ErkJggg==",authorizeSignature:true,authorizeCurrentTerms:true,legalAnnualMaximum:41.02,legalLimitChecked:true},"qa-owner");
+  await saveContractSettings({representativeAuthority:"Escritura QA ficticia",representativeName:"Representante Prueba",representativeRut:"12345678-5",paymentMethod:"both",signature:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6NwAAAABJRU5ErkJggg==",authorizeSignature:true,authorizeCurrentTerms:true,legalAnnualMaximum:41.02,legalLimitChecked:true},"qa-owner");
+  const mid=await createAgreementModel({definition:DIGITAL_AGREEMENT_PROPOSAL,note:"Modelo solo para prueba QA"},"qa-owner");
+  await transitionAgreementModel({id:mid,status:"pending",note:"Revisión QA local"},"qa-owner");await transitionAgreementModel({id:mid,status:"approved",note:"Aprobación ficticia QA",reviewedSample:true,reviewedLegal:true,reviewedPrint:true},"qa-owner");
+  await db.query(`UPDATE oc_client_sales SET request_data='{"appsFlySale":"QA-1","workOrder":"QA-2"}' WHERE id='qa-sale'`);
+  // The currently deployed writer must continue to work while the generator is staged.
+  await db.exec("BEGIN");
+  const legacyInsert = "INSERT INTO oc_client_commitments(sale_id,user_id,version,payload_enc,content_hash,prepared_by) VALUES('qa-sale','qa-customer',$1,'qa',repeat('a',64),'qa-owner')";
+  await db.query(legacyInsert,["2026-11-02-compromiso-v3"]);
+  await db.exec("ROLLBACK");
+  await expect(db.query(legacyInsert,["OC-CD-DIGITAL-1"])).rejects.toThrow(/approved model/);
+  vi.stubEnv("CLIENT_DIGITAL_AGREEMENT_MODEL_HASH",modelHash(DIGITAL_AGREEMENT_PROPOSAL));
   await prepareCommitment("qa-sale","qa-staff");
   const original=await getStoredCommitment("qa-sale","qa-customer");
   expect(original?.sale.credit).toBe(13500);expect(original?.representative.name).toBe("Representante Prueba");expect(original?.installments).toEqual([{number:1,dueDate:"2026-12-02",amount:13500}]);
@@ -26,26 +43,46 @@ it("verifica migración y generación inmutable en PostgreSQL local de memoria",
   const count=await db.query<{n:number}>("SELECT count(*)::int AS n FROM oc_client_commitments");expect(count.rows[0].n).toBe(1);
   const unchanged=await db.query("SELECT credit,remaining,signed_at FROM oc_client_sales WHERE id='qa-sale'");expect(unchanged.rows[0]).toEqual({credit:13500,remaining:13500,signed_at:null});
 
-  // Exercise actual payment/reversal transactions against a new, signed contract.
-  const configured=await db.query<{payload_enc:string}>("SELECT payload_enc FROM oc_client_contract_settings");
-  const {revealClientValue}=await import("./privacy");
-  const settings=JSON.parse(revealClientValue(configured.rows[0].payload_enc,"contract-settings"));settings.latePolicyEffectiveAt="2026-07-01T00:00:00.000Z";
-  await db.query("DELETE FROM oc_client_commitments WHERE sale_id='qa-sale'");
-  await db.query("UPDATE oc_client_contract_settings SET payload_enc=$1",[protectClientValue(JSON.stringify(settings),"contract-settings")]);
-  await db.query("UPDATE oc_client_sales SET created_at='2026-07-02T12:00:00Z' WHERE id='qa-sale'");
-  await db.query("UPDATE oc_client_installments SET due_date='2026-08-04' WHERE sale_id='qa-sale'");
-  await prepareCommitment("qa-sale","qa-staff");
-  await db.query("UPDATE oc_client_sales SET signed_at='2026-07-02T12:00:00Z' WHERE id='qa-sale'");
-  await db.query("UPDATE oc_client_credit_balances SET principal_outstanding=13500 WHERE user_id='qa-customer'");
-  const payment={saleId:"qa-sale",requestKey:"00000000-0000-4000-8000-000000000001",amount:13500,interestAmount:202,paidOn:"2026-11-02",reference:"Comprobante QA"};
-  const id=await recordSalePayment(payment,"qa-staff");expect(await recordSalePayment(payment,"qa-staff")).toBe(id);
-  const settled=await db.query<{remaining:number}>("SELECT remaining FROM oc_client_sales WHERE id='qa-sale'");expect(settled.rows[0].remaining).toBe(0);
-  await reverseSalePayment({paymentId:id,reason:"Corrección de prueba"},"qa-staff");
-  const interestId=await recordSalePayment({...payment,amount:0,requestKey:"00000000-0000-4000-8000-000000000002"},"qa-staff");
-  await recordSalePayment({...payment,interestAmount:0,requestKey:"00000000-0000-4000-8000-000000000003"},"qa-staff");
-  await expect(reverseSalePayment({paymentId:interestId,reason:"Prueba de reversa"},"qa-staff")).rejects.toThrow(/Reabre/);
-
   await db.query("UPDATE oc_client_user SET \"emailVerified\"=true WHERE id='qa-customer'");
+  vi.stubEnv("CLIENT_DIGITAL_AGREEMENT_MODEL_HASH",original!.model!.hash);
+  vi.stubEnv("CLIENT_DIGITAL_AGREEMENT_REPRESENTATIVE_ID","qa-representative");
+  vi.stubEnv("CLIENT_DIGITAL_AGREEMENT_REPRESENTATIVE_RUT","12345678-5");
+  const approval={limit:40,reference:"Fuente QA local",accepted:true};
+  await expect(authorizeDigitalAgreement("qa-sale","qa-other",approval)).rejects.toMatchObject({status:403});
+  await expect(requestAgreementCode("qa-sale","qa-customer")).rejects.toThrow(/habilite/);
+  await authorizeDigitalAgreement("qa-sale","qa-representative",approval);
+  expect(await digitalAgreementStatus("qa-sale","qa-other")).toBeNull();
+  await expect(requestAgreementCode("qa-sale","qa-other")).rejects.toMatchObject({status:404});
+  mock.send.mockResolvedValueOnce(true);
+  const first=await requestAgreementCode("qa-sale","qa-customer");
+  await expect(requestAgreementCode("qa-sale","qa-customer")).rejects.toMatchObject({status:429});
+  const firstCode=mock.send.mock.calls[0][3];
+  expect(firstCode).toMatch(/^\d{6}$/);
+  const badCode=firstCode==="000000"?"000001":"000000";
+  for(let i=0;i<5;i++)await expect(signDigitalAgreement("qa-sale","qa-customer",{...first,code:badCode,accepted:true})).rejects.toMatchObject({status:400});
+  await expect(signDigitalAgreement("qa-sale","qa-customer",{...first,code:firstCode,accepted:true})).rejects.toThrow(/no está disponible/);
+  await db.query("UPDATE oc_client_agreement_digital SET resend_at=now(),expires_at=now() WHERE sale_id='qa-sale'");
+  mock.send.mockResolvedValueOnce(true);
+  const second=await requestAgreementCode("qa-sale","qa-customer");
+  const code=mock.send.mock.calls[1][3];
+  await expect(signDigitalAgreement("qa-sale","qa-customer",{...second,code,accepted:false})).rejects.toMatchObject({status:400});
+  await expect(signDigitalAgreement("qa-sale","qa-other",{...second,code,accepted:true})).rejects.toMatchObject({status:404});
+  await db.query("UPDATE oc_client_agreement_digital SET expires_at=now() WHERE sale_id='qa-sale'");
+  await expect(signDigitalAgreement("qa-sale","qa-customer",{...second,code,accepted:true})).rejects.toThrow(/no está disponible/);
+  await db.query("UPDATE oc_client_agreement_digital SET expires_at=now()+interval '5 minutes' WHERE sale_id='qa-sale'");
+  mock.send.mockResolvedValueOnce(false);
+  expect(await signDigitalAgreement("qa-sale","qa-customer",{...second,code,accepted:true})).toEqual({signed:true,sent:false});
+  const signed=await signedAgreement("qa-sale");
+  const originalPdf=await storedAgreementPdf("qa-sale","qa-customer");
+  expect((await PDFDocument.load(signed!.bytes)).getPageCount()).toBe((await PDFDocument.load(originalPdf)).getPageCount()+1);
+  expect((await db.query("SELECT remaining FROM oc_client_sales WHERE id='qa-sale'")).rows[0]).toEqual({remaining:13500});
+  expect(await sendDigitalAgreementCopy("qa-sale","qa-customer")).toEqual({signed:true,sent:false});
+  await db.query("UPDATE oc_client_agreement_digital SET copy_retry_at=now() WHERE sale_id='qa-sale'");
+  mock.send.mockResolvedValueOnce(true);
+  expect(await sendDigitalAgreementCopy("qa-sale","qa-customer")).toEqual({signed:true,sent:true});
+  expect(await signDigitalAgreement("qa-sale","qa-customer",{...second,code,accepted:true})).toEqual({signed:true,sent:true});
+  expect((await db.query("SELECT count(*)::int AS n FROM oc_client_agreement_acceptances")).rows[0]).toEqual({n:1});
+  await db.query("UPDATE oc_client_sales SET remaining=0 WHERE id='qa-sale'");
   await db.query("DELETE FROM oc_client_contract_settings");
   await expect(createSale({customerId:"qa-customer",productId:"qa-product",quantity:1,total:45000,credit:13500,installmentCount:1,firstDueDate:new Date(Date.now()+30*86400000).toISOString().slice(0,10),identityChecked:true,depositReceived:true,requestKey:"00000000-0000-4000-8000-000000000004"},"qa-staff")).rejects.toThrow(/configurar/);
   expect((await db.query<{n:number}>("SELECT count(*)::int AS n FROM oc_client_sales")).rows[0].n).toBe(1);

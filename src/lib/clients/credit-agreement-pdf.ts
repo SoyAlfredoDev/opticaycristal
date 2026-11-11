@@ -10,6 +10,9 @@ export async function creditAgreementPdf(d: CreditAgreementDocument, { cancelled
     cancelled?: boolean;
     signedAt?: string | null;
 } = {}) {
+    if(d.model?.definition.layout==="a4-formal-v3"){const {formalAgreementPdf}=await import("./credit-agreement-formal-pdf");return formalAgreementPdf(d);}
+    if(d.model?.definition.layout==="a4-compact-v2"){const {compactAgreementPdf}=await import("./credit-agreement-compact-pdf");return compactAgreementPdf(d);}
+    if(d.model){const {readableAgreementPdf}=await import("./credit-agreement-v4-pdf");return readableAgreementPdf(d);}
     const pdf = await PDFDocument.create(), font = await pdf.embedFont(StandardFonts.Helvetica), bold = await pdf.embedFont(StandardFonts.HelveticaBold), copy = agreementCopy(d);
     const wine = rgb(.408, .11, .188), ink = rgb(.08, .17, .23), muted = rgb(.33, .4, .44), line = rgb(.84, .88, .9);
     let page = pdf.addPage([595.28, 841.89]), y = 790;

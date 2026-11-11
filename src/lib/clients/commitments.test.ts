@@ -1,11 +1,14 @@
+// @vitest-environment node
 import { beforeEach,describe,expect,it,vi } from "vitest";
 import { createHash } from "node:crypto";
 const mocks=vi.hoisted(()=>({query:vi.fn(),transaction:vi.fn(),release:vi.fn()}));
 vi.mock("./db",()=>({clientTable:(name:string)=>name,clientPool:()=>({query:mocks.query,connect:async()=>({query:mocks.transaction,release:mocks.release})})}));
 import { parseContractSettings,validateSignature,prepareCommitment,getStoredCommitment,decodeCommitment } from "./commitments";
+import { AGREEMENT_PROPOSAL } from "./agreement-model";
+import { modelHash } from "./agreement-registry";
 import { protectClientValue,revealClientValue } from "./privacy";
 const signature="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6NwAAAABJRU5ErkJggg==";
-const settings={representativeName:"Representante de prueba",representativeRut:"123456785",signature,paymentMethod:"local" as const,webpayUrl:null,legalAnnualMaximum:41.02,latePolicyEffectiveAt:"2026-11-02T00:00:00.000Z",legalLimitChecked:true};
+const settings={representativeAuthority:"Escritura de demostración, referencia ficticia QA",representativeName:"Representante de prueba",representativeRut:"123456785",signature,paymentMethod:"local" as const,webpayUrl:null,legalAnnualMaximum:41.02,latePolicyEffectiveAt:"2026-11-02T00:00:00.000Z",legalLimitChecked:true};
 const sale={id:"sale-qa",productName:"Lente de prueba",quantity:1,total:45000,net:37815,vat:7185,deposit:31500,credit:13500,createdAt:"2026-11-02T12:00:00.000Z",installments:[{number:1,dueDate:"2026-12-02",amount:13500,paid:0}]};
 beforeEach(()=>{vi.clearAllMocks();vi.stubEnv("CLIENT_DATA_KEY",Buffer.alloc(32,7).toString("base64"));});
 describe("Compromisos de pago",()=>{
@@ -23,7 +26,8 @@ describe("Compromisos de pago",()=>{
  });
  it("prepara una sola copia cifrada de datos originales sin registrar venta, pago ni firma del cliente",async()=>{
   mocks.transaction.mockImplementation(async(sql:string)=>{
-   if(sql.startsWith("SELECT s."))return{rows:[{user_id:"customer-qa",status:"active",signed_at:null,...sale,product_name:sale.productName,created_at:sale.createdAt,remaining:13500,firstName:"Cliente",lastName:"Prueba",email:"qa@example.invalid",rutCipher:protectClientValue("123456785","rut"),whatsappCipher:protectClientValue("+56911111111","whatsapp")}]};
+   if(sql.includes("oc_client_agreement_models"))return{rows:[{id:"model-qa",status:"approved",definition:AGREEMENT_PROPOSAL,content_hash:modelHash(AGREEMENT_PROPOSAL),approved_by:"qa",approved_at:"2026-11-03"}]};
+   if(sql.startsWith("SELECT s."))return{rows:[{request_data:{appsFlySale:"QA-123",workOrder:"QA-456"},user_id:"customer-qa",status:"active",signed_at:null,...sale,product_name:sale.productName,created_at:sale.createdAt,remaining:13500,firstName:"Cliente",lastName:"Prueba",email:"qa@example.invalid",rutCipher:protectClientValue("123456785","rut"),whatsappCipher:protectClientValue("+56911111111","whatsapp")}]};
    if(sql.includes("SELECT payload_enc FROM oc_client_contract_settings"))return{rows:[{payload_enc:protectClientValue(JSON.stringify(settings),"contract-settings")}]};
    if(sql.startsWith("SELECT number,due_date"))return{rows:[{number:1,due_date:"2026-12-02",amount:13500}]};
    return{rows:[]};

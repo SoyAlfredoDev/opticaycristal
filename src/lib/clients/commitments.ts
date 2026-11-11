@@ -5,14 +5,18 @@ import { protectClientValue, revealClientValue } from "./privacy";
 import { normalizeClientRut, validClientRut } from "./validation";
 import type { PoolClient } from "pg";
 import { CLIENT_MAIL_COMPANY } from "./mail";
+import { approvedAgreementModel } from "./agreement-registry";
+import type { AgreementModel } from "./agreement-model";
 import type { CustomerSale } from "./sales-types";
 
-export type ContractSettings = { representativeName: string; representativeRut: string; signature: string; paymentMethod: "local" | "transfer" | "both" | "all"; webpayUrl: string | null; legalAnnualMaximum: number; latePolicyEffectiveAt: string };
+export type ContractSettings = { representativeName: string; representativeRut: string; representativeAuthority?: string; signature: string; paymentMethod: "local" | "transfer" | "both" | "all"; webpayUrl: string | null; legalAnnualMaximum: number; latePolicyEffectiveAt: string };
 export type ContractSettingsSummary = Omit<ContractSettings,"signature"> & { signatureConfigured: boolean };
 export type CreditAgreementDocument = {
  version: string; preparedAt: string;
  company: typeof CLIENT_MAIL_COMPANY;
- representative: { name: string; rut: string; signature: string };
+ representative: { name: string; rut: string; signature: string; authority?: string };
+ model?: { id: string; hash: string; definition: AgreementModel; sample?: boolean };
+ references?: { appsFlySale: string; workOrder: string };
  customer: { name: string; rut: string; email: string; whatsapp: string };
  sale: Pick<CustomerSale,"id"|"productName"|"quantity"|"total"|"net"|"vat"|"deposit"|"credit"|"createdAt">;
  installments: { number: number; dueDate: string; amount: number }[];
@@ -20,7 +24,7 @@ export type CreditAgreementDocument = {
  ordinaryAnnualRate: 0; lateAnnualRate: number; lateGraceDays: number; legalAnnualMaximum: number; webpayUrl: string | null;
 };
 export class CommitmentError extends Error {}
-const version = "2026-11-02-compromiso-v3";
+
 function text(value: unknown, label: string, maximum: number) {
  if(typeof value!=="string" || value.trim().length<2 || value.length>maximum || /[\u0000-\u001f]/.test(value))throw new CommitmentError(`Revisa ${label}.`);
  return value.trim();
@@ -47,7 +51,7 @@ export function parseContractSettings(input: Record<string,unknown>, previous?: 
  const legalAnnualMaximum=Number(input.legalAnnualMaximum);
  if(!Number.isFinite(legalAnnualMaximum)||legalAnnualMaximum<0.01||legalAnnualMaximum>100||Math.abs(legalAnnualMaximum*100-Math.round(legalAnnualMaximum*100))>0.00001||input.legalLimitChecked!==true)throw new CommitmentError("Confirma el máximo legal anual consultado en la CMF.");
  const signature=validateSignature(input.signature || previous?.signature);
- return {representativeName,representativeRut,signature,paymentMethod,webpayUrl,legalAnnualMaximum,latePolicyEffectiveAt:previous?.latePolicyEffectiveAt||new Date().toISOString()};
+ return {representativeName,representativeRut,representativeAuthority:input.representativeAuthority ? text(input.representativeAuthority,"el antecedente de las facultades",1000) : previous?.representativeAuthority,signature,paymentMethod,webpayUrl,legalAnnualMaximum,latePolicyEffectiveAt:previous?.latePolicyEffectiveAt||new Date().toISOString()};
 }
 async function readSettings() {
  const result=await clientPool().query(`SELECT payload_enc FROM ${clientTable("oc_client_contract_settings")} WHERE id=true`);
@@ -55,7 +59,7 @@ async function readSettings() {
 }
 export async function contractSettingsSummary(): Promise<ContractSettingsSummary|null> {
  const settings=await readSettings();
- return settings?{representativeName:settings.representativeName,representativeRut:settings.representativeRut,paymentMethod:settings.paymentMethod,signatureConfigured:true,webpayUrl:settings.webpayUrl,legalAnnualMaximum:settings.legalAnnualMaximum,latePolicyEffectiveAt:settings.latePolicyEffectiveAt}:null;
+ return settings?{representativeAuthority:settings.representativeAuthority,representativeName:settings.representativeName,representativeRut:settings.representativeRut,paymentMethod:settings.paymentMethod,signatureConfigured:true,webpayUrl:settings.webpayUrl,legalAnnualMaximum:settings.legalAnnualMaximum,latePolicyEffectiveAt:settings.latePolicyEffectiveAt}:null;
 }
 export async function saveContractSettings(input: Record<string,unknown>, actor: string) {
  const settings=parseContractSettings(input,await readSettings());
@@ -95,13 +99,26 @@ export async function prepareCommitment(saleId: unknown, actor: string, transact
   const schedule=await db.query(`SELECT number,due_date::text,amount FROM ${clientTable("oc_client_installments")} WHERE sale_id=$1 ORDER BY number`,[saleId]);
   const sale={id:saleId,productName:String(owner.product_name),quantity:Number(owner.quantity),total:Number(owner.total),net:Number(owner.net),vat:Number(owner.vat),deposit:Number(owner.deposit),credit:Number(owner.credit),createdAt:new Date(owner.created_at).toISOString(),installments:schedule.rows.map(i=>({number:Number(i.number),dueDate:String(i.due_date),amount:Number(i.amount)}))};
   if(sale.total!==sale.net+sale.vat || sale.total!==sale.deposit+sale.credit || !sale.installments.length || sale.installments.length>4 || sale.installments.reduce((sum,i)=>sum+i.amount,0)!==sale.credit)throw new CommitmentError("El calendario y los importes de la venta no coinciden. Revisa la venta antes de emitir el documento.");
-  const document:CreditAgreementDocument={version,preparedAt:new Date().toISOString(),company:{...CLIENT_MAIL_COMPANY},
-   representative:{name:settings.representativeName,rut:settings.representativeRut,signature:settings.signature},
+  const selectedHash=process.env.CLIENT_DIGITAL_AGREEMENT_MODEL_HASH;
+  let model;try{model=selectedHash ? await approvedAgreementModel(db,selectedHash) : null;}catch(error){throw new CommitmentError((error as Error).message);}
+  if(model&&!settings.representativeAuthority)throw new CommitmentError("Completa el antecedente de las facultades del representante.");
+  const refs=owner.request_data;
+  const references={appsFlySale:refs?.appsFlySale ? text(refs.appsFlySale,"el número de venta AppsFly",100) : "No informado",workOrder:refs?.workOrder ? text(refs.workOrder,"la orden de trabajo",100) : "No informada"};
+  const version=model ? `${model.definition.identifier}-${model.definition.version}` : "2026-11-02-compromiso-v3";
+  const document:CreditAgreementDocument={version,...(model?{model:{id:model.row.id,hash:model.row.content_hash,definition:model.definition},references}:{}),preparedAt:new Date().toISOString(),company:{...CLIENT_MAIL_COMPANY},
+   representative:{name:settings.representativeName,rut:settings.representativeRut,signature:settings.signature,authority:settings.representativeAuthority},
    customer:{name:`${owner.firstName} ${owner.lastName}`,rut:revealClientValue(owner.rutCipher,"rut"),email:owner.email,whatsapp:revealClientValue(owner.whatsappCipher,"whatsapp")},
    sale:{id:sale.id,productName:sale.productName,quantity:sale.quantity,total:sale.total,net:sale.net,vat:sale.vat,deposit:sale.deposit,credit:sale.credit,createdAt:sale.createdAt},
    installments:sale.installments.map(({number,dueDate,amount})=>({number,dueDate,amount})),paymentMethod:settings.paymentMethod,ordinaryAnnualRate:0,lateAnnualRate:new Date(sale.createdAt)>=new Date(settings.latePolicyEffectiveAt)?Math.min(18,settings.legalAnnualMaximum):0,lateGraceDays:60,legalAnnualMaximum:settings.legalAnnualMaximum,webpayUrl:settings.webpayUrl};
   const clear=JSON.stringify(document);
-  await db.query(`INSERT INTO ${clientTable("oc_client_commitments")}(sale_id,user_id,version,payload_enc,content_hash,prepared_by) VALUES($1,$2,$3,$4,$5,$6)`,[saleId,owner.user_id,version,protectClientValue(clear,"contract-document"),createHash("sha256").update(clear).digest("hex"),actor]);
+  if(model){
+  const {creditAgreementPdf}=await import("./credit-agreement-pdf");
+  const pdf=Buffer.from(await creditAgreementPdf(document));
+  await db.query(`INSERT INTO ${clientTable("oc_client_commitments")}(sale_id,user_id,version,payload_enc,content_hash,prepared_by,model_id,pdf_enc,pdf_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,[saleId,owner.user_id,version,protectClientValue(clear,"contract-document"),createHash("sha256").update(clear).digest("hex"),actor,model.row.id,protectClientValue(pdf.toString("base64"),"contract-document"),createHash("sha256").update(pdf).digest("hex")]);
+  await db.query(`UPDATE ${clientTable("oc_client_sales")} SET commitment_version=$2 WHERE id=$1`,[saleId,version]);
+  }else{
+   await db.query(`INSERT INTO ${clientTable("oc_client_commitments")}(sale_id,user_id,version,payload_enc,content_hash,prepared_by) VALUES($1,$2,$3,$4,$5,$6)`,[saleId,owner.user_id,version,protectClientValue(clear,"contract-document"),createHash("sha256").update(clear).digest("hex"),actor]);
+  }
   if(ownsTransaction)await db.query("COMMIT");
  }catch(error){if(ownsTransaction)await db.query("ROLLBACK");throw error;}finally{if(ownsTransaction)db.release();}
 }
@@ -115,7 +132,18 @@ export async function saleInterestQuote(saleId:unknown,asOf:string,userId?:strin
  const document=await getStoredCommitment(saleId,sale.user_id);
  if(!document?.lateAnnualRate)return{annualRate:0,principalDue:Number(sale.remaining),due:0,totalDue:Number(sale.remaining),asOf};
  const[installments,payments]=await Promise.all([clientPool().query(`SELECT amount,due_date::text FROM ${clientTable("oc_client_installments")} WHERE sale_id=$1 ORDER BY number`,[saleId]),clientPool().query(`SELECT amount,paid_on::text,interest_amount,interest_waived FROM ${clientTable("oc_client_payments")} WHERE sale_id=$1 AND reversed_at IS NULL ORDER BY paid_on,created_at,id`,[saleId])]);
+ const { effectiveAgreementDate }=await import("./agreement-acceptance");
+ const signedOn=await effectiveAgreementDate(document,saleId,sale.signed_at);
  const { calculateLateInterest }=await import("./loan-interest");
- const interest=calculateLateInterest(installments.rows.map(i=>({amount:Number(i.amount),dueDate:i.due_date})),payments.rows.map(p=>({amount:Number(p.amount),paidOn:p.paid_on,interestAmount:Number(p.interest_amount),interestWaived:Number(p.interest_waived)})),asOf,sale.signed_at?Math.min(document.lateAnnualRate,document.legalAnnualMaximum):0,document.lateGraceDays,sale.signed_at?new Intl.DateTimeFormat("en-CA",{timeZone:"America/Santiago",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(sale.signed_at)):undefined);
- return{...interest,annualRate:document.lateAnnualRate,principalDue:Number(sale.remaining),totalDue:Number(sale.remaining)+interest.due,asOf};
+ const interest=calculateLateInterest(installments.rows.map(i=>({amount:Number(i.amount),dueDate:i.due_date})),payments.rows.map(p=>({amount:Number(p.amount),paidOn:p.paid_on,interestAmount:Number(p.interest_amount),interestWaived:Number(p.interest_waived)})),asOf,signedOn?Math.min(document.lateAnnualRate,document.legalAnnualMaximum,signedOn.legalAnnualLimit):0,document.lateGraceDays,signedOn?.date);
+ return{...interest,annualRate:signedOn?Math.min(document.lateAnnualRate,document.legalAnnualMaximum,signedOn.legalAnnualLimit):0,principalDue:Number(sale.remaining),totalDue:Number(sale.remaining)+interest.due,asOf};
+}
+
+/** Original issued bytes, owner scoped; never regenerate a revised agreement. */
+export async function storedAgreementPdf(saleId:string,userId:string){
+ const r=await clientPool().query(`SELECT pdf_enc,pdf_hash FROM ${clientTable("oc_client_commitments")} WHERE sale_id=$1 AND user_id=$2`,[saleId,userId]);
+ if(!r.rows[0]?.pdf_enc||!r.rows[0].pdf_hash)throw new CommitmentError("No hay un PDF original íntegro disponible. Revisa el respaldo sin regenerarlo.");
+ const bytes=Buffer.from(revealClientValue(r.rows[0].pdf_enc,"contract-document"),"base64");
+ if(createHash("sha256").update(bytes).digest("hex")!==r.rows[0].pdf_hash)throw new CommitmentError("No se pudo verificar la integridad del PDF original.");
+ return bytes;
 }

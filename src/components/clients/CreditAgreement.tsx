@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+import { VersionedCreditAgreement } from "./VersionedCreditAgreement";
 import Image from "next/image";
 import Link from "next/link";
 import { brand } from "@/components/site/content";
@@ -8,7 +10,8 @@ import { PrintCommitment } from "./PrintCommitment";
 import styles from "./Commitment.module.css";
 const rut=(value:string)=>`${value.slice(0,-1)}-${value.slice(-1)}`;
 const date=(value:string)=>new Intl.DateTimeFormat("es-CL",{dateStyle:"long",timeZone:"America/Santiago"}).format(new Date(value));
-export function CreditAgreement({document:d,backHref,cancelled,signedAt,pdfHref}:{document:CreditAgreementDocument;backHref:string;cancelled:boolean;signedAt:string|null;pdfHref:string}){
+export function CreditAgreement({document:d,backHref,cancelled,signedAt,pdfHref,signing,digitalSigned}:{document:CreditAgreementDocument;backHref:string;cancelled:boolean;signedAt:string|null;pdfHref:string;signing?:ReactNode;digitalSigned?:boolean}){
+ if(d.model)return <VersionedCreditAgreement document={d} backHref={backHref} pdfHref={pdfHref} cancelled={cancelled} signedAt={signedAt} signing={signing} digitalSigned={digitalSigned}/>;
  const copy=agreementCopy(d);
  const paymentParts=d.webpayUrl?copy.payments.split(d.webpayUrl):[copy.payments];
  return <main className={styles.document} id="contenido-principal">

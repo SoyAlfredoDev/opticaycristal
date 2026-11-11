@@ -50,3 +50,17 @@ export function staffVerificationEmailContent(code:string){
  return {title,html:corporateEmailHtml({title,heading:"Verifique su correo",purpose,action:"",url:CLIENT_MAIL_COMPANY.website,eyebrow:"Verificación presencial",security,expiry:"10 minutos",code}),text:`${purpose}\n\nCódigo: ${code}\n\nVálido durante 10 minutos y para un único uso.\n${security}\n\n${CLIENT_MAIL_COMPANY.name}\nRUT ${CLIENT_MAIL_COMPANY.rut}\n${CLIENT_MAIL_COMPANY.address}\n${CONTACTO_EMAIL}\nWhatsApp ${CLIENT_MAIL_COMPANY.phone}`};
 }
 export async function sendStaffVerificationCode(to:string,code:string,requestId:string){const content=staffVerificationEmailContent(code);const result=await enviarConResend({to,subject:content.title,html:content.html,text:content.text,replyTo:CONTACTO_EMAIL,idempotencyKey:`staff-email-code/${requestId}`});if(!result.ok)throw new Error("No se pudo confirmar el envío del código. Inténtalo nuevamente en un minuto.");}
+
+export async function sendAgreementMail(to: string, saleId: string, eventId: string, code?: string) {
+ const heading = code ? "Código para firmar tu compromiso" : "Tu compromiso de pago está firmado";
+ const title = `${heading} · Óptica & Cristal`;
+ const purpose = code ? "Ingresa este código en Mi cuenta para confirmar la firma de tu compromiso de pago." : "Tu copia íntegra está disponible en Mi cuenta. Ingresa para descargarla.";
+ const security = code ? "No compartas este código. Si no solicitaste la firma, ignora este mensaje." : "Por seguridad, ingresa con tu propia cuenta para acceder al documento.";
+ const url = `${new URL(process.env.CLIENT_APP_URL || CLIENT_MAIL_COMPANY.website).origin}/mi-cuenta/compras/${encodeURIComponent(saleId)}/compromiso`;
+ const html = corporateEmailHtml({ title, heading, purpose, action: "Ver mi compromiso", url, security, eyebrow: "Crédito directo", expiry: code ? "10 minutos" : undefined, code });
+ const result = await enviarConResend({
+  to, subject: title, html, text: [purpose, code ? `Código: ${code} (válido por 10 minutos).` : url, security].join("\n\n"),
+  replyTo: CONTACTO_EMAIL, idempotencyKey: `digital-agreement/${code ? "code" : "copy"}/${eventId}`,
+ });
+ return result.ok;
+}

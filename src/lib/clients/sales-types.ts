@@ -10,6 +10,6 @@ export type CustomerSale = {
 export type SaleInput = {
  customerId: string; productId: string; quantity: number; total: number; credit: number;
  installmentCount: number; firstDueDate: string; identityChecked: boolean; depositReceived: boolean; conditionsReviewed?: boolean;
- requestKey: string; unitProtectedCost?: number; pricingPolicy?: "category";
+ requestKey: string; appsFlySale?: string; workOrder?: string; unitProtectedCost?: number; pricingPolicy?: "category";
 };
 export type SaleQuote = { total: number; net: number; vat: number; maximumCredit: number; minimumDeposit: number; protectedCost: number | null; maxInstallments: number; enabled: boolean; reason: string };

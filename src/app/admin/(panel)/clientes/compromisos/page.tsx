@@ -1,3 +1,5 @@
+import { AgreementModels } from "@/components/clients/AgreementModels";
+import { listAgreementModels } from "@/lib/clients/agreement-registry";
 import Link from "next/link";
 import { AdminAccessDenied } from "@/components/admin/AdminAccessDenied";
 import { AdminCommitmentSettings } from "@/components/clients/AdminCommitments";
@@ -8,7 +10,8 @@ export const dynamic="force-dynamic";
 export default async function CommitmentsPage(){
  const staff=await customerAdminSession();if(!staff)return <AdminAccessDenied/>;
  let initial=null,unavailable=false;
+ let registry:Awaited<ReturnType<typeof listAgreementModels>>={models:[],history:[]},modelsUnavailable=false;
  const owner=canManageProductCosts(staff.u);
- if(owner){try{initial=await contractSettingsSummary();}catch{unavailable=true;}}
- return <main className={`${styles.main} ${styles.space}`} id="contenido-principal"><h1>Compromisos de pago</h1><p>Genera el documento desde una venta a crédito y entrégalo al cliente para firma presencial.</p><Link href="/admin/clientes/ventas">Ir a ventas</Link>{owner?<AdminCommitmentSettings initial={initial} unavailable={unavailable}/>:<p>El responsable de la óptica administra la firma preimpresa y los medios de pago.</p>}</main>;
+ if(owner){try{registry=await listAgreementModels();}catch{modelsUnavailable=true;}try{initial=await contractSettingsSummary();}catch{unavailable=true;}}
+ return <main className={`${styles.main} ${styles.space}`} id="contenido-principal"><h1>Compromisos de pago</h1><p>Genera el documento desde una venta a crédito y entrégalo al cliente para firma presencial.</p><Link href="/admin/clientes/ventas">Ir a ventas</Link>{owner?<><AgreementModels initial={registry.models} initialHistory={registry.history} unavailable={modelsUnavailable}/><AdminCommitmentSettings initial={initial} unavailable={unavailable}/></>:<p>El responsable de la óptica administra la firma preimpresa y los medios de pago.</p>}</main>;
 }

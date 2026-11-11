@@ -1,6 +1,8 @@
+import {effectiveModelClauses} from "./agreement-model";
 import type { CreditAgreementDocument } from "./commitments";
 export const agreementRut = (v: string) => `${v.slice(0, -1)}-${v.slice(-1)}`;
 export function agreementCopy(d: CreditAgreementDocument) {
+    if(d.model){const c=effectiveModelClauses(d.model.definition,d.lateAnnualRate);return {...c,parties:`${d.company.name}, RUT ${d.company.rut}, ${d.company.address}; representada por ${d.representative.name}, RUT ${agreementRut(d.representative.rut)}. Facultades: ${d.representative.authority}. Cliente ${d.customer.name}, RUT ${agreementRut(d.customer.rut)}.`,note:`Modelo ${d.version}. SHA-256 ${d.model.hash}. Generar no confirma firma ni entrega.`};}
     return {
         parties: `${d.company.name}, RUT ${d.company.rut}, con domicilio comercial en ${d.company.address}, representada por ${d.representative.name}, RUT ${agreementRut(d.representative.rut)}, y el cliente ${d.customer.name}, RUT ${agreementRut(d.customer.rut)}, acuerdan la compra y el siguiente calendario de pago.`,
         monthly: "El cliente se compromete a pagar el capital concedido a crédito en las siguientes cuotas mensuales. No se pacta interés sobre interés ni el vencimiento anticipado de las cuotas futuras por un atraso.",

@@ -5,6 +5,7 @@ import { clientPool, clientTable as t } from "./db";
 import { normalizeClientRut, validClientRut } from "./validation";
 import { clientFingerprint } from "./privacy";
 import { getStoredCommitment,prepareCommitment } from "./commitments";
+import { effectiveAgreementDate,recordAgreementAcceptance } from "./agreement-acceptance";
 import { calculateLateInterest } from "./loan-interest";
 import { calculateFinancing, monthlyInstallments } from "./financing";
 import type { CustomerSale, SaleInput, SaleProduct, SaleQuote } from "./sales-types";
@@ -41,6 +42,7 @@ export function parseSale(raw: unknown): SaleInput {
  return { customerId: textValue(b.customerId, "Cliente"), productId: textValue(b.productId, "Producto"),
  quantity: whole(b.quantity, "Cantidad", 1, 100), total: whole(b.total, "Total", 1), credit: whole(b.credit, "Crédito"),
  installmentCount: whole(b.installmentCount, "Cuotas", 0, 4), firstDueDate: typeof b.firstDueDate === "string" ? b.firstDueDate : "",
+ ...(b.appsFlySale?{appsFlySale:textValue(b.appsFlySale,"Número de venta AppsFly",100)}:{}),...(b.workOrder?{workOrder:textValue(b.workOrder,"Orden de trabajo",100)}:{}),
  identityChecked: b.identityChecked === true, depositReceived: b.depositReceived === true, requestKey: requestKey(b.requestKey),...(b.conditionsReviewed!==undefined?{conditionsReviewed:b.conditionsReviewed===true}:{}),...(b.unitProtectedCost!==undefined?{unitProtectedCost:whole(b.unitProtectedCost,"Costo protegido por unidad",1)}:{}),...(policy?{pricingPolicy:policy}:{}) };
 }
 export async function findCustomerByRut(rut: unknown) {
@@ -159,10 +161,11 @@ export async function recordSalePayment(raw: unknown, actor: string, existingTra
   const installments = await db.query(`SELECT id,amount,paid,due_date::text FROM ${t("oc_client_installments")} WHERE sale_id=$1 ORDER BY number FOR UPDATE`,[saleId]);
   const contract=await getStoredCommitment(saleId,owner.user_id,db);
   if(contract?.lateAnnualRate){
-   if(!sale.signed_at)throw new SaleError("Confirma la firma presencial antes de liquidar la mora de este contrato.");
+   const signedOn=await effectiveAgreementDate(contract,saleId,sale.signed_at,db);
+   if(!signedOn)throw new SaleError("Confirma la firma presencial antes de liquidar la mora de este contrato.");
    const history=await db.query(`SELECT amount,paid_on::text,interest_amount,interest_waived FROM ${t("oc_client_payments")} WHERE sale_id=$1 AND reversed_at IS NULL ORDER BY paid_on,created_at,id`,[saleId]);
    if(history.rows.some(p=>p.paid_on>paidOn))throw new SaleError("La fecha no puede ser anterior al último pago registrado de este contrato.");
-   const interest=calculateLateInterest(installments.rows.map(i=>({amount:Number(i.amount),dueDate:i.due_date})),history.rows.map(p=>({amount:Number(p.amount),paidOn:p.paid_on,interestAmount:Number(p.interest_amount),interestWaived:Number(p.interest_waived)})),paidOn,Math.min(contract.lateAnnualRate,contract.legalAnnualMaximum),contract.lateGraceDays,new Intl.DateTimeFormat("en-CA",{timeZone:"America/Santiago",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(sale.signed_at)));
+   const interest=calculateLateInterest(installments.rows.map(i=>({amount:Number(i.amount),dueDate:i.due_date})),history.rows.map(p=>({amount:Number(p.amount),paidOn:p.paid_on,interestAmount:Number(p.interest_amount),interestWaived:Number(p.interest_waived)})),paidOn,Math.min(contract.lateAnnualRate,contract.legalAnnualMaximum,signedOn.legalAnnualLimit),contract.lateGraceDays,signedOn.date);
    if(interestAmount+interestWaived>interest.due)throw new SaleError("La mora registrada supera el importe calculado para esa fecha.");
    if(amount===Number(sale.remaining)&&interestAmount+interestWaived!==interest.due)throw new SaleError(`Para cerrar el crédito debes pagar o condonar la mora pendiente: ${interest.due} pesos.`);
   }else if(interestAmount||interestWaived)throw new SaleError("Esta venta no tiene una cláusula de mora aplicable.");
@@ -209,6 +212,8 @@ export async function changeSaleState(raw: unknown, actor: string) {
   const sale=await lockedSale(db,id);
   if(b.action==="sign") {
    if(sale.status!=="active"||!Number(sale.credit))throw new SaleError("Esta venta no admite firma.");
+   const document=await getStoredCommitment(id,sale.user_id,db);
+   if(document?.model){try{await recordAgreementAcceptance(db,document,b,actor);}catch(e){throw new SaleError((e as Error).message);}}
    await db.query(`UPDATE ${t("oc_client_sales")} SET signed_at=COALESCE(signed_at,now()),signed_by=COALESCE(signed_by,$2) WHERE id=$1`,[id,actor]);
   } else if(b.action==="cancel") {
    const reason=textValue(b.reason,"Motivo",240);
