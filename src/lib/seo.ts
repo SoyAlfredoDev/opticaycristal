@@ -30,6 +30,15 @@ export type SeoEntry = {
   keywords: readonly string[];
   image: string;
   imageAlt: string;
+  shareImage?: { url: string; alt: string; width: number; height: number; type: string };
+};
+
+const creditShareImage = {
+  url: "/images/social/optica-cristal-credito-directo-v1.jpg",
+  alt: "Óptica & Cristal. Consulta tu crédito directo. Fotografía del local en Santiago Centro.",
+  width: 1200,
+  height: 630,
+  type: "image/jpeg",
 };
 
 export const seoPages = {
@@ -47,6 +56,7 @@ export const seoPages = {
       "convenio con empresas",
       "descuento compra online lentes",
     ],
+    shareImage: creditShareImage,
     image: "/images/home/hero-optical-boutique-v3.webp",
     imageAlt: "Interior de Óptica & Cristal en Santiago Centro, con vitrinas de lentes",
   },
@@ -72,6 +82,7 @@ export const seoPages = {
     description: "Conoce el crédito directo de Óptica & Cristal: condiciones Start, pasos para crear tu cuenta y compra presencial en Huérfanos 713, local 18.",
     path: "/credito-directo",
     keywords: ["crédito directo óptica", "crédito para lentes", "Óptica & Cristal"],
+    shareImage: creditShareImage,
     image: "/images/home/oc-lentes-opticos-v01.png",
     imageAlt: "Lentes ópticos de tono vino, imagen referencial de producto",
   },
@@ -124,6 +135,7 @@ export function absoluteUrl(path: string): string {
 export function pageMetadata(page: SeoEntry): Metadata {
   const url = absoluteUrl(page.path);
   const fullTitle = page.path === "/" ? page.title : `${page.title} | ${SITE_NAME}`;
+  const shareImage = page.shareImage ?? { url: page.image, alt: page.imageAlt };
   return {
     title: page.path === "/" ? { absolute: page.title } : page.title,
     description: page.description,
@@ -136,13 +148,13 @@ export function pageMetadata(page: SeoEntry): Metadata {
       siteName: SITE_NAME,
       locale: "es_CL",
       type: "website",
-      images: [{ url: page.image, alt: page.imageAlt }],
+      images: [shareImage],
     },
     twitter: {
       card: "summary_large_image",
       title: fullTitle,
       description: page.description,
-      images: [page.image],
+      images: [{ url: shareImage.url, alt: shareImage.alt }],
     },
   };
 }

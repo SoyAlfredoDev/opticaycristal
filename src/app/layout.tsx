@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Playfair_Display } from "next/font/google";
 import { JornadaModalProvider } from "@/components/forms/JornadaModalProvider";
 import { JsonLd } from "@/components/site/JsonLd";
-import { seoPages, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { pageMetadata, seoPages, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { siteJsonLd } from "@/lib/structured-data";
 import "./globals.css";
 
@@ -25,6 +25,8 @@ export const viewport = {
   viewportFit: "cover",
 };
 
+const homeMetadata = pageMetadata(seoPages.home);
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -39,21 +41,8 @@ export const metadata: Metadata = {
   publisher: SITE_NAME,
   category: "Óptica",
   alternates: { canonical: SITE_URL, languages: { "es-CL": SITE_URL } },
-  openGraph: {
-    title: seoPages.home.title,
-    description: seoPages.home.description,
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    locale: "es_CL",
-    type: "website",
-    images: [{ url: seoPages.home.image, alt: seoPages.home.imageAlt }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: seoPages.home.title,
-    description: seoPages.home.description,
-    images: [seoPages.home.image],
-  },
+  openGraph: homeMetadata.openGraph,
+  twitter: homeMetadata.twitter,
   robots: {
     index: true,
     follow: true,
