@@ -173,11 +173,11 @@ export function FrameAdvisor() {
   }
 
   return <div className={styles.advisor}>
-    <div className={`${space.pageIntro} ${styles.intro}`}><h1>Asesor de monturas</h1><p>Tu foto, tres propuestas y una explicación para ti.</p></div>
+    <div className={`${space.pageIntro} ${styles.intro}`}><h1><span className={styles.titleIcon}><Sparkles size={22} aria-hidden="true" /></span>Asesor Inteligente</h1></div>
     <details key={result ? "results" : "setup"} className={styles.setup} open={!result || undefined}>
       <summary><span><Camera size={18} aria-hidden="true" /> Tu foto y estilo</span><span><Plus size={16} aria-hidden="true" /> Nueva asesoría</span></summary>
     <form onSubmit={consult} className={`${space.panel} ${styles.form}`}>
-      <div>
+      <div className={styles.photoStep}>
         <h2>Elige tu foto</h2>
         <p>De frente, sin lentes y con buena luz.</p>
         <div className={styles.photoActions}>
