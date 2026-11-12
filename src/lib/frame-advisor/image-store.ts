@@ -44,7 +44,7 @@ export async function reserveFrameImage(userId: string, id: string, index: numbe
         else if (existing.state === "ready") decision = { state: "ready", image: Buffer.from(revealClientValue(existing.image_encrypted, "frame-image"), "base64") };
         else decision = { state: existing.state === "pending" && existing.active ? "pending" : "failed" };
       } else {
-        const limits = (await client.query(`SELECT count(*) FILTER(WHERE i.created_at >= (date_trunc('day',now() AT TIME ZONE 'America/Santiago') AT TIME ZONE 'America/Santiago'))::int AS used,
+        const limits = (await client.query(`SELECT count(*) FILTER(WHERE i.created_at >= GREATEST((date_trunc('day',now() AT TIME ZONE 'America/Santiago') AT TIME ZONE 'America/Santiago'), (SELECT daily_reset_at FROM ${clientTable("oc_client_frame_pilot")} WHERE user_id=$1)))::int AS used,
           coalesce(bool_or(i.state='pending' AND i.created_at>now()-interval '3 minutes'),false) AS pending
           FROM ${images()} i JOIN ${advice()} a ON a.id=i.advice_id WHERE a.user_id=$1`, [userId])).rows[0];
         if (limits.pending) decision = { state: "pending" };

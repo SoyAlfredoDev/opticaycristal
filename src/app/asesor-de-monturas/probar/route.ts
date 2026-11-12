@@ -5,7 +5,7 @@ export async function GET() {
   return new Response(null, {
     status: 307,
     headers: {
-      Location: session ? "/mi-cuenta/asesor-de-monturas" : "/mi-cuenta/registro",
+      Location: session ? "/mi-cuenta/asesor-de-monturas" : "/mi-cuenta/registro?destino=asesor",
       "Cache-Control": "private, no-store",
     },
   });

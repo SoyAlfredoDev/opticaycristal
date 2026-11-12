@@ -25,7 +25,7 @@ export async function isFrameAdvisorPilot(userId: string) {
 }
 
 export async function reserveAdvice(userId: string, requestId: string): Promise<Reservation> {
-  const { advice, budget } = tables();
+  const { advice, budget, pilot } = tables();
   const client = await clientPool().connect();
   try {
     await client.query("BEGIN");
@@ -42,7 +42,7 @@ export async function reserveAdvice(userId: string, requestId: string): Promise<
       decision = { status: existing.expired ? "failed" : "pending" };
     } else {
       const { daily, pending } = (await client.query(
-        `SELECT count(*) FILTER (WHERE created_at >= (${chileDay} AT TIME ZONE 'America/Santiago'))::int AS daily,
+        `SELECT count(*) FILTER (WHERE created_at >= GREATEST((${chileDay} AT TIME ZONE 'America/Santiago'), (SELECT daily_reset_at FROM ${pilot} WHERE user_id=$1)))::int AS daily,
           coalesce(bool_or(result IS NULL AND failed_at IS NULL AND created_at > now() - interval '1 minute'), false) AS pending
           FROM ${advice} WHERE user_id=$1 AND created_at >= LEAST((${chileDay} AT TIME ZONE 'America/Santiago'),now() - interval '1 minute')`,
         [userId],
@@ -106,7 +106,7 @@ export async function rateAdvice(userId: string, id: string, rating: number, fee
 }
 
 export async function frameAdviceMetrics() {
-  const { advice, budget } = tables();
+  const { advice, budget, pilot } = tables();
   const result = await clientPool().query<{ used: number | null; completed: number; rated: number; average: number | null }>(`SELECT
     (SELECT used FROM ${budget} WHERE month=${month}) AS used,
     count(*) FILTER (WHERE result IS NOT NULL)::int AS completed,

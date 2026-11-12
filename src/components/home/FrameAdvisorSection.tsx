@@ -31,7 +31,7 @@ export function FrameAdvisorSection() {
             </figure>
           ))}
         </div>
-        <p className={styles.note}>Simulaciones de ejemplo. Acceso en fase piloto.</p>
+        <p className={styles.note}>Simulaciones de ejemplo. Disponible con tu cuenta.</p>
         <Link className={styles.button} href="/asesor-de-monturas/probar" prefetch={false}>
           Probar con mi foto
         </Link>

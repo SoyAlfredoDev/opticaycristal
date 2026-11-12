@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       case "expired": return privateJson({ error: "Esta asesoría ya venció. Crea una nueva cuando quieras." }, 410);
       case "mismatch": return privateJson({ error: "Usa la misma foto para las tres propuestas." }, 409);
       case "pending": return privateJson({ error: "Todavía estamos preparando tu propuesta.", retry: true }, 409);
-      case "limit": return privateJson({ error: "Se alcanzó el límite de imágenes del piloto." }, 429);
+      case "limit": return privateJson({ error: "Se alcanzó el límite de generación de imágenes." }, 429);
       case "failed": return privateJson({ error: "Esta imagen no se pudo completar. Conservamos tus recomendaciones.", retry: false }, 503);
       case "reserved": {
         try {

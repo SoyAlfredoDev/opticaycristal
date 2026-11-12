@@ -25,3 +25,16 @@ it("responde igual a RUT nuevo y duplicado sin crear dos cuentas",async()=>{
  expect(fresh.status).toBe(200);expect(duplicate.status).toBe(200);const freshBody=await fresh.json();expect(freshBody).toEqual(await duplicate.json());expect(freshBody.welcome).toEqual({tierName:"Start",maxAmount:40000,maxPercent:30,maxInstallments:1});
  expect((await db.query("SELECT count(*)::int AS count FROM oc_client_user")).rows[0]).toEqual({count:1});
 },20000);
+
+it("permite iniciar sesión inmediatamente con la cuenta recién creada", async () => {
+  const auth = state.auth as ReturnType<typeof createClientAuth>;
+  const response = await auth.api.signInEmail({
+    body: { email: "audit-new@example.com", password: "Synthetic audit password 2026!" },
+    asResponse: true,
+  });
+  expect(response.status).toBe(200);
+  const cookie = response.headers.getSetCookie().map(value => value.split(";")[0]).join("; ");
+  const session = await auth.api.getSession({ headers: new Headers({ cookie }) });
+  expect(session?.user.email).toBe("audit-new@example.com");
+  expect(session?.user.emailVerified).toBe(false);
+});

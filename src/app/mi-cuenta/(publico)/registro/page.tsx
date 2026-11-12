@@ -1,2 +1,5 @@
 import { AuthForm } from "@/components/clients/AuthForm";
-export default function CustomerRegister() {return <AuthForm mode="register" />;}
+
+export default async function CustomerRegister({ searchParams }: { searchParams: Promise<{ destino?: string }> }) {
+  return <AuthForm mode="register" openAdvisor={(await searchParams).destino === "asesor"} />;
+}

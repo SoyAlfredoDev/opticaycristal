@@ -43,6 +43,7 @@ beforeAll(async () => {
   const migration = await readFile("sql/clients/025-frame-advisor.sql", "utf8");
   await db.exec(migration);
   await db.exec(migration);
+  await db.exec(await readFile("sql/clients/027-frame-advisor-reset.sql", "utf8"));
   vi.stubEnv("CLIENT_APP_URL", origin);
   vi.stubEnv("CLIENT_DATA_KEY", randomBytes(32).toString("base64"));
   vi.stubEnv("CLIENT_FRAME_ADVISOR_ENABLED", "true");
@@ -172,4 +173,27 @@ it("usa AI Gateway con la identidad del proyecto y el mismo modelo estructurado"
   expect(JSON.parse(String(options?.body))).toMatchObject({
     model: "openai/gpt-5.4-mini", store: false, text: { format: { type: "json_schema", strict: true } },
   });
+});
+
+it("habilita a un cliente registrado fuera del piloto y conserva el requisito de sesión", async () => {
+  await db.exec("DELETE FROM oc_client_frame_pilot WHERE user_id='test-b'");
+  vi.stubEnv("CLIENT_FRAME_ADVISOR_ALL_CUSTOMERS", "true");
+  try {
+    state.user = "test-b";
+    const response = await post(consult());
+    expect(response.status).toBe(200);
+    expect((await response.json()).advice.suggestions).toHaveLength(3);
+    state.user = null;
+    expect((await post(consult())).status).toBe(401);
+  } finally {
+    vi.stubEnv("CLIENT_FRAME_ADVISOR_ALL_CUSTOMERS", undefined);
+  }
+});
+
+it("reinicia el cupo diario sin borrar historial ni devolver presupuesto mensual", async () => {
+  for (let i = 0; i < 3; i++) expect((await post(consult())).status).toBe(200);
+  expect((await post(consult())).status).toBe(429);
+  await db.exec("UPDATE oc_client_frame_pilot SET daily_reset_at=now() WHERE user_id='test-a'");
+  expect((await post(consult())).status).toBe(200);
+  expect(await frameAdviceMetrics()).toMatchObject({ used: 4, completed: 4 });
 });

@@ -23,7 +23,7 @@ export function FrameAdvisor() {
   const [original, setOriginal] = useState("");
   const [style, setStyle] = useState<Style>("clásico");
   const [consent, setConsent] = useState(false);
-  const [busy, setBusy] = useState<"photo" | "advice" | "images" | "rating" | null>(null);
+  const [busy, setBusy] = useState<"photo" | "advice" | "images" | "rating" | "pdf" | null>(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [result, setResult] = useState<Advice | null>(null);
@@ -145,6 +145,30 @@ export function FrameAdvisor() {
     finally { pending.current = false; if (mounted.current) setBusy(null); }
   }
 
+  async function downloadAdvice() {
+    if (!result || pending.current) return;
+    pending.current = true;
+    setError("");
+    setBusy("pdf");
+    try {
+      const { createAdvicePdf } = await import("@/lib/frame-advisor/advice-pdf");
+      const pdf = await createAdvicePdf(result, previews.map(preview => preview.image));
+      const url = URL.createObjectURL(new Blob([new Uint8Array(pdf)], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "mis-propuestas-optica-y-cristal.pdf";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch {
+      if (mounted.current) setError("No pudimos descargar el PDF. Intenta nuevamente.");
+    } finally {
+      pending.current = false;
+      if (mounted.current) setBusy(null);
+    }
+  }
+
   return <div className={styles.advisor}>
     <div className={space.pageIntro}><h1>Asesor de monturas</h1><p>Tu foto, tres propuestas y una explicación para ti.</p></div>
     <form onSubmit={consult} className={`${space.panel} ${styles.form}`}>
@@ -181,7 +205,7 @@ export function FrameAdvisor() {
         setResult(previous); setRating(null); setFeedback(""); void recoverImages(previous);
       }}>Ver mi última asesoría</button>}
     </form>
-    {busy && <p role="status" className={styles.progress}><span aria-hidden="true" />{busy === "photo" ? "Preparando tu foto…" : busy === "advice" ? "Eligiendo tres estilos para ti…" : busy === "images" ? `Creando propuesta ${progress} de 3. Puede tardar un momento…` : "Guardando tu calificación…"}</p>}
+    {busy && <p role="status" className={styles.progress}><span aria-hidden="true" />{busy === "photo" ? "Preparando tu foto…" : busy === "advice" ? "Eligiendo tres estilos para ti…" : busy === "images" ? `Creando propuesta ${progress} de 3. Puede tardar un momento…`  : busy === "pdf" ? "Preparando tu PDF…" : "Guardando tu calificación…"}</p>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
     {result && <section className={styles.results} aria-labelledby="frame-results-title">
       <h2 id="frame-results-title" ref={heading} tabIndex={-1}>Tres maneras de verte con lentes</h2>
@@ -215,6 +239,9 @@ export function FrameAdvisor() {
           <label className={space.field}>Comentario opcional<textarea placeholder="Cuéntanos qué mejorar, sin incluir datos personales." className={space.input} maxLength={400} rows={2} value={feedback} onChange={event => setFeedback(event.target.value)} disabled={!!busy} /></label>
           <button type="submit" className={space.button} disabled={!rating || !!busy}>Enviar calificación</button>
         </form>}
+      <button type="button" className={space.button} disabled={!!busy} onClick={() => void downloadAdvice()}>
+        Descargar sugerencias en PDF
+      </button>
     </section>}
   </div>;
 }

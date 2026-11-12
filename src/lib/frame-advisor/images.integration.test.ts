@@ -24,7 +24,7 @@ const get=()=>GET(new Request(`${origin}/api/clientes/asesor-de-monturas/imagene
 const success=()=>new Response(JSON.stringify({data:[{b64_json:output}]}));
 beforeAll(async()=>{
   await db.exec("CREATE TABLE oc_client_user(id text PRIMARY KEY); INSERT INTO oc_client_user VALUES('test-a'),('test-b');");
-  for(const file of ["025-frame-advisor.sql","026-frame-photo-edits.sql","026-frame-photo-edits.sql"]) await db.exec(await readFile(`sql/clients/${file}`,"utf8"));
+  for(const file of ["025-frame-advisor.sql","026-frame-photo-edits.sql","026-frame-photo-edits.sql","027-frame-advisor-reset.sql"]) await db.exec(await readFile(`sql/clients/${file}`,"utf8"));
   photo=(await sharp({create:{width:512,height:688,channels:3,background:"#babaaf"}}).jpeg().toBuffer()).toString("base64");
   output=(await sharp({create:{width:768,height:1024,channels:3,background:"#aabbcc"}}).jpeg().toBuffer()).toString("base64");
   vi.stubEnv("CLIENT_APP_URL",origin);vi.stubEnv("CLIENT_DATA_KEY",randomBytes(32).toString("base64"));
