@@ -11,7 +11,7 @@ const SESSION_CHANNEL = "oc-customer-session";
 type Snapshot = CustomerSnapshot;
 type CustomerData = {
   customer: CustomerOverview | null; historyVersion: string; historyCache: Map<string, unknown>; tiers: CustomerProfile["tier"][];
-  viewer: { firstName: string; lastName: string }; refreshing: boolean; error: string;
+  viewer: { firstName: string; lastName: string; frameAdvisor?: boolean }; refreshing: boolean; error: string;
   refresh: () => Promise<void>; clear: () => void;
 };
 const Context = createContext<CustomerData | null>(null);

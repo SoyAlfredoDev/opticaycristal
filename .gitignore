@@ -53,3 +53,5 @@ next-env.d.ts
 
 # Metadatos macOS en discos externos
 **/._*
+
+/public/asesor-monturas/wasm/

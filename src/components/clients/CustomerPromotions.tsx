@@ -25,13 +25,14 @@ function subscribeMotion(onChange: () => void) {
 const reducedMotion = () => window.matchMedia(motionQuery).matches;
 const serverMotion = () => true;
 
-export function CustomerPromotions() {
+export function CustomerPromotions({ advisorAvailable = false }: { advisorAvailable?: boolean } = {}) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const reduce = useSyncExternalStore(subscribeMotion, reducedMotion, serverMotion);
-  const current = announcements[index];
+  const selected = announcements[index];
+  const current = advisorAvailable && selected.id === "ia" ? { ...selected, label: "Asesor de monturas", accent: "Prueba tu estilo.", description: "Compara tres formas y colores con una foto o tus preferencias.", action: "Probar monturas", href: "/mi-cuenta/asesor-de-monturas" } : selected;
   useEffect(() => {
     if (!playing || reduce || hovered || focused) return;
     const timer = window.setInterval(() => setIndex(value => (value + 1) % announcements.length), 8000);
@@ -50,7 +51,7 @@ export function CustomerPromotions() {
           <h2 className={styles.title}>{current.title}<br /><span>{current.accent}</span></h2>
           {current.address && <p className={styles.address}>{current.address}</p>}
           {current.description && <p className={styles.description}>{current.description}</p>}
-          {current.href && current.action && <a href={current.href} target="_blank" rel="noopener noreferrer" className={styles.link}>{current.action}<ArrowUpRight size={17} aria-hidden="true" /></a>}
+          {current.href && current.action && <a href={current.href} target={current.href.startsWith("/") ? undefined : "_blank"} rel="noopener noreferrer" className={styles.link}>{current.action}<ArrowUpRight size={17} aria-hidden="true" /></a>}
         </div>
         {current.reference && <span className={styles.reference}>Imagen referencial</span>}
       </div>

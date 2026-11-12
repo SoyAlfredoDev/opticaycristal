@@ -23,9 +23,11 @@
     "db:clients:levels": "node scripts/migrate-level-benefits.mjs",
     "db:notifications:dev": "node scripts/migrate-business-notifications-dev.mjs",
     "dev:notifications": "node scripts/dev-notifications.mjs",
-    "db:clients:level-mail:dev": "node scripts/migrate-level-mail-dev.mjs"
+    "db:clients:level-mail:dev": "node scripts/migrate-level-mail-dev.mjs",
+    "postinstall": "node scripts/prepare-frame-advisor.mjs"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "1.2.3",
     "@neon/config": "^1.8.6",
     "@neon/env": "^1.5.3",
     "@neondatabase/serverless": "^1.2.0",
@@ -35,6 +37,7 @@
     "@react-three/fiber": "^9.8.1",
     "@react-three/postprocessing": "^3.1.3",
     "@vercel/functions": "^3.10.5",
+    "@vercel/oidc": "4.0.5",
     "better-auth": "^1.7.14",
     "exceljs": "^4.4.0",
     "fflate": "^0.8.3",
