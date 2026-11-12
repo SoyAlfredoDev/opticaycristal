@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Camera, MessageCircle, Sparkles } from "lucide-react";
+import { Camera, MessageCircle, Sparkles, Download, Expand, Plus } from "lucide-react";
 import { shapeLabels, styles as preferenceStyles, type Advice, type Style } from "@/lib/frame-advisor/shared";
 import { whatsappUrl } from "@/components/site/content";
 import type { Portrait } from "@/lib/frame-advisor/photo";
@@ -173,7 +173,9 @@ export function FrameAdvisor() {
   }
 
   return <div className={styles.advisor}>
-    <div className={space.pageIntro}><h1>Asesor de monturas</h1><p>Tu foto, tres propuestas y una explicación para ti.</p></div>
+    <div className={`${space.pageIntro} ${styles.intro}`}><h1>Asesor de monturas</h1><p>Tu foto, tres propuestas y una explicación para ti.</p></div>
+    <details key={result ? "results" : "setup"} className={styles.setup} open={!result || undefined}>
+      <summary><span><Camera size={18} aria-hidden="true" /> Tu foto y estilo</span><span><Plus size={16} aria-hidden="true" /> Nueva asesoría</span></summary>
     <form onSubmit={consult} className={`${space.panel} ${styles.form}`}>
       <div>
         <h2>Elige tu foto</h2>
@@ -208,6 +210,7 @@ export function FrameAdvisor() {
         setActiveOption(0); setResult(previous); setRating(null); setFeedback(""); void recoverImages(previous);
       }}>Ver mi última asesoría</button>}
     </form>
+    </details>
     {busy && <p role="status" className={styles.progress}><span aria-hidden="true" />{busy === "photo" ? "Preparando tu foto…" : busy === "advice" ? "Eligiendo tres estilos para ti…" : busy === "images" ? `Creando propuesta ${progress} de 3. Puede tardar un momento…`  : busy === "pdf" ? "Preparando tu PDF…" : "Guardando tu calificación…"}</p>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
     {result && <section className={styles.results} aria-label="Propuestas de monturas" ref={resultsRegion} tabIndex={-1}>
@@ -233,24 +236,24 @@ export function FrameAdvisor() {
                 <button className={styles.viewPhoto} type="button" onClick={() => {
                   setExpandedPhoto({ source, label });
                   photoDialog.current?.showModal();
-                }}>Ver foto completa</button>
+                }} aria-label={`Ver foto completa: ${shape}`}><Expand size={16} aria-hidden="true" /><span>Ampliar</span></button>
               </> : <div className={styles.imagePlaceholder} data-generating={generating}>
                 {generating && <span className={styles.generationIcon} aria-hidden="true"><Sparkles size={30} /></span>}
                 <span>{generating ? "Creando tu propuesta…" : preview.state === "failed" ? "Imagen no disponible" : preview.state === "expired" ? "La imagen ya venció" : "Tu propuesta aparecerá aquí"}</span>
               </div>}
             </div>
             <div className={styles.optionBody}>
-              <p>{suggestion.reason}</p>
-              <p className={styles.privacy}>También puedes probar: {suggestion.colors.slice(1).join(", ")}.</p>
+              <details className={styles.reason}><summary>Por qué te lo sugerimos</summary><p>{suggestion.reason}</p>
+              <p className={styles.privacy}>También puedes probar: {suggestion.colors.slice(1).join(", ")}.</p></details>
               <a className={styles.contact} href={whatsappUrl(`Hola, probé el asesor y me gustó el estilo ${shape.toLowerCase()} en ${suggestion.colors[0]}. ¿Me ayudan a buscar una similar?`)} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} aria-hidden="true" /> Buscar una parecida</a>
             </div>
           </article>;
         })}
       </div>
-      <p className={styles.position}>{activeOption + 1} de {result.suggestions.length}</p>
+      <div className={styles.position}><span className={styles.dots} aria-hidden="true">{result.suggestions.map((_, index) => <i key={index} data-active={index === activeOption} />)}</span><span>{activeOption + 1} de {result.suggestions.length}</span></div>
       <div className={styles.download}>
         <button type="button" className={space.button} disabled={!!busy} onClick={() => void downloadAdvice()}>
-          Descargar Sugerencia
+          <Download size={18} aria-hidden="true" /> Descargar Sugerencia
         </button>
       </div>
       <dialog ref={photoDialog} className={styles.photoDialog} aria-label="Foto completa de la propuesta" onClose={() => setExpandedPhoto(null)}>
@@ -268,13 +271,13 @@ export function FrameAdvisor() {
         finally { pending.current = false; if (mounted.current) setBusy(null); }
       }}>Completar propuestas con esta foto</button>}
       {result.rating ? <p className={styles.thanks} role="status">Gracias por calificar tu asesoría.</p> :
-        <form onSubmit={sendRating} className={`${space.panel} ${styles.form}`}>
+        <details className={styles.rating}><summary>Califica tu asesoría</summary><form onSubmit={sendRating} className={styles.form}>
           <fieldset className={styles.preferences} disabled={!!busy}><legend>¿Qué tan útil fue esta asesoría?</legend>
             {[1,2,3,4,5].map(value => <label key={value}><input type="radio" name="frame-rating" aria-label={`${value} de 5`} checked={rating === value} onChange={() => setRating(value)} />{value}</label>)}
           </fieldset>
           <label className={space.field}>Comentario opcional<textarea placeholder="Cuéntanos qué mejorar, sin incluir datos personales." className={space.input} maxLength={400} rows={2} value={feedback} onChange={event => setFeedback(event.target.value)} disabled={!!busy} /></label>
           <button type="submit" className={space.button} disabled={!rating || !!busy}>Enviar calificación</button>
-        </form>}
+        </form></details>}
     </section>}
   </div>;
 }
