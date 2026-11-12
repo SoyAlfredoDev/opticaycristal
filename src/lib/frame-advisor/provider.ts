@@ -3,6 +3,8 @@ import { getVercelOidcToken } from "@vercel/oidc";
 import { adviceReference } from "./knowledge";
 import { colors, shapes, type Profile, type Style, type Suggestion } from "./shared";
 
+const maxReasonLength = 240;
+
 const resultSchema = {
   type: "object",
   additionalProperties: false,
@@ -19,7 +21,7 @@ const resultSchema = {
         properties: {
           shape: { type: "string", enum: shapes },
           colors: { type: "array", items: { type: "string", enum: colors }, minItems: 2, maxItems: 3 },
-          reason: { type: "string", minLength: 15, maxLength: 160 },
+          reason: { type: "string", minLength: 15, maxLength: maxReasonLength },
         },
       },
     },
@@ -36,7 +38,7 @@ export function parseSuggestions(value: unknown): Suggestion[] {
       !Array.isArray(item.colors) || item.colors.length < 2 || item.colors.length > 3 ||
       !item.colors.every((color: Suggestion["colors"][number]) => colors.includes(color)) ||
       new Set(item.colors).size !== item.colors.length ||
-      typeof item.reason !== "string" || item.reason.trim().length < 15 || item.reason.trim().length > 160) {
+      typeof item.reason !== "string" || item.reason.trim().length < 15 || item.reason.trim().length > maxReasonLength) {
       throw new Error("Invalid advice");
     }
     result.push({ shape: item.shape, colors: item.colors, reason: item.reason.trim() });
@@ -52,15 +54,15 @@ export function frameAdvisorProviderConfigured() {
 }
 
 async function providerConfig() {
-  const model = process.env.CLIENT_FRAME_ADVISOR_MODEL?.trim() || "gpt-5.4-mini";
+  const model = process.env.CLIENT_FRAME_ADVISOR_MODEL?.trim();
   if (process.env.CLIENT_FRAME_ADVISOR_PROVIDER === "vercel") {
     return {
       url: "https://ai-gateway.vercel.sh/v1/responses",
-      model: `openai/${model}`,
+      model: `openai/${model || "gpt-5.4-mini"}`,
       token: process.env.AI_GATEWAY_API_KEY?.trim() || await getVercelOidcToken(),
     };
   }
-  return { url: "https://api.openai.com/v1/responses", model, token: process.env.OPENAI_API_KEY?.trim() };
+  return { url: "https://api.openai.com/v1/responses", model: model || "gpt-6-luna", token: process.env.OPENAI_API_KEY?.trim() };
 }
 
 export async function generateAdvice(profile: Profile, style: Style) {
@@ -74,14 +76,18 @@ export async function generateAdvice(profile: Profile, style: Style) {
     body: JSON.stringify({
       model: provider.model,
       store: false,
-      max_output_tokens: 550,
+      max_output_tokens: 650,
       reasoning: { effort: "none" },
       instructions: [
         "Asesora sobre estilo de monturas para una óptica chilena. Usa solo los criterios de la biblioteca proporcionada.",
-        "Devuelve tres formas distintas, dos o tres colores distintos por forma y un motivo sencillo en español por opción.",
-        "Trata el efecto como una preferencia estética. No describas el rostro como un problema ni infieras atributos sensibles.",
-        "Habla solo de referencias de estilo. No inventes modelos, marcas, precios, disponibilidad, tallas ni recomendaciones clínicas.",
-        "La razón debe ser una frase sin Markdown ni enlaces, con un máximo de 160 caracteres. Evita promesas de ajuste.",
+        "Devuelve tres formas distintas, dos o tres colores distintos por forma y un motivo concreto en español por opción.",
+        "Háblale de tú, como en una asesoría presencial. Explica qué detalle de la montura te hace sugerírsela y qué efecto visual podría aportar en su caso. Evita repetir la misma apertura o el mismo argumento.",
+        profile === "sin-foto"
+          ? "No tienes foto ni información sobre su rostro. Relaciona el detalle y el efecto con el estilo que eligió. Ejemplo: «Si buscas un look clásico, te sugeriría un aviador: el puente doble y las curvas le dan un aire retro.»"
+          : "Usa solo las proporciones aproximadas de la ficha. Conecta un rasgo concreto de la montura con esas proporciones cuando sea pertinente. Ejemplo para un rostro de proporciones alargadas: «Te sugeriría un aviador porque sus aros más altos pueden dar más presencia a la zona de tus ojos. En dorado fino conserva un aire clásico.»",
+        "Trata el efecto como una posibilidad estética. No describas el rostro como un problema ni infieras atributos sensibles.",
+        "Habla solo de referencias de estilo. No inventes modelos, marcas, precios, disponibilidad, tallas ni recomendaciones clínicas. Evita prometer ajuste.",
+        "Escribe un párrafo breve de una o dos frases, sin Markdown ni enlaces, con un máximo de 240 caracteres.",
       ].join(" "),
       input: JSON.stringify({ perfil: profile, preferencia: style, biblioteca: adviceReference(profile, style) }),
       text: { format: { type: "json_schema", name: "frame_style_advice", strict: true, schema: resultSchema } },

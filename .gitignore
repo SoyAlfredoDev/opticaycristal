@@ -55,3 +55,6 @@ next-env.d.ts
 **/._*
 
 /public/asesor-monturas/wasm/
+
+# Private local advisor review outputs and discarded prototype
+/tmp/

@@ -52,6 +52,7 @@ beforeEach(async () => {
   await db.exec("TRUNCATE oc_client_frame_advice, oc_client_frame_budget, oc_client_frame_pilot; INSERT INTO oc_client_frame_pilot VALUES ('test-a'),('test-b');");
   state.user = "test-a";
   vi.stubEnv("CLIENT_FRAME_ADVISOR_PROVIDER", "openai");
+  vi.stubEnv("CLIENT_FRAME_ADVISOR_MODEL", undefined);
   vi.stubEnv("OPENAI_API_KEY", "synthetic-unit-test-only");
   vi.stubGlobal("fetch", vi.fn(async () => providerResponse()));
 });
@@ -83,8 +84,10 @@ it("consulta una vez, conserva la respuesta y admite una sola calificación de s
   expect(fetch).toHaveBeenCalledTimes(1);
   const providerCall = vi.mocked(fetch).mock.calls[0];
   const payload = JSON.parse(String(providerCall[1]?.body));
-  expect(payload).toMatchObject({ store: false, max_output_tokens: 550 });
+  expect(providerCall[0]).toBe("https://api.openai.com/v1/responses");
+  expect(payload).toMatchObject({ model: "gpt-6-luna", store: false, max_output_tokens: 650 });
   expect(payload.input).toContain("biblioteca");
+  expect(payload.instructions).toContain("proporciones aproximadas");
   expect(payload.input).not.toContain("test-a");
 
   const vote = { action: "rate", id: advice.id, rating: 5, feedback: "Buenas opciones." };
@@ -96,6 +99,17 @@ it("consulta una vez, conserva la respuesta y admite una sola calificación de s
   expect(await (await post({ ...vote, rating: 1 })).json()).toEqual({ rating: 5 });
   expect((await db.query("SELECT feedback FROM oc_client_frame_advice")).rows[0]).not.toEqual({ feedback: vote.feedback });
   expect(await frameAdviceMetrics()).toMatchObject({ used: 1, completed: 1, rated: 1, average: 5, feedback: [{ rating: 5, feedback: vote.feedback }] });
+});
+
+it("admite explicaciones más detalladas y evita inferir rasgos sin foto", async () => {
+  const reason = "Si buscas un look clásico, te sugeriría una montura cuadrada: sus lados rectos le dan una línea definida que puedes combinar con facilidad. En carey, el acabado añade textura y conserva ese aire clásico.";
+  vi.mocked(fetch).mockImplementation(async () => providerResponse([{ ...suggestions[0], reason }, ...suggestions.slice(1)]));
+  const response = await post({ ...consult(), profile: "sin-foto" });
+  expect(response.status).toBe(200);
+  expect((await response.json()).advice.suggestions[0].reason).toBe(reason);
+  const payload = JSON.parse(String(vi.mocked(fetch).mock.calls[0][1]?.body));
+  expect(payload.instructions).toContain("No tienes foto ni información sobre su rostro");
+  expect(payload.instructions).not.toContain("rostro de proporciones alargadas");
 });
 
 it("aplica cupo diario por cliente y cupo mensual compartido", async () => {

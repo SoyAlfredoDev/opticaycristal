@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: [{ key: "X-Content-Type-Options", value: "nosniff" }, { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" }] },
       ...["/admin/:path*", "/api/admin/:path*", "/encuesta/:path*", "/api/encuestas/:path*", "/api/integraciones/:path*", "/mi-cuenta/:path*", "/api/clientes/:path*"].map(source => ({ source, headers: privateHeaders })),
+      { source: "/mi-cuenta/asesor-de-monturas", headers: [{ key: "Content-Security-Policy", value: "connect-src 'self'" }] },
       ...(process.env.NODE_ENV === "production" ? [{ source: "/admin/:path*", headers: [{
         key: "Content-Security-Policy-Report-Only",
         value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",

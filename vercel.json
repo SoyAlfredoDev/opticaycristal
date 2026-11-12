@@ -1,5 +1,6 @@
 {
   "crons": [
+    {"path":"/api/cron/asesor-imagenes","schedule":"0 16 * * *"},
     {"path":"/api/cron/encuestas","schedule":"0 15 * * *"},
     {"path": "/api/admin/clientes/nivel-correos", "schedule": "0 15 * * *"},
     {
