@@ -1,0 +1,42 @@
+.section {
+  padding: clamp(3rem, 7vw, 6rem) clamp(1rem, 5vw, 3rem);
+  background: #f4e7d4;
+  color: #3d0b1a;
+  text-align: center;
+}
+
+.content { max-width: 58rem; margin-inline: auto; }
+
+.content h2 {
+  margin: 0;
+  font: 600 clamp(2.25rem, 5vw, 4.25rem)/1.03 var(--oc-font-editorial, Georgia), Georgia, serif;
+  text-wrap: balance;
+  color: #681c30;
+}
+
+.section .intro { max-width: 41rem; margin: 1rem auto 1.65rem; line-height: 1.6; }
+
+.gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(.55rem, 2vw, 1.25rem); }
+.gallery figure { margin: 0; }
+.gallery img { display: block; width: 100%; height: auto; }
+.gallery figcaption { margin-top: .6rem; font-size: clamp(.8rem, 2vw, 1.125rem); }
+
+.section .note { margin: 1rem 0 .8rem; font-size: .8rem; }
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: .6rem 1.35rem;
+  border-radius: .45rem;
+  background: #9bcb5a;
+  color: #3d0b1a;
+  font-weight: 700;
+  text-decoration: none;
+}
+.button:hover { background: #aed879; }
+.button:focus-visible { outline: 2px solid #681c30; outline-offset: 4px; }
+
+@media (max-width: 480px) {
+  .gallery figcaption { overflow-wrap: anywhere; }
+}
