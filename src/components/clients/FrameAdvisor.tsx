@@ -34,7 +34,10 @@ export function FrameAdvisor() {
   const retry = useRef<string | null>(null);
   const pending = useRef(false);
   const mounted = useRef(true);
-  const heading = useRef<HTMLHeadingElement>(null);
+  const resultsRegion = useRef<HTMLElement>(null);
+  const photoDialog = useRef<HTMLDialogElement>(null);
+  const [activeOption, setActiveOption] = useState(0);
+  const [expandedPhoto, setExpandedPhoto] = useState<{ source: string; label: string } | null>(null);
 
   useEffect(() => {
     mounted.current = true;
@@ -46,7 +49,7 @@ export function FrameAdvisor() {
   }, []);
 
   const resultId = result?.id;
-  useEffect(() => { if (resultId) heading.current?.focus(); }, [resultId]);
+  useEffect(() => { if (resultId) resultsRegion.current?.focus(); }, [resultId]);
 
   async function selectPhoto(file?: File) {
     if (!file || pending.current) return;
@@ -121,7 +124,7 @@ export function FrameAdvisor() {
       if (!body.retry) retry.current = null;
       if (!response.ok) throw new Error(body.error ?? "No pudimos preparar tu asesoría.");
       if (!mounted.current) return;
-      setResult(body.advice); setPrevious(body.advice); setPreviews(waiting()); setRating(null); setFeedback("");
+      setActiveOption(0); setResult(body.advice); setPrevious(body.advice); setPreviews(waiting()); setRating(null); setFeedback("");
       await createImages(body.advice, portrait.prepared);
     } catch (error) {
       if (mounted.current) setError(error instanceof Error && error.name === "Error" ? error.message : "Se interrumpió la consulta. Puedes volver a intentar.");
@@ -202,28 +205,61 @@ export function FrameAdvisor() {
       <p className={styles.privacy}>No guardamos tu foto original. Tus propuestas son privadas y están disponibles durante 24 horas.</p>
       <button type="submit" className={`${space.button} ${space.primary}`} disabled={!!busy || !portrait || !consent}><Sparkles size={19} aria-hidden="true" /> Crear mis tres propuestas</button>
       {previous && !result && <button type="button" className={space.button} disabled={!!busy} onClick={() => {
-        setResult(previous); setRating(null); setFeedback(""); void recoverImages(previous);
+        setActiveOption(0); setResult(previous); setRating(null); setFeedback(""); void recoverImages(previous);
       }}>Ver mi última asesoría</button>}
     </form>
     {busy && <p role="status" className={styles.progress}><span aria-hidden="true" />{busy === "photo" ? "Preparando tu foto…" : busy === "advice" ? "Eligiendo tres estilos para ti…" : busy === "images" ? `Creando propuesta ${progress} de 3. Puede tardar un momento…`  : busy === "pdf" ? "Preparando tu PDF…" : "Guardando tu calificación…"}</p>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
-    {result && <section className={styles.results} aria-labelledby="frame-results-title">
-      <h2 id="frame-results-title" ref={heading} tabIndex={-1}>Tres maneras de verte con lentes</h2>
-      <p>Simulaciones con IA: pueden variar detalles de la foto. El ajuste y la disponibilidad se confirman en la óptica.</p>
-      <div className={styles.options}>{result.suggestions.map((suggestion,index) => {
-        const preview = previews[index], shape = shapeLabels[suggestion.shape];
-        return <article className={styles.option} key={`${result.id}:${index}`}>
-          <div className={styles.preview} aria-busy={preview.state === "pending"}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {preview.image ? <img src={`data:image/jpeg;base64,${preview.image}`} alt={`Tu foto con montura ${shape.toLowerCase()} en ${suggestion.colors[0]}`} /> :
-              <div className={styles.imagePlaceholder}>{preview.state === "pending" ? "Creando tu propuesta…" : preview.state === "failed" ? "Imagen no disponible" : preview.state === "expired" ? "La imagen ya venció" : "Tu propuesta aparecerá aquí"}</div>}
-          </div>
-          <div className={styles.optionBody}><h3>{shape} · {suggestion.colors[0]}</h3><p>{suggestion.reason}</p>
-            <p className={styles.privacy}>También puedes probar: {suggestion.colors.slice(1).join(", ")}.</p>
-            <a className={styles.contact} href={whatsappUrl(`Hola, probé el asesor y me gustó el estilo ${shape.toLowerCase()} en ${suggestion.colors[0]}. ¿Me ayudan a buscar una similar?`)} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} aria-hidden="true" /> Buscar una parecida</a>
-          </div>
-        </article>;
-      })}</div>
+    {result && <section className={styles.results} aria-label="Propuestas de monturas" ref={resultsRegion} tabIndex={-1}>
+      <div key={result.id} className={styles.options} role="region" aria-label="Comparar propuestas" tabIndex={0}
+        onScroll={event => {
+          const track = event.currentTarget;
+          const left = track.getBoundingClientRect().left;
+          const positions = Array.from(track.children, card => Math.abs(card.getBoundingClientRect().left - left));
+          setActiveOption(positions.indexOf(Math.min(...positions)));
+        }}>
+        {result.suggestions.map((suggestion, index) => {
+          const preview = previews[index];
+          const shape = shapeLabels[suggestion.shape];
+          const label = `Tu foto con montura ${shape.toLowerCase()} en ${suggestion.colors[0]}`;
+          const source = preview.image ? `data:image/jpeg;base64,${preview.image}` : undefined;
+          const generating = preview.state === "pending";
+          return <article className={styles.option} key={suggestion.shape}>
+            <h3 className={styles.optionTitle}>{shape} · {suggestion.colors[0]}</h3>
+            <div className={styles.preview} aria-busy={generating}>
+              {source ? <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={source} alt={label} />
+                <button className={styles.viewPhoto} type="button" onClick={() => {
+                  setExpandedPhoto({ source, label });
+                  photoDialog.current?.showModal();
+                }}>Ver foto completa</button>
+              </> : <div className={styles.imagePlaceholder} data-generating={generating}>
+                {generating && <span className={styles.generationIcon} aria-hidden="true"><Sparkles size={30} /></span>}
+                <span>{generating ? "Creando tu propuesta…" : preview.state === "failed" ? "Imagen no disponible" : preview.state === "expired" ? "La imagen ya venció" : "Tu propuesta aparecerá aquí"}</span>
+              </div>}
+            </div>
+            <div className={styles.optionBody}>
+              <p>{suggestion.reason}</p>
+              <p className={styles.privacy}>También puedes probar: {suggestion.colors.slice(1).join(", ")}.</p>
+              <a className={styles.contact} href={whatsappUrl(`Hola, probé el asesor y me gustó el estilo ${shape.toLowerCase()} en ${suggestion.colors[0]}. ¿Me ayudan a buscar una similar?`)} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} aria-hidden="true" /> Buscar una parecida</a>
+            </div>
+          </article>;
+        })}
+      </div>
+      <p className={styles.position}>{activeOption + 1} de {result.suggestions.length}</p>
+      <div className={styles.download}>
+        <button type="button" className={space.button} disabled={!!busy} onClick={() => void downloadAdvice()}>
+          Descargar Sugerencia
+        </button>
+      </div>
+      <dialog ref={photoDialog} className={styles.photoDialog} aria-label="Foto completa de la propuesta" onClose={() => setExpandedPhoto(null)}>
+        <form method="dialog"><button className={space.button}>Cerrar foto</button></form>
+        {expandedPhoto && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={expandedPhoto.source} alt={expandedPhoto.label} />
+        )}
+      </dialog>
       {!busy && previews.some(item => !item.image) && <button type="button" className={space.button} onClick={() => void recoverImages(result)}>Actualizar imágenes</button>}
       {!busy && portrait && consent && previews.some(item => item.state === "waiting") && <button type="button" className={space.button} onClick={async () => {
         if (pending.current) return;
@@ -239,9 +275,6 @@ export function FrameAdvisor() {
           <label className={space.field}>Comentario opcional<textarea placeholder="Cuéntanos qué mejorar, sin incluir datos personales." className={space.input} maxLength={400} rows={2} value={feedback} onChange={event => setFeedback(event.target.value)} disabled={!!busy} /></label>
           <button type="submit" className={space.button} disabled={!rating || !!busy}>Enviar calificación</button>
         </form>}
-      <button type="button" className={space.button} disabled={!!busy} onClick={() => void downloadAdvice()}>
-        Descargar sugerencias en PDF
-      </button>
     </section>}
   </div>;
 }
