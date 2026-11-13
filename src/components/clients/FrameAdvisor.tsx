@@ -18,6 +18,36 @@ const photoBase64 = (blob: Blob) => new Promise<string>((resolve, reject) => {
   reader.readAsDataURL(blob);
 });
 
+function PhotoPlaceholder({ label, animated }: { label: string; animated: boolean }) {
+  return <div className={styles.imagePlaceholder} data-generating={animated}>
+    {animated && <span className={styles.generationIcon} aria-hidden="true"><Sparkles size={30} /></span>}
+    <span>{label}</span>
+  </div>;
+}
+
+function ProposalPhoto({ source, label, shape, onExpand }: {
+  source: string;
+  label: string;
+  shape: string;
+  onExpand: () => void;
+}) {
+  const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
+
+  return <div className={styles.preview} aria-busy={state === "loading"}>
+    {state !== "failed" && (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={source} alt={label} className={styles.proposalImage} data-ready={state === "ready"}
+        onLoad={() => setState("ready")} onError={() => setState("failed")} />
+    )}
+    {state === "loading" && <div className={styles.loadingOverlay}>
+      <PhotoPlaceholder label="Cargando tu foto…" animated />
+    </div>}
+    {state === "failed" && <PhotoPlaceholder label="No pudimos mostrar esta foto" animated={false} />}
+    {state === "ready" && <button className={styles.viewPhoto} type="button" onClick={onExpand}
+      aria-label={`Ver foto completa: ${shape}`}><Expand size={16} aria-hidden="true" /><span>Ampliar</span></button>}
+  </div>;
+}
+
 export function FrameAdvisor() {
   const [portrait, setPortrait] = useState<Portrait | null>(null);
   const [original, setOriginal] = useState("");
@@ -229,19 +259,14 @@ export function FrameAdvisor() {
           const generating = preview.state === "pending";
           return <article className={styles.option} key={suggestion.shape}>
             <h3 className={styles.optionTitle}>{shape} · {suggestion.colors[0]}</h3>
-            <div className={styles.preview} aria-busy={generating}>
-              {source ? <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={source} alt={label} />
-                <button className={styles.viewPhoto} type="button" onClick={() => {
-                  setExpandedPhoto({ source, label });
-                  photoDialog.current?.showModal();
-                }} aria-label={`Ver foto completa: ${shape}`}><Expand size={16} aria-hidden="true" /><span>Ampliar</span></button>
-              </> : <div className={styles.imagePlaceholder} data-generating={generating}>
-                {generating && <span className={styles.generationIcon} aria-hidden="true"><Sparkles size={30} /></span>}
-                <span>{generating ? "Creando tu propuesta…" : preview.state === "failed" ? "Imagen no disponible" : preview.state === "expired" ? "La imagen ya venció" : "Tu propuesta aparecerá aquí"}</span>
-              </div>}
-            </div>
+            {source ? <ProposalPhoto key={source} source={source} label={label} shape={shape} onExpand={() => {
+              setExpandedPhoto({ source, label });
+              photoDialog.current?.showModal();
+            }} /> : <div className={styles.preview} aria-busy={generating}>
+              <PhotoPlaceholder animated={generating} label={generating ? "Creando tu propuesta…" :
+                preview.state === "failed" ? "Imagen no disponible" :
+                preview.state === "expired" ? "La imagen ya venció" : "Tu propuesta aparecerá aquí"} />
+            </div>}
             <div className={styles.optionBody}>
               <details className={styles.reason}><summary>Por qué te lo sugerimos</summary><p>{suggestion.reason}</p>
               <p className={styles.privacy}>También puedes probar: {suggestion.colors.slice(1).join(", ")}.</p></details>
