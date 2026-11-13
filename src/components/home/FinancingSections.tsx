@@ -26,7 +26,7 @@ export function FinancingIntroduction({ tiers=[] }: { tiers?: CustomerProfile["t
           <h1 id="financing-title">{maximumPercent?<>Financiamos hasta el <strong>{maximumPercent}%</strong><span>del precio de tus lentes.</span></>:<>Financia una parte<span>de tus lentes.</span></>}</h1>
           <p className={styles.description}>Tus próximos lentes, con crédito directo<br className={styles.desktopBreak} /> y sin tarjeta de crédito.</p>
           <div className={styles.actions}>
-            <Link className={styles.primary} href="/mi-cuenta/registro">Conocer mi cupo<ArrowRight size={20} aria-hidden="true" /></Link>
+            <Link className={styles.primary} href="/credito-directo#simulador">Simular mi compra<ArrowRight size={20} aria-hidden="true" /></Link>
             <a className={styles.secondary} href={whatsappUrl(financingMessage)} target="_blank" rel="noopener noreferrer"><MessageCircle size={21} aria-hidden="true" />Consultar por WhatsApp</a>
           </div>
           <p className={styles.conditions}>Regístrate para conocer tu cupo disponible.<br />El porcentaje y el tope de crédito dependen de tu nivel. Pagas un pie y devuelves el crédito en cuotas. Compra presencial.</p>

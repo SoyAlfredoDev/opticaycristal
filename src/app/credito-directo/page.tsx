@@ -1,3 +1,4 @@
+import { PublicCreditCalculator } from "@/components/home/PublicCreditCalculator";
 import { FinancingIntroduction, FinancingProcess } from "@/components/home/FinancingSections";
 import { SiteShell } from "@/components/site/SiteShell";
 import { VisitSection } from "@/components/site/VisitSection";
@@ -17,6 +18,7 @@ export default async function DirectCreditPage() {
   return (
     <SiteShell active="Crédito directo">
       <FinancingIntroduction tiers={tiers}/>
+      <PublicCreditCalculator tiers={tiers} />
       <FinancingProcess start={start} />
       <VisitSection financing />
     </SiteShell>
