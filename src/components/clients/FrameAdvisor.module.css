@@ -239,3 +239,30 @@
 @media (prefers-reduced-motion: reduce) {
   .proposalImage[data-ready="true"] { animation: none; }
 }
+
+.generationNotice {
+  position: fixed;
+  z-index: 100;
+  inset: auto auto max(5.5rem, calc(5rem + env(safe-area-inset-bottom))) 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  padding: .7rem 1.1rem .7rem .7rem;
+  border: 1px solid #b7ded0;
+  border-radius: 1rem;
+  background: #effbf5;
+  color: #124537;
+  font-weight: 600;
+  box-shadow: 0 8px 28px #142d3b30;
+  pointer-events: none;
+}
+
+.generationNotice .generationIcon {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: .75rem;
+}

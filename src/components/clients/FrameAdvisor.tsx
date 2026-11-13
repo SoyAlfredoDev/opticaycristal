@@ -97,6 +97,7 @@ export function FrameAdvisor() {
   }
 
   async function createImages(advice: Advice, photo: Blob, existing = waiting()) {
+    setProgress(0);
     setBusy("images");
     const encoded = await photoBase64(photo);
     for (let index=0; index<3 && mounted.current; index++) {
@@ -241,7 +242,15 @@ export function FrameAdvisor() {
       }}>Ver mi última asesoría</button>}
     </form>
     </details>
-    {busy && <p role="status" className={styles.progress}><span aria-hidden="true" />{busy === "photo" ? "Preparando tu foto…" : busy === "advice" ? "Eligiendo tres estilos para ti…" : busy === "images" ? `Creando propuesta ${progress} de 3. Puede tardar un momento…`  : busy === "pdf" ? "Preparando tu PDF…" : "Guardando tu calificación…"}</p>}
+    {(busy === "advice" || busy === "images") && <div className={styles.generationNotice} role="status" aria-atomic="true">
+      <span className={styles.generationIcon} aria-hidden="true"><Sparkles size={24} /></span>
+      <span>{busy === "images" && progress > 0
+        ? `Creando propuesta ${progress} de 3…`
+        : "Preparando tus propuestas…"}</span>
+    </div>}
+    {busy && busy !== "advice" && busy !== "images" && <p role="status" className={styles.progress}>
+      <span aria-hidden="true" />{busy === "photo" ? "Preparando tu foto…" : busy === "pdf" ? "Preparando tu PDF…" : "Guardando tu calificación…"}
+    </p>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
     {result && <section className={styles.results} aria-label="Propuestas de monturas" ref={resultsRegion} tabIndex={-1}>
       <div key={result.id} className={styles.options} role="region" aria-label="Comparar propuestas" tabIndex={0}
