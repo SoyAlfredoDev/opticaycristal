@@ -5,7 +5,7 @@ import { clientPool,clientTable } from "./db";
 import type { CategorySettings } from "./category-types";
 export class CategoryError extends Error{constructor(message:string,public status=400){super(message);}}
 function customerId(id:string){if(!id||id.length>100)throw new CategoryError("Cliente no válido.");return id;}
-function code(value:unknown){if(typeof value!=="string"||!["start","vip","premium","elite"].includes(value))throw new CategoryError("Selecciona un nivel válido.");return value;}
+function code(value:unknown){if(typeof value!=="string"||!["start","star_plus","vip","premium","elite"].includes(value))throw new CategoryError("Selecciona un nivel válido.");return value;}
 export async function getCategorySettings(id:string):Promise<CategorySettings>{
  const user=await clientPool().query<{category:string}>(`SELECT category FROM ${clientTable("oc_client_user")} WHERE id=$1`,[customerId(id)]);
  if(!user.rows[0])throw new CategoryError("Cliente no encontrado.",404);

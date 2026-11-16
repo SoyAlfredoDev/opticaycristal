@@ -6,7 +6,7 @@ import type { LevelBenefits, LevelChange, LevelSettings, ManagedLevel } from "./
 export class LevelError extends Error {
   constructor(message: string, public status = 400) { super(message); }
 }
-const codes = ["start", "vip", "premium", "elite"];
+const codes = ["start", "star_plus", "vip", "premium", "elite"];
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const pageSize = 20;
 type Row = Record<string, unknown>;

@@ -44,3 +44,20 @@ it("calculates the deposit and each monthly payment with the selected tier's cap
   expect(calculator.getByRole("link", { name: "Crear mi cuenta" })).toHaveAttribute("href", "/mi-cuenta/registro");
   expect(calculator.getByRole("link", { name: "Iniciar sesión" })).toHaveAttribute("href", "/mi-cuenta/ingresar");
 });
+
+it("offers Star Plus with the $50.000 cap and three monthly payments", async () => {
+  m.tiers.mockResolvedValue([
+    { code: "start", name: "Start", maxAmount: 40000, maxPercent: 30, maxInstallments: 2 },
+    { code: "star_plus", name: "Star Plus", maxAmount: 50000, maxPercent: 30, maxInstallments: 3 },
+  ]);
+  render(await Page());
+  const calculator = within(screen.getByRole("region", { name: "Simula tu crédito directo" }));
+  fireEvent.change(calculator.getByLabelText("Categoría de crédito"), { target: { value: "star_plus" } });
+  fireEvent.change(calculator.getByLabelText("Cuotas mensuales"), { target: { value: "3" } });
+  fireEvent.change(calculator.getByLabelText("Precio de los lentes (CLP)"), { target: { value: "200.000" } });
+  fireEvent.click(calculator.getByRole("button", { name: "Calcular mi compra" }));
+  expect(calculator.getByText("$150.000")).toBeVisible();
+  expect(calculator.getByText("$50.000")).toBeVisible();
+  expect(calculator.getAllByText("$16.666")).toHaveLength(2);
+  expect(calculator.getByText("$16.668")).toBeVisible();
+});
