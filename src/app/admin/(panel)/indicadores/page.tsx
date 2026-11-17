@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Banknote, ChartNoAxesCombined, CircleAlert, CreditCard, ShoppingBag, Wallet } from "lucide-react";
+import { Banknote, ChartNoAxesCombined, CircleAlert, CreditCard, ShoppingBag, Sparkles, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
 import { AdminAccessDenied } from "@/components/admin/AdminAccessDenied";
 import { customerAdminSession } from "@/lib/clients/admin";
-import { indicatorPeriod, readIndicators } from "@/lib/clients/indicators";
+import { indicatorPeriod, readAdvisorIndicators, readIndicators } from "@/lib/clients/indicators";
 import { todayChile } from "@/lib/clients/sales";
 import { clp } from "@/lib/clients/types";
 import styles from "./Indicators.module.css";
@@ -39,22 +39,24 @@ export default async function IndicatorsPage({ searchParams }: {
   if (!await customerAdminSession()) return <AdminAccessDenied />;
   const today = todayChile();
   const period = indicatorPeriod(await searchParams, today);
-  const { totals, tiers } = await readIndicators(period.from, period.to, today);
+  const [{ totals, tiers }, advisor] = await Promise.all([
+    readIndicators(period.from, period.to, today),
+    readAdvisorIndicators(period.from, period.to),
+  ]);
   const salesCount = totals.sales_count;
   const receipts = totals.cash_total + totals.deposits + totals.principal_collected + totals.interest_collected;
   const creditShare = salesCount ? percent.format(totals.credit_count / salesCount) : "—";
   const riskShare = totals.outstanding ? percent.format(totals.at_risk / totals.outstanding) : "—";
 
   return <main className={styles.page} id="contenido-principal">
-    <header className={styles.intro}><h1>Indicadores</h1><p>Ventas registradas, cobros y cartera de Crédito Directo.</p></header>
+    <header className={styles.intro}><h1>Indicadores</h1><p>Ventas, cobros, Crédito Directo y uso del Asesor Inteligente.</p></header>
 
-    <form className={styles.filters} action="/admin/indicadores" method="get" aria-label="Filtrar por período">
-      <label>Desde<input type="date" name="desde" defaultValue={period.from} max={today} required key={period.from} /></label>
-      <label>Hasta<input type="date" name="hasta" defaultValue={period.to} max={today} required key={period.to} /></label>
+    <form className={styles.filters} action="/admin/indicadores" method="get" aria-label="Filtrar por mes">
+      <label>Mes<input type="month" name="mes" defaultValue={period.month} max={today.slice(0, 7)} required key={period.month} /></label>
       <button type="submit">Aplicar</button>
-      <Link href="/admin/indicadores">Este mes</Link>
+      <Link href="/admin/indicadores">Último mes completo</Link>
     </form>
-    {period.error && <p role="alert" className={styles.notice}>{period.error} Se muestran los datos de este mes.</p>}
+    {period.error && <p role="alert" className={styles.notice}>{period.error}</p>}
 
     <section aria-labelledby="periodo">
       <div className={styles.sectionHead}><h2 id="periodo">Resultados del período</h2><p>{formatDate(period.from)} – {formatDate(period.to)}</p></div>
@@ -82,6 +84,12 @@ export default async function IndicatorsPage({ searchParams }: {
             <summary>Capital por nivel al vender</summary>
             <dl>{tiers.map(tier => <Detail key={tier.code} label={`${tier.name} · ${number.format(tier.sales)}`} value={clp(tier.financed)} />)}</dl>
           </details>}
+        </Metric>
+        <Metric title="Asesor Inteligente" value={advisor ? number.format(advisor.sessions) : "—"} icon={<Sparkles size={20} />}>
+          {advisor ? <>
+            <p>Asesorías completadas</p>
+            <dl><Detail label="Clientes únicos" value={number.format(advisor.customers)} /></dl>
+          </> : <p>Datos del asesor no disponibles en esta base.</p>}
         </Metric>
       </div>
       {!salesCount && !receipts && <p className={styles.notice}>No hay ventas ni cobros registrados en este período.</p>}

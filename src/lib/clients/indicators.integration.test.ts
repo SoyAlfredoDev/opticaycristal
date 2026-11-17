@@ -2,7 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
-import { indicatorPeriod, readIndicators } from "./indicators";
+import { indicatorPeriod, readAdvisorIndicators, readIndicators } from "./indicators";
 
 vi.mock("./db", () => ({
   clientPool: () => db,
@@ -13,7 +13,7 @@ const db = new PGlite();
 const today = "2026-11-17";
 
 beforeAll(async () => {
-  for (const migration of ["001-customers", "002-sales", "003-audit", "010-payment-commitments"]) {
+  for (const migration of ["001-customers", "002-sales", "003-audit", "010-payment-commitments", "025-frame-advisor"]) {
     await db.exec(await readFile(`sql/clients/${migration}.sql`, "utf8"));
   }
   await db.exec(`
@@ -40,6 +40,11 @@ beforeAll(async () => {
     VALUES ('old-paid', 'old', 'paid', 5000, '2026-11-01', 'QA', 'webpay-plus', 200, NULL),
       ('new-paid', 'new', 'new-paid', 30000, '2026-11-17', 'QA', 'qa', 0, NULL),
       ('old-reversed', 'old', 'reversed', 8000, '2026-11-06', 'QA', 'qa', 0, '2026-11-06T17:00:00Z');
+    INSERT INTO oc_client_frame_advice (user_id, request_id, created_at, result, failed_at)
+    VALUES ('qa', gen_random_uuid(), '2026-10-01T03:00:00Z', '{}', NULL),
+      ('qa', gen_random_uuid(), '2026-10-15T14:00:00Z', '{}', NULL),
+      ('qa', gen_random_uuid(), '2026-10-15T15:00:00Z', NULL, '2026-10-15T15:01:00Z'),
+      ('qa', gen_random_uuid(), '2026-11-01T03:00:00Z', '{}', NULL);
   `);
 }, 30_000);
 
@@ -80,9 +85,25 @@ it("calcula cobros en una base de desarrollo anterior a la migración de interes
 });
 
 it("acepta fechas reales inclusivas y rechaza rangos invertidos, futuros o repetidos", () => {
-  expect(indicatorPeriod({ desde: today, hasta: today }, today)).toEqual({ from: today, to: today, error: null });
-  expect(indicatorPeriod({}, today)).toEqual({ from: "2026-11-01", to: today, error: null });
+  expect(indicatorPeriod({ desde: today, hasta: today }, today)).toEqual({ from: today, to: today, month: undefined, error: null });
+  expect(indicatorPeriod({}, today)).toEqual({ from: "2026-10-01", to: "2026-10-31", month: "2026-10", error: null });
   for (const search of [{ desde: "2026-02-30" }, { desde: today, hasta: "2026-11-16" }, { hasta: "2026-11-18" }, { desde: [today] }]) {
     expect(indicatorPeriod(search, today).error).toBeTruthy();
   }
+});
+
+
+it("usa el último mes completo, maneja el cambio de año y valida la selección mensual", () => {
+  expect(indicatorPeriod({}, "2027-01-05")).toEqual({ from: "2026-12-01", to: "2026-12-31", month: "2026-12", error: null });
+  expect(indicatorPeriod({ mes: "2024-02" }, today).to).toBe("2024-02-29");
+  expect(indicatorPeriod({ mes: "2026-11" }, today).to).toBe(today);
+  for (const month of ["2026-00", "2026-12", ["2026-10"]]) {
+    expect(indicatorPeriod({ mes: month }, today).error).toBeTruthy();
+  }
+});
+
+it("cuenta clientes distintos y usos completados en el mes de Santiago", async () => {
+  await expect(readAdvisorIndicators("2026-10-01", "2026-10-31")).resolves.toEqual({ customers: 1, sessions: 2 });
+  await expect(readAdvisorIndicators("2026-11-01", today)).resolves.toEqual({ customers: 1, sessions: 1 });
+  await expect(readAdvisorIndicators("2026-09-01", "2026-09-30")).resolves.toEqual({ customers: 0, sessions: 0 });
 });

@@ -10,13 +10,43 @@ function isDate(value: unknown): value is string {
 }
 
 export function indicatorPeriod(search: Search, today: string) {
-  const monthStart = today.slice(0, 8) + "01";
-  const from = search.desde ?? monthStart;
-  const to = search.hasta ?? today;
-  if (!isDate(from) || !isDate(to) || from > to || to > today) {
-    return { from: monthStart, to: today, error: "Elige un período válido que termine a más tardar hoy." };
+  const currentMonth = today.slice(0, 7);
+  const currentStart = currentMonth + "-01";
+  const previousEnd = new Date(Date.parse(currentStart) - 86_400_000).toISOString().slice(0, 10);
+  const previousMonth = previousEnd.slice(0, 7);
+  const fallback = { from: previousMonth + "-01", to: previousEnd, month: previousMonth };
+  const invalid = { ...fallback, error: "El período no es válido. Se muestra el último mes completo." };
+
+  if (search.mes === undefined && (search.desde !== undefined || search.hasta !== undefined)) {
+    const from = search.desde ?? currentStart;
+    const to = search.hasta ?? today;
+    if (!isDate(from) || !isDate(to) || from > to || to > today) return invalid;
+    return { from, to, month: undefined, error: null };
   }
-  return { from, to, error: null };
+
+  const month = search.mes ?? previousMonth;
+  if (typeof month !== "string" || !isDate(month + "-01") || month > currentMonth) return invalid;
+  const from = month + "-01";
+  const lastDay = new Date(from);
+  lastDay.setUTCMonth(lastDay.getUTCMonth() + 1, 0);
+  return { from, to: month === currentMonth ? today : lastDay.toISOString().slice(0, 10), month, error: null };
+}
+
+export async function readAdvisorIndicators(from: string, to: string) {
+  try {
+    const result = await clientPool().query<{ customers: number; sessions: number }>(`
+      SELECT count(DISTINCT user_id)::integer AS customers, count(*)::integer AS sessions
+      FROM ${clientTable("oc_client_frame_advice")}
+      WHERE result IS NOT NULL
+        AND created_at >= ($1::date::timestamp AT TIME ZONE 'America/Santiago')
+        AND created_at < (($2::date + 1)::timestamp AT TIME ZONE 'America/Santiago')
+    `, [from, to]);
+    return result.rows[0];
+  } catch (error) {
+    // Development databases can predate the advisor migration.
+    if (error && typeof error === "object" && "code" in error && error.code === "42P01") return null;
+    throw error;
+  }
 }
 
 type Totals = {
