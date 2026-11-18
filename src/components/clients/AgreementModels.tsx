@@ -1,6 +1,6 @@
 "use client";
 import {useState,type FormEvent} from "react";
-import {DIGITAL_AGREEMENT_PROPOSAL,type AgreementModel} from "@/lib/clients/agreement-model";
+import {TWO_PAGE_DIGITAL_AGREEMENT_PROPOSAL as DIGITAL_AGREEMENT_PROPOSAL,type AgreementModel} from "@/lib/clients/agreement-model";
 import type {ModelRow} from "@/lib/clients/agreement-registry";
 import styles from "./ClientSpace.module.css";
 const labels={draft:"Borrador",pending:"Pendiente de aprobación",approved:"Aprobado",retired:"Retirado"};

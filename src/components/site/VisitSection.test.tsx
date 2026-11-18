@@ -6,7 +6,8 @@ import { VisitSection } from "./VisitSection";
 describe("local de Óptica & Cristal", () => {
   it("usa la dirección oficial y enlaces de Google Maps", () => {
     expect(store.fullAddress).toBe("Huérfanos 713, local 18, Santiago Centro");
-    expect(storePhotos).toEqual([]);
+    expect(storePhotos.length).toBeGreaterThan(0);
+    expect(storePhotos.every(photo => photo.src.startsWith("/images/local/"))).toBe(true);
     expect(decodeURIComponent(storeMapUrl("embed"))).toContain("Huérfanos 713, local 18, Santiago Centro, Santiago, Chile");
     for (const mode of ["embed", "directions", "search"] as const) expect(decodeURIComponent(storeMapUrl(mode))).toContain("local 18");
     expect(storeMapUrl("embed")).toContain("output=embed");

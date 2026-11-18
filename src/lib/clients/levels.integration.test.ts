@@ -20,7 +20,7 @@ function request(body: unknown, origin = "https://opticaycristal.cl") { return n
 beforeAll(() => { vi.stubEnv("CLIENT_APP_URL", "https://opticaycristal.cl"); vi.stubEnv("CLIENT_DATA_KEY", randomBytes(32).toString("base64")); });
 beforeEach(async () => {
   await db.exec("DROP SCHEMA IF EXISTS level_test CASCADE; CREATE SCHEMA level_test; SET search_path TO level_test;");
-  for (const name of ["001-customers.sql", "002-sales.sql", "003-audit.sql", "007-installments.sql", "010-payment-commitments.sql", "015-level-benefits.sql"]) await db.exec(await readFile(`sql/clients/${name}`, "utf8"));
+  for (const name of ["001-customers.sql", "002-sales.sql", "003-audit.sql","030-sale-internal-controls.sql","031-automatic-sale-controls.sql", "007-installments.sql", "010-payment-commitments.sql", "015-level-benefits.sql"]) await db.exec(await readFile(`sql/clients/${name}`, "utf8"));
   await seedLegacyContractSettings(db);
   state.staff = true; state.allowed = true;
 }, 30000);

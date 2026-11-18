@@ -7,6 +7,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 const state = vi.hoisted(()=>({pool:null as unknown}));
 vi.mock("./db",()=>({clientPool:()=>state.pool,clientTable:(name:string)=>`"${name}"`}));
 import { changeSaleState, reverseSalePayment, createSale, findCustomerByRut, listCustomerSales, listSaleProducts, parseSale, quoteSale, recordSalePayment, saveSaleProduct, todayChile } from "./sales";
+import { getCustomerSaleContext } from "./store";
 import { runSaleOperation,recoverSaleOperation } from "./operations";
 import { allowStaffLogin } from "./staff-access";
 import { clientFingerprint,protectClientValue } from "./privacy";
@@ -22,7 +23,11 @@ beforeAll(async()=>{
  await db.exec(await readFile("sql/clients/001-customers.sql","utf8"));
  await db.exec(await readFile("sql/clients/002-sales.sql","utf8"));
  await db.exec(await readFile("sql/clients/003-audit.sql","utf8"));
+ await db.exec(await readFile("sql/clients/030-sale-internal-controls.sql","utf8"));
+ await db.exec(await readFile("sql/clients/031-automatic-sale-controls.sql","utf8"));
  await db.exec(await readFile("sql/clients/003-audit.sql","utf8"));
+ await db.exec(await readFile("sql/clients/030-sale-internal-controls.sql","utf8"));
+ await db.exec(await readFile("sql/clients/031-automatic-sale-controls.sql","utf8"));
  await db.exec(await readFile("sql/clients/010-payment-commitments.sql","utf8"));
  await db.exec(await readFile("sql/clients/014-category-sale-pricing.sql","utf8"));
  await seedLegacyContractSettings(db);
@@ -70,6 +75,8 @@ describe.sequential("Ventas y pagos con PostgreSQL aislado",()=>{
   expect(list[0].installments).toHaveLength(1);
   expect((await db.query("SELECT principal_outstanding FROM oc_client_credit_balances WHERE user_id='alice'")).rows[0]).toEqual({principal_outstanding:35700});
   expect(JSON.stringify(list)).not.toMatch(/protected_cost|protectedCost|created_by|request_data|rutHash/);
+  expect(await getCustomerSaleContext("alice")).toMatchObject({purchaseCount:1,lastPurchaseAt:list[0].createdAt,tier:{name:"Start"},credit:{available:0}});
+  expect(await getCustomerSaleContext("bob")).toMatchObject({purchaseCount:0,lastPurchaseAt:null,tier:{name:"Premium"},credit:{available:80000}});
   expect(await listCustomerSales("bob")).toEqual([]);
  });
  it("impide una segunda financiación activa y conserva condiciones tras cambiar producto",async()=>{
@@ -122,6 +129,7 @@ describe.sequential("Recuperación y correcciones trazables",()=>{
   for(const p of payments){await reverseSalePayment({paymentId:p.id,reason:"Corrección QA"},"seller");await reverseSalePayment({paymentId:p.id,reason:"Corrección QA"},"seller");}
   let sale=(await listCustomerSales("alice"))[0];expect(sale.remaining).toBe(35700);expect(sale.installments[0].paid).toBe(0);expect(sale.payments.every(p=>p.reversed)).toBe(true);
   await changeSaleState({action:"cancel",saleId,reason:"Firma rechazada QA"},"seller");
+  expect(await getCustomerSaleContext("alice")).toMatchObject({purchaseCount:0,lastPurchaseAt:null});
   await changeSaleState({action:"cancel",saleId,reason:"Firma rechazada QA"},"seller");
   sale=(await listCustomerSales("alice"))[0];expect(sale).toMatchObject({status:"cancelled",remaining:0,credit:35700});expect(sale.payments).toHaveLength(2);
   expect((await db.query("SELECT principal_outstanding FROM oc_client_credit_balances WHERE user_id='alice'")).rows[0]).toEqual({principal_outstanding:0});

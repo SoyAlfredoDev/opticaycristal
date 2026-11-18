@@ -1,3 +1,4 @@
+import { customerDocumentText } from "./customer-document";
 import {effectiveModelClauses} from "./agreement-model";
 import "server-only";
 import { readFile } from "node:fs/promises";
@@ -27,7 +28,7 @@ export async function compactAgreementPdf(d:CreditAgreementDocument){
  title("Hoja resumen · Compraventa a crédito directo");
  if(d.model.sample)paragraph("MUESTRA SIN VALIDEZ · PROPUESTA NO APROBADA. Importes ilustrativos; sin venta, firma, pago ni entrega reales.",bold);
  paragraph(`${d.company.name} · RUT ${d.company.rut}. ${d.company.address}`);
- paragraph(`Cliente: ${d.customer.name}. RUT: ${rut(d.customer.rut)}.`);
+ paragraph(`Cliente: ${d.customer.name}. ${customerDocumentText(d.customer, ": ")}.`);
  row("Precio al contado, IVA incluido",clp(d.sale.total));row("Neto / IVA",`${clp(d.sale.net)} / ${clp(d.sale.vat)}`);
  row("Pie registrado administrativamente",clp(d.sale.deposit));row("Capital financiado",clp(d.sale.credit));row("Interés de financiamiento pactado / CAE","0 % / 0 %");
  row("Comisiones / seguros / mantención","$0 / $0 / $0");row("Impuestos del crédito / otros cargos","$0 / $0");row("Cobranza extrajudicial","$0");row("Costo total del crédito al día",clp(d.sale.credit));row("Total compra: pie más cuotas",clp(d.sale.total));
@@ -40,7 +41,7 @@ export async function compactAgreementPdf(d:CreditAgreementDocument){
  paragraph(`Venta interna: ${d.sale.id}. AppsFly venta: ${d.references?.appsFlySale||"No informado"}. Orden de trabajo: ${d.references?.workOrder||"No informada"}.`);
  paragraph(`Modelo ${d.version}. Preparado: ${new Intl.DateTimeFormat("en-CA",{timeZone:"America/Santiago",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(d.preparedAt))}. Emisión no acredita suscripción, pago ni entrega.`);
  title("1. Partes y facultades");
- paragraph(`${d.company.name}, RUT ${d.company.rut}, ${d.company.address}, representada por ${d.representative.name}, RUT ${rut(d.representative.rut)}. Antecedente de facultades: ${d.representative.authority||"[Por completar]"}. Cliente: ${d.customer.name}, RUT ${rut(d.customer.rut)}. Contacto: ${d.customer.email}; ${d.customer.whatsapp}.`);
+ paragraph(`${d.company.name}, RUT ${d.company.rut}, ${d.company.address}, representada por ${d.representative.name}, RUT ${rut(d.representative.rut)}. Antecedente de facultades: ${d.representative.authority||"[Por completar]"}. Cliente: ${d.customer.name}, ${customerDocumentText(d.customer)}. Contacto: ${d.customer.email}; ${d.customer.whatsapp}.`);
  paragraph(`Producto: ${d.sale.productName}. Cantidad: ${d.sale.quantity}. La hoja resumen y el calendario precedente forman parte íntegra de este contrato.`);
  const labels={monthly:"2. Precio y obligaciones",late:"3. Mora y cálculo por tramos",payments:"4. Pagos, abonos y prepago",collection:"5. Cobranza directa",judicial:"6. Acciones civiles de cobro",rights:"7. Derechos y atención",acceptance:"8. Aceptación y copia íntegra",privacy:"9. Datos personales"};
  for(const key of Object.keys(labels) as (keyof typeof labels)[]){title(labels[key]);paragraph(effectiveModelClauses(d.model.definition,d.lateAnnualRate)[key]);if(key==="payments")paragraph((d.paymentMethod==="local"?"Medio habilitado: pago en el local.":d.paymentMethod==="transfer"?"Medio habilitado: transferencia; solicita datos bancarios vigentes al WhatsApp oficial.":"Medios habilitados: local y transferencia; solicita los datos bancarios al WhatsApp oficial.")+(d.paymentMethod==="all"&&d.webpayUrl?` Webpay oficial: ${d.webpayUrl}.`:" Webpay no habilitado en este documento."));}

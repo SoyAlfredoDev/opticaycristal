@@ -6,7 +6,7 @@ import { PGlite } from "@electric-sql/pglite";
 const mock=vi.hoisted(()=>({query:vi.fn(),send:vi.fn()}));
 vi.mock("./mail",async importOriginal=>({...await importOriginal<typeof import("./mail")>(),sendAgreementMail:mock.send}));
 vi.mock("./db",()=>({clientTable:(name:string)=>name,clientPool:()=>({query:mock.query,connect:async()=>({query:mock.query,release:()=>{}})})}));
-import { DIGITAL_AGREEMENT_PROPOSAL } from "./agreement-model";
+import { DIGITAL_AGREEMENT_PROPOSAL, TWO_PAGE_DIGITAL_AGREEMENT_PROPOSAL } from "./agreement-model";
 import { createAgreementModel,transitionAgreementModel,modelHash } from "./agreement-registry";
 import { protectClientValue } from "./privacy";
 import { createSale } from "./sales";
@@ -14,10 +14,10 @@ import { saveContractSettings,prepareCommitment,getStoredCommitment } from "./co
 import { authorizeDigitalAgreement, digitalAgreementStatus, requestAgreementCode, sendDigitalAgreementCopy, signDigitalAgreement } from "./digital-agreement";
 import { signedAgreement } from "./agreement-acceptance";
 import { storedAgreementPdf } from "./commitments";
-it("verifica migración y generación inmutable en PostgreSQL local de memoria",async()=>{
+it.each([DIGITAL_AGREEMENT_PROPOSAL,TWO_PAGE_DIGITAL_AGREEMENT_PROPOSAL])("verifica emisión y firma inmutables con el diseño $layout en PostgreSQL local de memoria",async model=>{
  const db=new PGlite();vi.stubEnv("CLIENT_DATA_KEY",Buffer.alloc(32,7).toString("base64"));
  try{
-  for(const migration of ["001-customers","002-sales","003-audit","007-installments","010-payment-commitments","019-agreement-models","020-digital-agreements"]){await db.exec(await readFile(`sql/clients/${migration}.sql`,"utf8"));}
+  for(const migration of ["001-customers","002-sales","003-audit","030-sale-internal-controls","031-automatic-sale-controls","007-installments","010-payment-commitments","019-agreement-models","020-digital-agreements"]){await db.exec(await readFile(`sql/clients/${migration}.sql`,"utf8"));}
   mock.query.mockImplementation((sql:string,values?:unknown[])=>db.query(sql,values));
   await db.query(`INSERT INTO oc_client_user(id,name,email,"firstName","lastName","rutCipher","rutHash","whatsappCipher") VALUES('qa-customer','Cliente Prueba','qa@example.invalid','Cliente','Prueba',$1,'qa-hash',$2)`,[protectClientValue("123456785","rut"),protectClientValue("+56911111111","whatsapp")]);
   await db.query("INSERT INTO oc_client_products(id,name,protected_cost,updated_by) VALUES('qa-product','Lente de prueba',20000,'qa-owner')");
@@ -25,7 +25,7 @@ it("verifica migración y generación inmutable en PostgreSQL local de memoria",
   await db.query("INSERT INTO oc_client_installments(id,sale_id,number,due_date,amount) VALUES('qa-installment','qa-sale',1,'2026-12-02',13500)");
   await expect(db.query("INSERT INTO oc_client_payments(id,sale_id,request_key,amount,interest_waived,paid_on,reference,created_by) VALUES('qa-invalid-reason','qa-sale','qa-invalid-request',0,1,'2026-11-02','QA','qa-owner')")).rejects.toThrow(/oc_client_payments_capital_check/);
   await saveContractSettings({representativeAuthority:"Escritura QA ficticia",representativeName:"Representante Prueba",representativeRut:"12345678-5",paymentMethod:"both",signature:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6NwAAAABJRU5ErkJggg==",authorizeSignature:true,authorizeCurrentTerms:true,legalAnnualMaximum:41.02,legalLimitChecked:true},"qa-owner");
-  const mid=await createAgreementModel({definition:DIGITAL_AGREEMENT_PROPOSAL,note:"Modelo solo para prueba QA"},"qa-owner");
+  const mid=await createAgreementModel({definition:model,note:"Modelo solo para prueba QA"},"qa-owner");
   await transitionAgreementModel({id:mid,status:"pending",note:"Revisión QA local"},"qa-owner");await transitionAgreementModel({id:mid,status:"approved",note:"Aprobación ficticia QA",reviewedSample:true,reviewedLegal:true,reviewedPrint:true},"qa-owner");
   await db.query(`UPDATE oc_client_sales SET request_data='{"appsFlySale":"QA-1","workOrder":"QA-2"}' WHERE id='qa-sale'`);
   // The currently deployed writer must continue to work while the generator is staged.
@@ -34,7 +34,7 @@ it("verifica migración y generación inmutable en PostgreSQL local de memoria",
   await db.query(legacyInsert,["2026-11-02-compromiso-v3"]);
   await db.exec("ROLLBACK");
   await expect(db.query(legacyInsert,["OC-CD-DIGITAL-1"])).rejects.toThrow(/approved model/);
-  vi.stubEnv("CLIENT_DIGITAL_AGREEMENT_MODEL_HASH",modelHash(DIGITAL_AGREEMENT_PROPOSAL));
+  vi.stubEnv("CLIENT_DIGITAL_AGREEMENT_MODEL_HASH",modelHash(model));
   await prepareCommitment("qa-sale","qa-staff");
   const original=await getStoredCommitment("qa-sale","qa-customer");
   expect(original?.sale.credit).toBe(13500);expect(original?.representative.name).toBe("Representante Prueba");expect(original?.installments).toEqual([{number:1,dueDate:"2026-12-02",amount:13500}]);
@@ -74,7 +74,8 @@ it("verifica migración y generación inmutable en PostgreSQL local de memoria",
   expect(await signDigitalAgreement("qa-sale","qa-customer",{...second,code,accepted:true})).toEqual({signed:true,sent:false});
   const signed=await signedAgreement("qa-sale");
   const originalPdf=await storedAgreementPdf("qa-sale","qa-customer");
-  expect((await PDFDocument.load(signed!.bytes)).getPageCount()).toBe((await PDFDocument.load(originalPdf)).getPageCount()+1);
+  expect((await PDFDocument.load(signed!.bytes)).getPageCount()).toBe(model.layout==="a4-two-page-v4"?2:(await PDFDocument.load(originalPdf)).getPageCount()+1);
+  expect(await storedAgreementPdf("qa-sale","qa-customer")).toEqual(originalPdf);
   expect((await db.query("SELECT remaining FROM oc_client_sales WHERE id='qa-sale'")).rows[0]).toEqual({remaining:13500});
   expect(await sendDigitalAgreementCopy("qa-sale","qa-customer")).toEqual({signed:true,sent:false});
   await db.query("UPDATE oc_client_agreement_digital SET copy_retry_at=now() WHERE sale_id='qa-sale'");

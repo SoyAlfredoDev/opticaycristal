@@ -4,8 +4,9 @@ import { listCustomerSales } from "./sales";
 import { clientPool, clientTable } from "./db";
 import { normalizeClientRut,validClientRut } from "./validation";
 import { clientFingerprint } from "./privacy";
+import { readCustomerDocument } from "./customer-document-store";
 import { revealClientValue } from "./privacy";
-import { availableCredit, type CustomerProfile, type CustomerSummary, type CustomerSnapshot } from "./types";
+import { availableCredit, type CustomerProfile, type CustomerSummary, type CustomerSnapshot, type SaleCustomer } from "./types";
 const select = (withContact = false, extra = "") => `SELECT ${extra}${withContact ? 'u."rutCipher",u."whatsappCipher",' : ""}u.id,u."firstName",u."lastName",u.email,u."emailVerified",u."identityVerified",u."whatsappVerified",u."createdAt",t.code,t.name AS tier_name,t.max_percent,t.max_amount,t.max_installments,COALESCE(b.principal_outstanding,0) AS outstanding FROM ${clientTable("oc_client_user")} u JOIN ${clientTable("oc_client_tiers")} t ON t.code=u.category LEFT JOIN ${clientTable("oc_client_credit_balances")} b ON b.user_id=u.id`;
 type Row = Record<string, unknown>;
 function summary(r: Row): CustomerSummary {
@@ -21,8 +22,25 @@ function summary(r: Row): CustomerSummary {
 export async function getCustomerProfile(userId: string): Promise<CustomerProfile | null> {
   const r = await clientPool().query(`${select(true)} WHERE u.id=$1`, [userId]);
   if (!r.rows[0]) return null;
-  return { ...summary(r.rows[0]), rut: revealClientValue(r.rows[0].rutCipher, "rut"), whatsapp: revealClientValue(r.rows[0].whatsappCipher, "whatsapp"), purchases: await listCustomerSales(userId) };
+  return { ...summary(r.rows[0]), ...readCustomerDocument(r.rows[0].rutCipher), whatsapp: revealClientValue(r.rows[0].whatsappCipher, "whatsapp"), purchases: await listCustomerSales(userId) };
 }
+export async function getCustomerSaleContext(userId: string): Promise<SaleCustomer | null> {
+  const sales = clientTable("oc_client_sales");
+  const extra = `
+    (SELECT count(*) FROM ${sales} WHERE user_id=u.id AND status<>'cancelled') AS purchase_count,
+    (SELECT max(created_at) FROM ${sales} WHERE user_id=u.id AND status<>'cancelled') AS last_purchase_at,`;
+  const { rows: [row] } = await clientPool().query(`${select(true, extra)} WHERE u.id=$1`, [userId]);
+  if (!row) return null;
+  return {
+    ...summary(row),
+    ...readCustomerDocument(row.rutCipher),
+    whatsapp: revealClientValue(row.whatsappCipher, "whatsapp"),
+    purchaseCount: Number(row.purchase_count),
+    lastPurchaseAt: row.last_purchase_at instanceof Date ? row.last_purchase_at.toISOString()
+      : row.last_purchase_at ? new Date(String(row.last_purchase_at)).toISOString() : null,
+  };
+}
+
 export async function searchCustomerSummaries(search="",offset=0):Promise<{customers:CustomerSummary[];hasMore:boolean}>{
  if(!Number.isSafeInteger(offset)||offset<0||offset>10000)throw new Error("Página no válida.");
  const value=search.trim().slice(0,100),term=value.toLowerCase().replace(/[\\%_]/g,"\\$&");
@@ -53,7 +71,7 @@ export async function getCustomerSnapshot(userId: string): Promise<CustomerSnaps
  const result = await clientPool().query(`${select(true, extra)} WHERE u.id=$1`, [userId]);
  const row = result.rows[0];
  if (!row) return null;
- return { customer: { ...summary(row), rut: revealClientValue(row.rutCipher,"rut"), whatsapp: revealClientValue(row.whatsappCipher,"whatsapp"),
+ return { customer: { ...summary(row), ...readCustomerDocument(row.rutCipher), whatsapp: revealClientValue(row.whatsappCipher,"whatsapp"),
   activity: { purchaseCount:Number(row.purchase_count), creditCount:Number(row.credit_count), nextInstallment:row.next_installment ?? null } },
   tiers:row.tiers ?? [], historyVersion:String(row.history_version) };
 }

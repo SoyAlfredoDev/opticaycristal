@@ -7,9 +7,9 @@ export async function GET(_r: Request, { params }: {
     params: Promise<{
         id: string;
     }>;
-}) { if (!await customerAdminSession(true))
+}) { const staff = await customerAdminSession(true); if (!staff)
     return privateJson({ error: "Acceso restringido." }, 401); try {
-    return privateJson({ customer: await editableCustomer((await params).id) });
+    return privateJson({ customer: await editableCustomer((await params).id), canChangeEmail: staff.role !== "seller" });
 }
 catch (e) {
     return fail(e);

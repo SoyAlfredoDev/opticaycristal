@@ -1,2 +1,14 @@
 .form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}.form label{flex:1;min-width:180px}.form button{white-space:nowrap}.history{padding-left:20px}.history li{margin-top:12px}.history time{color:#536574}
 @media(max-width:650px){.form{display:grid;grid-template-columns:minmax(0,1fr)}.form label{min-width:0}.form button{width:100%}}
+
+.tierChoices { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; padding: 0; margin: 0 0 18px; border: 0; min-width: 0; }
+.tierChoices legend { margin: 0 0 12px; padding: 0; font-size: 14px; font-weight: 650; color: #4e605a; }
+.tierChoice { display: flex; align-items: flex-start; gap: 10px; padding: 14px; border: 1px solid #d7e2d5; border-radius: 9px; background: #fff; cursor: pointer; min-width: 0; }
+.tierChoice[data-selected=true] { background: #eff5e9; border-color: #639148; }
+.tierChoice input { margin-top: 4px; accent-color: #285b41; }
+.tierChoice > span { display: grid; gap: 5px; min-width: 0; font-size: 13px; color: #4e605a; }
+.tierChoice strong { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: #192926; font-size: 16px; }
+.tierChoice small { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #e1ebd7; color: #355d2c; font-weight: 600; }
+.tierChoices + button[type="submit"] { background: #9bcb5a; border-color: #789d42; color: #233016; margin-bottom: 12px; }
+.tierChoices + button[type="submit"]:hover:not(:disabled) { background: #add677; border-color: #789d42; }
+@media(max-width:520px){.tierChoices { grid-template-columns: minmax(0,1fr); }}

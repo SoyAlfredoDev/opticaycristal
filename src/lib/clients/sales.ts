@@ -1,4 +1,5 @@
 import "server-only";
+import { insertAutomaticSaleControl } from "./sales-register";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { clientPool, clientTable as t } from "./db";
@@ -30,6 +31,13 @@ function categoryPolicy(raw: unknown) {
  if (raw !== "category") throw new SaleError("La regla de cálculo no es válida.");
  return "category" as const;
 }
+function overrideReason(raw: unknown) {
+ if(raw===undefined)return undefined;
+ if(typeof raw!=="string"||raw.length>500||/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(raw))throw new SaleError("Indica un motivo de 5 a 500 caracteres para aplicar el cupo máximo.");
+ const reason=raw.trim().replace(/\s+/g," ");
+ if(reason.length<5)throw new SaleError("Indica un motivo de 5 a 500 caracteres para aplicar el cupo máximo.");
+ return reason;
+}
 function validDate(value: unknown) {
  const date = textValue(value, "Fecha", 10);
  try { monthlyInstallments(1, 1, date); } catch { throw new SaleError("Fecha no válida."); }
@@ -39,7 +47,9 @@ export function parseSale(raw: unknown): SaleInput {
  if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new SaleError("Datos no válidos.");
  const b = raw as Record<string, unknown>;
  const policy=categoryPolicy(b.pricingPolicy);
- return { customerId: textValue(b.customerId, "Cliente"), productId: textValue(b.productId, "Producto"),
+ if(b.internalControl!==undefined)throw new SaleError("El control interno se genera automáticamente y no puede modificarse.");
+ const reason=overrideReason(b.creditOverrideReason);
+ return { ...(reason?{creditOverrideReason:reason}:{}), customerId: textValue(b.customerId, "Cliente"), productId: textValue(b.productId, "Producto"),
  quantity: whole(b.quantity, "Cantidad", 1, 100), total: whole(b.total, "Total", 1), credit: whole(b.credit, "Crédito"),
  installmentCount: whole(b.installmentCount, "Cuotas", 0, 4), firstDueDate: typeof b.firstDueDate === "string" ? b.firstDueDate : "",
  ...(b.appsFlySale?{appsFlySale:textValue(b.appsFlySale,"Número de venta AppsFly",100)}:{}),...(b.workOrder?{workOrder:textValue(b.workOrder,"Orden de trabajo",100)}:{}),
@@ -49,7 +59,7 @@ export async function findCustomerByRut(rut: unknown) {
  const normalized = normalizeClientRut(textValue(rut, "RUT", 20));
  if (!validClientRut(normalized)) throw new SaleError("Revisa el RUT y su dígito verificador.");
  const r = await clientPool().query(`SELECT id FROM ${t("oc_client_user")} WHERE "rutHash"=$1`, [clientFingerprint(normalized,"rut")]);
- if (!r.rows[0]) throw new SaleError("El cliente no está registrado. Debe crear su cuenta antes de registrar la venta.");
+ if (!r.rows[0]) throw new SaleError("El cliente no está registrado con ese RUT.");
  return String(r.rows[0].id);
 }
 export async function listSaleProducts(): Promise<SaleProduct[]> {
@@ -76,7 +86,7 @@ async function transaction<T>(work: (db: PoolClient) => Promise<T>) {
  try { await db.query("BEGIN"); const result = await work(db); await db.query("COMMIT"); return result; }
  catch (error) { await db.query("ROLLBACK"); throw error; } finally { db.release(); }
 }
-async function quoteWith(db: Pick<PoolClient,"query">, b: Pick<SaleInput,"customerId"|"productId"|"quantity"|"total"|"unitProtectedCost"|"pricingPolicy">, lock = false): Promise<SaleQuote & { productName: string; tierCode: string; maxPercent: number; maxAmount: number }> {
+async function quoteWith(db: Pick<PoolClient,"query">, b: Pick<SaleInput,"customerId"|"productId"|"quantity"|"total"|"unitProtectedCost"|"pricingPolicy"|"creditOverrideReason">, lock = false): Promise<SaleQuote & { productName: string; tierCode: string; maxPercent: number; maxAmount: number;standardMaximumCredit:number;maximumCreditAtCapacity:number }> {
  const r = await db.query(`SELECT u."emailVerified",u.category,tier.max_percent,tier.max_amount,tier.max_installments,b.principal_outstanding
  FROM ${t("oc_client_user")} u JOIN ${t("oc_client_tiers")} tier ON tier.code=u.category
  JOIN ${t("oc_client_credit_balances")} b ON b.user_id=u.id WHERE u.id=$1 ${lock ? "FOR UPDATE OF u,b FOR SHARE OF tier" : ""}`,[b.customerId]);
@@ -89,11 +99,17 @@ async function quoteWith(db: Pick<PoolClient,"query">, b: Pick<SaleInput,"custom
  const total = whole(b.total,"Total",1);
  const tier = { maxPercent: Number(c.max_percent), maxAmount: Number(c.max_amount), maxInstallments: Number(c.max_installments) };
  const quote = calculateFinancing({ total, protectedCost: cost, outstanding: Number(c.principal_outstanding), tier });
+ const capacityQuote = calculateFinancing({ total, protectedCost: cost, outstanding: Number(c.principal_outstanding), tier:{...tier,maxPercent:100} });
  const active = Number(c.principal_outstanding) > 0;
  const enabled = c.emailVerified === true && !active;
+ const reason=overrideReason(b.creditOverrideReason);
+ if(reason&&!enabled)throw new SaleError(!c.emailVerified?"Debe verificar el correo para financiar.":"Ya tiene un financiamiento pendiente.");
+ if(reason&&capacityQuote.maximumCredit<=quote.maximumCredit)throw new SaleError("El cálculo ya aplica el cupo máximo disponible.");
+ const maximum=reason?capacityQuote.maximumCredit:quote.maximumCredit;
  const net = Math.round(total * 100 / 119);
- return { total, net, vat: total-net, protectedCost: categoryOnly?null:cost, maximumCredit: enabled ? quote.maximumCredit : 0,
- minimumDeposit: enabled ? quote.minimumDeposit : total, maxInstallments: tier.maxInstallments, enabled,
+ return { total, net, vat: total-net, protectedCost: categoryOnly?null:cost, maximumCredit: enabled ? maximum : 0,
+ minimumDeposit: enabled ? total-maximum : total, maxInstallments: tier.maxInstallments, enabled,
+ standardMaximumCredit:enabled?quote.maximumCredit:0,maximumCreditAtCapacity:enabled?capacityQuote.maximumCredit:0,creditOverrideApplied:Boolean(reason),
  reason: !c.emailVerified ? "Debe verificar el correo para financiar." : active ? "Ya tiene un financiamiento pendiente; puede registrar una venta al contado." : "",
  productName: String(p.name), tierCode: String(c.category), maxPercent: tier.maxPercent, maxAmount: tier.maxAmount };
 }
@@ -101,7 +117,8 @@ export async function quoteSale(raw: unknown): Promise<SaleQuote> {
  const b = raw as Record<string,unknown>;
  if (!b || typeof b !== "object") throw new SaleError("Datos no válidos.");
  const policy=categoryPolicy(b.pricingPolicy);
- return quoteWith(clientPool(), { customerId: textValue(b.customerId,"Cliente"), productId: textValue(b.productId,"Producto"), quantity: whole(b.quantity,"Cantidad",1,100), total: whole(b.total,"Total",1),...(b.unitProtectedCost!==undefined?{unitProtectedCost:whole(b.unitProtectedCost,"Costo protegido por unidad",1)}:{}),...(policy?{pricingPolicy:policy}:{}) });
+ const reason=overrideReason(b.creditOverrideReason);
+ return quoteWith(clientPool(), { customerId: textValue(b.customerId,"Cliente"), productId: textValue(b.productId,"Producto"), quantity: whole(b.quantity,"Cantidad",1,100), total: whole(b.total,"Total",1),...(reason?{creditOverrideReason:reason}:{}),...(b.unitProtectedCost!==undefined?{unitProtectedCost:whole(b.unitProtectedCost,"Costo protegido por unidad",1)}:{}),...(policy?{pricingPolicy:policy}:{}) });
 }
 export async function createSale(input: SaleInput, actor: string) {
  return transaction(async db => {
@@ -118,7 +135,8 @@ export async function createSale(input: SaleInput, actor: string) {
   if (input.conditionsReviewed===false) throw new SaleError("Confirma la revisión de las condiciones con el cliente.");
   if (!input.depositReceived) throw new SaleError("Confirma el pago recibido del pie o del total al contado.");
   if (input.credit > q.maximumCredit) throw new SaleError(q.reason || "El crédito supera el máximo permitido. Vuelve a calcular.");
-  if (input.credit > 0 && !input.identityChecked) throw new SaleError("Confirma la revisión presencial de cédula.");
+  if(input.creditOverrideReason&&input.credit!==q.maximumCredit)throw new SaleError("El cupo cambió. Vuelve a calcular antes de aplicar el máximo.");
+  if (input.credit > 0 && !input.identityChecked) throw new SaleError("Confirma la revisión presencial de la cédula o documento de identidad.");
   if (input.credit > 0 && (input.installmentCount < 1 || input.installmentCount > q.maxInstallments)) throw new SaleError("Las cuotas superan las condiciones del nivel.");
   if (input.credit === 0 && input.installmentCount !== 0) throw new SaleError("Una venta al contado no tiene cuotas.");
   const date = input.credit ? validDate(input.firstDueDate) : "";
@@ -128,9 +146,11 @@ export async function createSale(input: SaleInput, actor: string) {
   await db.query(`INSERT INTO ${t("oc_client_sales")}(id,user_id,request_key,request_data,product_id,product_name,quantity,protected_cost,total,net,vat,deposit,credit,remaining,tier_code,max_percent,max_amount,installment_count,identity_checked,commitment_version,created_by)
   VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13,$14,$15,$16,$17,$18,'2026-10-29-v1',$19)`,
   [id,input.customerId,input.requestKey,JSON.stringify(canonical),input.productId,q.productName,input.quantity,q.protectedCost,q.total,q.net,q.vat,q.total-input.credit,input.credit,q.tierCode,q.maxPercent,q.maxAmount,input.installmentCount,input.identityChecked,actor]);
+  if(input.creditOverrideReason)await db.query(`INSERT INTO ${t("oc_client_sale_credit_overrides")}(sale_id,reason,percent_maximum,tier_maximum,applied_credit,actor) VALUES($1,$2,$3,$4,$5,$6)`,[id,input.creditOverrideReason,q.standardMaximumCredit,q.maxAmount,input.credit,actor]);
   for (const i of schedule) await db.query(`INSERT INTO ${t("oc_client_installments")}(id,sale_id,number,due_date,amount) VALUES($1,$2,$3,$4,$5)`,[randomUUID(),id,i.number,i.dueDate,i.amount]);
   await db.query(`UPDATE ${t("oc_client_credit_balances")} SET principal_outstanding=principal_outstanding+$2,updated_at=now() WHERE user_id=$1`,[input.customerId,input.credit]);
   if(input.credit>0)await prepareCommitment(id,actor,db);
+  await insertAutomaticSaleControl(db,id,actor);
   return id;
  });
 }

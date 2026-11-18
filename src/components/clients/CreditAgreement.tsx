@@ -1,3 +1,4 @@
+import { customerDocumentText } from "@/lib/clients/customer-document";
 import type { ReactNode } from "react";
 import { VersionedCreditAgreement } from "./VersionedCreditAgreement";
 import Image from "next/image";
@@ -31,7 +32,7 @@ export function CreditAgreement({document:d,backHref,cancelled,signedAt,pdfHref,
   <p>{copy.rights}</p>
   <h2>5. Aceptación y entrega de copia</h2><p>{copy.acceptance}</p>
   <p>Suscrito en Santiago, el ______ de __________________ de __________.</p>
-  <div className={styles.signatures}><div><div className={styles.signatureArea}/><strong>Firma del cliente</strong><br/>{d.customer.name}<br/>RUT {rut(d.customer.rut)}</div><div><Image src={d.representative.signature} alt="Firma preimpresa autorizada del representante" width={220} height={90} unoptimized className={styles.signatureImage}/><strong>{d.representative.name}</strong><br/>RUT {rut(d.representative.rut)}<br/>Por {d.company.name}</div></div>
+  <div className={styles.signatures}><div><div className={styles.signatureArea}/><strong>Firma del cliente</strong><br/>{d.customer.name}<br/>{customerDocumentText(d.customer)}</div><div><Image src={d.representative.signature} alt="Firma preimpresa autorizada del representante" width={220} height={90} unoptimized className={styles.signatureImage}/><strong>{d.representative.name}</strong><br/>RUT {rut(d.representative.rut)}<br/>Por {d.company.name}</div></div>
   <p className={styles.note}>{copy.note}</p>
  </main>;
 }

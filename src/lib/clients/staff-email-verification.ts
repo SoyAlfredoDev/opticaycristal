@@ -24,10 +24,10 @@ export async function sendCustomerEmailCode(userId: string, actor: string) {
             return { verified: true };
         }
         email = user.email;
-        const previous = (await db.query(`SELECT *,resend_at>now() AS waiting,window_started_at>now()-interval '1 hour' AS same_hour,day_started_at>now()-interval '1 day' AS same_day FROM ${t("oc_client_staff_email_codes")} WHERE user_id=$1 FOR UPDATE`, [userId])).rows[0];
-        if (previous && (previous.waiting || (previous.same_hour && previous.sent_count >= 3) || (previous.same_day && previous.day_count >= 6)))
-            throw new StaffEmailCodeError(previous.waiting ? "Espera un minuto antes de enviar otro código." : "Se alcanzó el límite de envíos. Inténtalo más tarde.", 429);
-        await db.query(`INSERT INTO ${t("oc_client_staff_email_codes")}(user_id,request_id,actor,email_hash,code_hash,expires_at,resend_at) VALUES($1,$2,$3,$4,$5,now()+interval '10 minutes',now()+interval '1 minute') ON CONFLICT(user_id) DO UPDATE SET request_id=EXCLUDED.request_id,actor=EXCLUDED.actor,email_hash=EXCLUDED.email_hash,code_hash=EXCLUDED.code_hash,expires_at=EXCLUDED.expires_at,resend_at=EXCLUDED.resend_at,attempts=0,verified_at=NULL,sent_count=CASE WHEN oc_client_staff_email_codes.window_started_at>now()-interval '1 hour' THEN oc_client_staff_email_codes.sent_count+1 ELSE 1 END,window_started_at=CASE WHEN oc_client_staff_email_codes.window_started_at>now()-interval '1 hour' THEN oc_client_staff_email_codes.window_started_at ELSE now() END,day_count=CASE WHEN oc_client_staff_email_codes.day_started_at>now()-interval '1 day' THEN oc_client_staff_email_codes.day_count+1 ELSE 1 END,day_started_at=CASE WHEN oc_client_staff_email_codes.day_started_at>now()-interval '1 day' THEN oc_client_staff_email_codes.day_started_at ELSE now() END`, [userId, requestId, actor, emailHash(email), codeHash(code, requestId, userId, email)]);
+        const previous = (await db.query(`SELECT *,window_started_at>now()-interval '1 hour' AS same_hour,day_started_at>now()-interval '1 day' AS same_day FROM ${t("oc_client_staff_email_codes")} WHERE user_id=$1 FOR UPDATE`, [userId])).rows[0];
+        if (previous && ((previous.same_hour && previous.sent_count >= 3) || (previous.same_day && previous.day_count >= 6)))
+            throw new StaffEmailCodeError("Se alcanzó el límite de envíos. Inténtalo más tarde.", 429);
+        await db.query(`INSERT INTO ${t("oc_client_staff_email_codes")}(user_id,request_id,actor,email_hash,code_hash,expires_at,resend_at) VALUES($1,$2,$3,$4,$5,now()+interval '10 minutes',now()) ON CONFLICT(user_id) DO UPDATE SET request_id=EXCLUDED.request_id,actor=EXCLUDED.actor,email_hash=EXCLUDED.email_hash,code_hash=EXCLUDED.code_hash,expires_at=EXCLUDED.expires_at,resend_at=EXCLUDED.resend_at,attempts=0,verified_at=NULL,sent_count=CASE WHEN oc_client_staff_email_codes.window_started_at>now()-interval '1 hour' THEN oc_client_staff_email_codes.sent_count+1 ELSE 1 END,window_started_at=CASE WHEN oc_client_staff_email_codes.window_started_at>now()-interval '1 hour' THEN oc_client_staff_email_codes.window_started_at ELSE now() END,day_count=CASE WHEN oc_client_staff_email_codes.day_started_at>now()-interval '1 day' THEN oc_client_staff_email_codes.day_count+1 ELSE 1 END,day_started_at=CASE WHEN oc_client_staff_email_codes.day_started_at>now()-interval '1 day' THEN oc_client_staff_email_codes.day_started_at ELSE now() END`, [userId, requestId, actor, emailHash(email), codeHash(code, requestId, userId, email)]);
         await db.query("COMMIT");
     }
     catch (e) {
@@ -42,7 +42,7 @@ export async function sendCustomerEmailCode(userId: string, actor: string) {
     }
     catch {
         await clientPool().query(`UPDATE ${t("oc_client_staff_email_codes")} SET code_hash=NULL WHERE user_id=$1 AND request_id=$2`, [userId, requestId]);
-        throw new StaffEmailCodeError("No se pudo confirmar el envío del código. Inténtalo nuevamente en un minuto.", 503);
+        throw new StaffEmailCodeError("No se pudo confirmar el envío del código. Inténtalo nuevamente.", 503);
     }
     return { requestId, expiresIn: 600 };
 }

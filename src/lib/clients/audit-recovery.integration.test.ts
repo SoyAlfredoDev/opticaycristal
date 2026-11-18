@@ -38,23 +38,3 @@ it("impide que un vendedor redirija la recuperación de una cuenta con correo pe
  expect(transport.mock.lastCall?.[0].to).toBe(email);
  await expect(auth.api.signInEmail({body:{email,password:existing}})).resolves.toMatchObject({user:{id:result.id}});
 });
-
-it("permite corregir una ficha sin contraseña y revoca el enlace que se emitió antes de la corrección",async()=>{
- const transport=vi.fn<(message:{url:string;to:string})=>Promise<void>>().mockResolvedValue(undefined);
- const auth=createClientAuth(pool,transport);
- const customerId="new-customer",original="typo@example.invalid",correct="correct@example.invalid";
- await db.query(`INSERT INTO oc_client_user(id,name,email,"firstName","lastName","rutCipher","rutHash","whatsappCipher") VALUES($1,'Cliente Prueba',$2,'Cliente','Prueba',$3,$1,$4)`,[customerId,original,protectClientValue("76543216","rut"),protectClientValue("+56900000002","whatsapp")]);
- await auth.api.requestPasswordReset({body:{email:original,redirectTo:"/mi-cuenta/restablecer"}});
- const originalToken=new URL(transport.mock.lastCall![0].url).pathname.split("/").at(-1)!;
- const context={params:Promise.resolve({id:customerId})},url=base+"/api/admin/clientes/"+customerId+"/datos";
- const {customer}=await (await GET(new Request(url),context)).json();
- expect(customer.emailEditable).toBe(true);
- const edited=await POST(new Request(url,{method:"POST",headers:{Origin:base,"Content-Type":"application/json"},body:JSON.stringify({firstName:customer.firstName,lastName:customer.lastName,email:correct,whatsapp:customer.whatsapp,expectedVersion:customer.version})}),context);
- expect(edited.status,await edited.clone().text()).toBe(200);
- const newPassword="New synthetic password 44!";
- await expect(auth.api.resetPassword({body:{token:originalToken,newPassword}})).rejects.toThrow();
- await auth.api.requestPasswordReset({body:{email:correct,redirectTo:"/mi-cuenta/restablecer"}});
- const newToken=new URL(transport.mock.lastCall![0].url).pathname.split("/").at(-1)!;
- expect(transport.mock.lastCall?.[0].to).toBe(correct);
- await expect(auth.api.resetPassword({body:{token:newToken,newPassword}})).resolves.toMatchObject({status:true});
-});

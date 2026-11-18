@@ -14,7 +14,7 @@ describe("Regresiones de la auditoría",()=>{
   let finish!:(value:Response)=>void;
   vi.stubGlobal("fetch",vi.fn().mockResolvedValueOnce(response({customer})).mockImplementationOnce(()=>new Promise(r=>{finish=r;})));
   render(<AdminSales initialProducts={[{id:"product",name:"Paquete QA",protectedCost:50000}]}/>);
-  fireEvent.change(screen.getByLabelText("RUT del cliente"),{target:{value:"90.000.001-4"}});fireEvent.click(screen.getByRole("button",{name:"Buscar cliente"}));await screen.findByText("Auditoría QA");fireEvent.click(screen.getByRole("button",{name:"Continuar"}));
+  fireEvent.change(screen.getByLabelText("Buscar por RUT"),{target:{value:"12.345.678-5"}});fireEvent.click(screen.getByRole("button",{name:"Buscar cliente"}));await screen.findByText("Auditoría QA");fireEvent.click(screen.getByRole("button",{name:"Continuar a producto"}));
   fireEvent.change(screen.getByLabelText("Producto o paquete",{exact:true}),{target:{value:"product"}});fireEvent.change(screen.getByLabelText("Precio total con IVA incluido"),{target:{value:"119000"}});fireEvent.click(screen.getByRole("button",{name:"Calcular y continuar"}));
   expect(screen.getByLabelText("Precio total con IVA incluido")).toBeDisabled();
   // Even an external state change must invalidate an in-flight result.

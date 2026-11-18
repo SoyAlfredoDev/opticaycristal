@@ -3,7 +3,7 @@ import { DIGITAL_ACCEPTANCE_CLAUSE } from "./digital-agreement-copy";
 /** Versioned proposal. Editing the proposal never changes an issued snapshot. */
 export const JUDICIAL_CLAUSE = "Si una cuota mantiene un saldo vencido e impago una vez transcurridos seis meses calendario desde su vencimiento, Óptica y Cristal Limitada podrá ejercer ante el tribunal competente las acciones civiles de cobro que legalmente procedan respecto de las sumas vencidas y exigibles. Los abonos se descontarán del saldo y no reiniciarán el plazo respecto del remanente de esa cuota, salvo acuerdo expreso de reprogramación. Esta cláusula no anticipa el vencimiento de cuotas futuras. Solo podrán reclamarse intereses y conceptos legal y contractualmente procedentes; las costas judiciales quedarán sujetas a lo que resuelva el tribunal. Se respetarán los derechos del consumidor, la prescripción y las normas concursales aplicables";
 export type AgreementModel = {
- identifier: string; version: number; legacyNoLate: string; layout: "a4-readable-v1" | "a4-compact-v2" | "a4-formal-v3";
+ identifier: string; version: number; legacyNoLate: string; layout: "a4-readable-v1" | "a4-compact-v2" | "a4-formal-v3" | "a4-two-page-v4";
  terms: { financingAnnualRate: 0; lateAnnualRate: 18; graceDays: 60; commissions: 0; insurance: 0; maintenance: 0; collectionFees: 0; otherCosts: 0 };
  clauses: { monthly: string; late: string; payments: string; collection: string; judicial: string; rights: string; acceptance: string; privacy: string };
 };
@@ -23,7 +23,7 @@ export const AGREEMENT_PROPOSAL: AgreementModel = {
 };
 export function validateAgreementModel(value: unknown): AgreementModel {
  const m=value as AgreementModel;
- if(!m || !/^[A-Z0-9-]{2,32}$/.test(m.identifier) || !Number.isSafeInteger(m.version)||m.version<1||!["a4-readable-v1","a4-compact-v2","a4-formal-v3"].includes(m.layout))throw new Error("Identificador, versión o diseño no válido.");
+ if(!m || !/^[A-Z0-9-]{2,32}$/.test(m.identifier) || !Number.isSafeInteger(m.version)||m.version<1||!["a4-readable-v1","a4-compact-v2","a4-formal-v3","a4-two-page-v4"].includes(m.layout))throw new Error("Identificador, versión o diseño no válido.");
  if(!m.terms||Object.keys(m.terms).length!==Object.keys(AGREEMENT_PROPOSAL.terms).length||Object.entries(AGREEMENT_PROPOSAL.terms).some(([key,value])=>(m.terms as Record<string,unknown>)[key]!==value))throw new Error("Este generador solo admite el crédito sin costos y la política de mora revisada.");
  for(const key of Object.keys(AGREEMENT_PROPOSAL.clauses) as (keyof AgreementModel["clauses"])[])if(typeof m.clauses?.[key]!=="string"||m.clauses[key].length<30||m.clauses[key].length>5000||/[\u0000-\u001f]/.test(m.clauses[key]))throw new Error("Revisa el contenido de las cláusulas.");
  if(typeof m.legacyNoLate!=="string"||m.legacyNoLate.length<30||m.legacyNoLate.length>1000)throw new Error("Completa las condiciones originales sin mora.");
@@ -63,4 +63,12 @@ export const DIGITAL_AGREEMENT_PROPOSAL: AgreementModel = {
   ...FORMAL_AGREEMENT_PROPOSAL.clauses,
   acceptance: DIGITAL_ACCEPTANCE_CLAUSE,
  },
+};
+
+/** New layout proposals: retain the approved clauses and all previously issued originals. */
+export const TWO_PAGE_AGREEMENT_PROPOSAL: AgreementModel = {
+ ...structuredClone(FORMAL_AGREEMENT_PROPOSAL), version: 4, layout: "a4-two-page-v4",
+};
+export const TWO_PAGE_DIGITAL_AGREEMENT_PROPOSAL: AgreementModel = {
+ ...structuredClone(DIGITAL_AGREEMENT_PROPOSAL), version: 2, layout: "a4-two-page-v4",
 };

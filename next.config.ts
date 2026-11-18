@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
     "/api/admin/clientes/*/categoria": ["./public/images/home/oc-logo-oficial.png"],
     "/api/admin/clientes/nivel-correos": ["./public/images/home/oc-logo-oficial.png"],
     "/api/clientes/compras/*/compromiso/pdf": ["./public/images/home/oc-logo-oficial.png"],
+    "/api/admin/clientes/ventas/alta": ["./public/images/home/oc-logo-oficial.png"],
+    "/api/admin/clientes/*/cambiar-correo": ["./public/images/home/oc-logo-oficial.png"],
     "/api/admin/clientes/*/verificar-correo": ["./public/images/home/oc-logo-oficial.png"],
     "/api/admin/clientes/ventas/*/compromiso/pdf": ["./public/images/home/oc-logo-oficial.png"],
     "/api/clientes/*": ["./public/images/home/oc-logo-oficial.png"],

@@ -16,7 +16,7 @@ const db=new PGlite();const conn={query:async(sql:string,values?:unknown[])=>{co
 let variableId="",fixedId="";
 beforeAll(async()=>{
  vi.stubEnv("CLIENT_DATA_KEY",Buffer.alloc(32,9).toString("base64"));
- for(const name of ["001-customers","002-sales","003-audit","007-installments","010-payment-commitments","011-variable-product-cost","011-variable-product-cost"])await db.exec(await readFile(`sql/clients/${name}.sql`,"utf8"));
+ for(const name of ["001-customers","002-sales","003-audit","030-sale-internal-controls","031-automatic-sale-controls","007-installments","010-payment-commitments","011-variable-product-cost","011-variable-product-cost"])await db.exec(await readFile(`sql/clients/${name}.sql`,"utf8"));
  await seedLegacyContractSettings(db);
  await db.query(`INSERT INTO oc_client_user(id,name,email,"firstName","lastName","rutCipher","rutHash","whatsappCipher","emailVerified") VALUES('variable-qa','Cliente Prueba','qa@example.invalid','Cliente','Prueba',$1,'qa-variable-rut',$2,true)`,[protectClientValue("123456785","rut"),protectClientValue("+56911111111","whatsapp")]);
  variableId=await saveSaleProduct({name:"Lente óptico",protectedCost:null},"qa-owner");fixedId=await saveSaleProduct({name:"Lente fijo",protectedCost:20000},"qa-owner");

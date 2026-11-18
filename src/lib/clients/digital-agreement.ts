@@ -7,6 +7,7 @@ import { clientFingerprint, protectClientValue, revealClientValue } from "./priv
 import { getStoredCommitment } from "./commitments";
 import { sendAgreementMail } from "./mail";
 import { DIGITAL_ACCEPTANCE_CLAUSE, DIGITAL_AGREEMENT_TERMS } from "./digital-agreement-copy";
+import { addTwoPageDigitalEvidence, TWO_PAGE_LAYOUT } from "./credit-agreement-two-page-pdf";
 
 const date = (value: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Santiago", year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
@@ -78,14 +79,14 @@ export async function digitalAgreementStatus(saleId: string, userId: string) {
 async function ready(db: PoolClient, saleId: string, userId: string) {
   const { user, sale } = await lockSale(db, saleId, userId);
   const row = (await db.query(`SELECT *,resend_at>now() AS waiting, expires_at<=now() AS expired FROM ${t("oc_client_agreement_digital")} WHERE sale_id=$1 FOR UPDATE`, [saleId])).rows[0];
-  if (row?.signed_at) return { user, row };
+  if (row?.signed_at) return { user, row, document: null };
   const doc = await getStoredCommitment(saleId, userId, db);
   if (sale.signed_at || !row || !doc?.model || doc.model.hash !== process.env.CLIENT_DIGITAL_AGREEMENT_MODEL_HASH ||
       doc.model.definition.clauses.acceptance !== DIGITAL_ACCEPTANCE_CLAUSE ||
       row.terms_hash !== termsHash || row.representative_id !== process.env.CLIENT_DIGITAL_AGREEMENT_REPRESENTATIVE_ID ||
       date(row.approved_at) !== date(new Date()))
     throw new DigitalAgreementError("Pide al ejecutivo que habilite la firma de esta compra.");
-  return { user, row };
+  return { user, row, document: doc };
 }
 
 export async function requestAgreementCode(saleId: string, userId: string) {
@@ -117,7 +118,7 @@ export async function signDigitalAgreement(saleId: string, userId: string, raw: 
   if (raw.accepted !== true || typeof code !== "string" || !/^\d{6}$/.test(code) || typeof requestId !== "string")
     throw new DigitalAgreementError("Ingresa los seis dígitos y confirma que aceptas el compromiso.", 400);
   const signed = await transaction(async db => {
-    const { user, row } = await ready(db, saleId, userId);
+    const { user, row, document } = await ready(db, saleId, userId);
     if (row.signed_at) return true;
     if (row.request_id !== requestId || row.expired || row.attempts >= 5 || !row.code_hash || row.email_hash !== hashEmail(user.email))
       throw new DigitalAgreementError("El código ya no está disponible. Solicita otro.");
@@ -131,6 +132,9 @@ export async function signDigitalAgreement(saleId: string, userId: string, raw: 
     if (digest(original) !== row.pdf_hash || issued.pdf_hash !== row.pdf_hash) throw new Error("PDF integrity");
     const now = new Date();
     const pdf = await PDFDocument.load(original);
+    if (document?.model?.definition.layout === TWO_PAGE_LAYOUT) {
+      await addTwoPageDigitalEvidence(pdf, { saleId, originalHash: row.pdf_hash, signedAt: now, representativeAt: new Date(row.approved_at) });
+    } else {
     const page = pdf.addPage([595, 842]);
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     page.drawText("Constancia de firma electrónica", { x: 48, y: 782, size: 19, font });
@@ -142,6 +146,7 @@ export async function signDigitalAgreement(saleId: string, userId: string, raw: 
       `Aceptación en administración: ${new Date(row.approved_at).toISOString()}`, "",
       `Venta: ${saleId}`, "SHA-256 del PDF original:", row.pdf_hash,
     ].join("\n"), { x: 48, y: 741, size: 10, lineHeight: 17, maxWidth: 499, font, wordBreaks: [" "] });
+    }
     const bytes = Buffer.from(await pdf.save());
     await db.query(`INSERT INTO ${t("oc_client_agreement_acceptances")}
       (sale_id,signed_on,confirmed_at,confirmed_by,copy_delivered_on,delivery_method,delivery_reference,original_reference,signed_pdf_enc,signed_pdf_hash,legal_annual_limit,legal_limit_reference)

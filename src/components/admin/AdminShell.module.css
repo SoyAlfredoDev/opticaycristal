@@ -1,27 +1,115 @@
-.shell{--admin-wine:#681c30;--admin-menu-ink:#fff7ef;--admin-menu-active:#b7f45b;--admin-side:214px;min-height:100dvh;color:#142b3a;background:#fff;font-family:Arial,Helvetica,sans-serif}
-.sidebar{position:fixed;inset:0 auto 0 0;z-index:20;width:var(--admin-side);box-sizing:border-box;display:flex;flex-direction:column;padding:16px 12px 14px;background:var(--admin-wine);overflow:hidden}
-.brand{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin:0 0 12px;padding:0 12px;color:var(--admin-menu-ink);text-decoration:none;flex-shrink:0}
-.brand img{box-sizing:border-box;height:77px;width:150px;padding:8px 10px;object-fit:contain;border-radius:10px;background:#fff}
-.brand span{font-size:12px;font-weight:600;letter-spacing:.04em}
-.sidebar nav,.drawer nav{display:flex;flex-direction:column;gap:6px;min-height:0;overflow-y:auto;flex:1}
-.sidebar nav a,.drawer nav a{display:flex;align-items:center;gap:10px;flex-shrink:0;min-height:46px;padding:10px 12px;box-sizing:border-box;border-radius:11px;color:var(--admin-menu-ink);font-size:14px;text-decoration:none}
-.sidebar nav a:hover,.drawer nav a:hover,.sidebar .logout:hover,.drawer .logout:hover{background:#ffffff1f}
-.sidebar nav a[aria-current],.drawer nav a[aria-current]{background:var(--admin-menu-active);color:#3d0b1a;font-weight:600}
-.sidebar form,.drawer form{margin-top:14px;border-top:1px solid #ffffff40;padding-top:12px;flex-shrink:0}
-.logout{display:flex;align-items:center;gap:9px;min-height:44px;border:0;border-radius:11px;background:none;color:var(--admin-menu-ink);font:inherit;font-size:13px;cursor:pointer;padding:10px 12px}
-.content{margin-left:var(--admin-side);min-width:0}.content>div{min-height:0}.content main{max-width:none}
-.location{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:20px 24px 0;font-size:12px;color:#536574}.location>span{color:#a2b5aa}
-.menuButton{display:none}
-.drawer{position:fixed;inset:0 auto 0 0;box-sizing:border-box;width:min(310px,calc(100vw - 32px));max-width:none;height:100dvh;max-height:100dvh;margin:0;padding:20px;border:0;border-radius:0 18px 18px 0;background:var(--admin-wine);color:var(--admin-menu-ink);overflow:auto;overscroll-behavior:contain}
-.drawer::backdrop{background:#142b3a66;backdrop-filter:blur(3px)}
-.drawer[open]{display:flex;flex-direction:column}
-.drawerHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-shrink:0}
-.drawerHeader h2{font-size:18px;font-weight:650;margin:0}
-.drawerHeader button{display:grid;place-items:center;width:44px;height:44px;border:1px solid #ffffff66;border-radius:50%;background:#ffffff1f;color:var(--admin-menu-ink);cursor:pointer}
-.drawer .brand{padding:0;margin-bottom:16px}
-.shell :is(a,button,input,select,summary):focus-visible{outline:3px solid #007f5f;outline-offset:3px}
-.sidebar :is(a,button,summary):focus-visible,.drawer :is(a,button,summary):focus-visible{outline-color:var(--admin-menu-active)}
-@media(max-width:800px){.sidebar{display:none}.content{margin-left:0}.menuButton{position:fixed;top:12px;left:14px;z-index:30;display:grid;place-items:center;width:44px;height:44px;border:1px solid #dce8e3;border-radius:11px;background:#fff;color:var(--admin-wine);box-shadow:0 3px 12px #142b3a10;cursor:pointer}.location{box-sizing:border-box;min-height:58px;padding:21px 18px 0 74px;align-content:flex-start}}
-@media print{.sidebar,.drawer,.menuButton,.location{display:none}.content{margin:0}}
-
-.sidebar nav{gap:4px}.sidebar nav,.drawer nav{scrollbar-width:thin;scrollbar-color:#ffffff66 transparent}.sidebar nav::-webkit-scrollbar,.drawer nav::-webkit-scrollbar{width:6px}.sidebar nav::-webkit-scrollbar-thumb,.drawer nav::-webkit-scrollbar-thumb{background:#ffffff66;border-radius:8px}.sidebar nav::-webkit-scrollbar-track,.drawer nav::-webkit-scrollbar-track{background:transparent}
+.shell {
+  --admin-wine: #681c30;
+  --admin-side-bg: #561729;
+  --admin-menu-ink: #fff5f2;
+  --admin-menu-active: #f3e6e9;
+  --admin-side: 214px;
+  --admin-ink: #192926;
+  --admin-muted: #4e605a;
+  --admin-line: #dde4db;
+  --admin-workspace: #f6f7f3;
+  --admin-action: #9bcb5a;
+  min-height: 100dvh;
+  color: var(--admin-ink);
+  background: var(--admin-workspace);
+  font-family: var(--oc-font-body, Arial), sans-serif;
+}
+.shell :is(a, button, input, select, summary):focus-visible { outline: 3px solid #007f5f; outline-offset: 3px; }
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 20;
+  width: var(--admin-side);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 15px 12px;
+  background: var(--admin-side-bg);
+}
+.sidebar, .drawer { color: var(--admin-menu-ink); box-sizing: border-box; }
+.brand { display: grid; justify-items: start; gap: 8px; padding-inline: 9px; margin-bottom: 20px; text-decoration: none; }
+.brand img { box-sizing: border-box; height: 61px; width: 124px; padding: 6px 11px; object-fit: contain; border-radius: 8px; background: #fff; }
+.brand span, .groupLabel { color: #f0cbd3; font-weight: 650; font-size: 12px; }
+.navigation { min-height: 0; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #ffffff66 transparent; }
+.navigation > div + div { margin-top: 14px; }
+.groupLabel { margin: 0 0 5px; padding-inline: 10px; }
+.navigation ul { list-style: none; margin: 0; padding: 0; }
+.navigation a, .logout {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+  box-sizing: border-box;
+  font-size: 13px;
+}
+.navigation a { min-height: 34px; padding: 5px 10px; }
+.navigation a svg, .logout svg, .location svg { flex-shrink: 0; }
+.navigation a:hover, .logout:hover { background: #ffffff1f; }
+.navigation a[aria-current] { background: var(--admin-menu-active); color: var(--admin-side-bg); font-weight: 750; }
+.logoutForm { margin-top: 10px; border-top: 1px solid #ffffff40; padding-top: 5px; flex-shrink: 0; }
+.logout { min-height: 44px; border: 0; background: none; cursor: pointer; padding-inline: 10px; }
+.sidebar :is(a, button):focus-visible, .drawer :is(a, button):focus-visible { outline-color: #c4ed91; outline-offset: -3px; }
+.content { margin-left: var(--admin-side); min-width: 0; }
+.content > div { min-height: 0; }
+.content main { max-width: none; }
+.topBar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 65px;
+  padding: 8px clamp(20px, 2.4vw, 40px);
+  background: #fff;
+  border-bottom: 1px solid var(--admin-line);
+}
+.location { display: flex; align-items: center; gap: 9px; color: var(--admin-muted); font-size: 14px; min-width: 0; }
+.location strong { color: var(--admin-wine); }
+.notices { margin-left: auto; }
+.menuButton { display: none; }
+.drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(310px, calc(100vw - 32px));
+  max-width: none;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 18px;
+  border: 0;
+  border-radius: 0 16px 16px 0;
+  background: var(--admin-side-bg);
+}
+.drawer::backdrop { background: #142b3a66; }
+.drawer[open] { display: flex; flex-direction: column; }
+.drawerHeader { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.drawerHeader h2 { font-size: 18px; font-weight: 700; margin: 0; }
+.drawerHeader button, .menuButton {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid #ffffff66;
+  border-radius: 8px;
+  background: #ffffff1f;
+  color: inherit;
+  cursor: pointer;
+}
+.menuButton { display: none; }
+.drawer .brand { padding: 0; margin-bottom: 14px; }
+.drawer .navigation a { min-height: 44px; }
+@media (max-width: 800px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; }
+  .topBar { justify-content: flex-start; padding-inline: 14px; }
+  .menuButton { display: grid; border-color: var(--admin-line); background: #fff; color: var(--admin-wine); }
+  .location { font-size: 13px; gap: 6px; flex-wrap: wrap; }
+}
+@media (max-width: 380px) {
+  .area, .area + svg { display: none; }
+}
+@media print {
+  .sidebar, .drawer, .topBar { display: none; }
+  .content { margin: 0; }
+}

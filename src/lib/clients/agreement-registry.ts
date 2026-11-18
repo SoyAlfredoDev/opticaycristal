@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { clientPool, clientTable as t } from "./db";
-import { FORMAL_AGREEMENT_PROPOSAL, validateAgreementModel, type AgreementModel } from "./agreement-model";
+import { TWO_PAGE_DIGITAL_AGREEMENT_PROPOSAL, validateAgreementModel, type AgreementModel } from "./agreement-model";
 import type { CreditAgreementDocument } from "./commitments";
 import { CLIENT_MAIL_COMPANY } from "./mail";
 export type ModelStatus="draft"|"pending"|"approved"|"retired";
@@ -21,7 +21,7 @@ export function specimen(definition:AgreementModel,id="MUESTRA",hash=modelHash(d
  model:{id,hash,definition,sample:true},references:{appsFlySale:"EJEMPLO-NO-REAL",workOrder:"EJEMPLO-NO-REAL"}};
 }
 export async function createAgreementModel(input:Record<string,unknown>,actor:string){
- const definition=validateAgreementModel(input.definition??FORMAL_AGREEMENT_PROPOSAL);
+ const definition=validateAgreementModel(input.definition??TWO_PAGE_DIGITAL_AGREEMENT_PROPOSAL);
  if(typeof input.note!=="string"||input.note.trim().length<5||input.note.length>1000)throw new Error("Describe el cambio de esta versión.");
  const hash=modelHash(definition),id=randomUUID();
  const {creditAgreementPdf}=await import("./credit-agreement-pdf");const sample=Buffer.from(await creditAgreementPdf(specimen(definition,id,hash)));

@@ -1,3 +1,4 @@
+import { customerDocumentText } from "./customer-document";
 import "server-only";
 import {readFile} from "node:fs/promises";
 import {join} from "node:path";
@@ -47,7 +48,7 @@ export async function formalAgreementPdf(d:CreditAgreementDocument){
  const prepared=new Intl.DateTimeFormat("es-CL",{timeZone:"America/Santiago",day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date(d.preparedAt));
  paragraph(`Modelo ${d.version} · Preparado: ${prepared}. Generar o imprimir no acredita suscripción ni entrega.`,{justify:false});
  band("I. INDIVIDUALIZACIÓN Y REFERENCIAS");
- paragraph(`Cliente: ${d.customer.name}. RUT: ${rut(d.customer.rut)}. Correo: ${d.customer.email}. WhatsApp: ${d.customer.whatsapp}.`,{justify:false});
+ paragraph(`Cliente: ${d.customer.name}. ${customerDocumentText(d.customer, ": ")}. Correo: ${d.customer.email}. WhatsApp: ${d.customer.whatsapp}.`,{justify:false});
  paragraph(`Venta interna: ${d.sale.id}. Venta AppsFly: ${d.references?.appsFlySale||"No informada"}. Orden de trabajo: ${d.references?.workOrder||"No informada"}. Producto: ${d.sale.productName}. Cantidad: ${d.sale.quantity}.`,{justify:false});
  band("II. HOJA RESUMEN Y CALENDARIO DE PAGO");
  grid(["Precio contado con IVA",clp(d.sale.total),"Total de la compra",clp(d.sale.total)]);
@@ -71,7 +72,7 @@ export async function formalAgreementPdf(d:CreditAgreementDocument){
  const start=y;y-=55;for(const x of [left,310])page.drawLine({start:{x,y},end:{x:x+231,y},color:black,thickness:.6});
  if(d.representative.signature){const image=await pdf.embedPng(d.representative.signature),dim=image.scale(Math.min(220/image.width,48/image.height));page.drawImage(image,{x:315,y:start-49,width:dim.width,height:dim.height});}
  y-=leading;draw("FIRMA DEL CLIENTE",left,y,bold);draw("POR LA ÓPTICA",310,y,bold);y-=leading;
- const columns=[[left,d.customer.name,`RUT ${rut(d.customer.rut)}`],[310,d.representative.name,`RUT ${rut(d.representative.rut)}`,"Firma preimpresa autorizada"]] as const;
+ const columns=[[left,d.customer.name,`${customerDocumentText(d.customer)}`],[310,d.representative.name,`RUT ${rut(d.representative.rut)}`,"Firma preimpresa autorizada"]] as const;
  let count=0;for(const [x,...values]of columns){let n=0;for(const v of values)for(const row of wrap(v,231)){draw(row,x,y-n*leading);n++;}count=Math.max(count,n);}y-=count*leading+8;
  paragraph("Registro interno: la confirmación administrativa es distinta de la fecha efectiva de firma. Se conservarán el original aceptado, su respaldo digital y la constancia de entrega.");
  paragraph(`Identificador del modelo: ${d.model.id}. Huella de integridad SHA-256: ${d.model.hash}.`,{justify:false});

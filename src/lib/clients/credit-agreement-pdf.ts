@@ -1,3 +1,4 @@
+import { customerDocumentText } from "./customer-document";
 import "server-only";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -10,6 +11,7 @@ export async function creditAgreementPdf(d: CreditAgreementDocument, { cancelled
     cancelled?: boolean;
     signedAt?: string | null;
 } = {}) {
+    if(d.model?.definition.layout==="a4-two-page-v4"){const {twoPageAgreementPdf}=await import("./credit-agreement-two-page-pdf");return twoPageAgreementPdf(d);}
     if(d.model?.definition.layout==="a4-formal-v3"){const {formalAgreementPdf}=await import("./credit-agreement-formal-pdf");return formalAgreementPdf(d);}
     if(d.model?.definition.layout==="a4-compact-v2"){const {compactAgreementPdf}=await import("./credit-agreement-compact-pdf");return compactAgreementPdf(d);}
     if(d.model){const {readableAgreementPdf}=await import("./credit-agreement-v4-pdf");return readableAgreementPdf(d);}
@@ -106,7 +108,7 @@ export async function creditAgreementPdf(d: CreditAgreementDocument, { cancelled
     page.drawLine({ start: { x: 48, y }, end: { x: 260, y }, color: ink, thickness: .6 });
     page.drawLine({ start: { x: 325, y }, end: { x: 537, y }, color: ink, thickness: .6 });
     y -= 18;
-    const columns = [[48, "Firma del cliente", d.customer.name, `RUT ${agreementRut(d.customer.rut)}`], [325, "Firma preimpresa autorizada", d.representative.name, `RUT ${agreementRut(d.representative.rut)}`, `Por ${d.company.name}`]];
+    const columns = [[48, "Firma del cliente", d.customer.name, `${customerDocumentText(d.customer)}`], [325, "Firma preimpresa autorizada", d.representative.name, `RUT ${agreementRut(d.representative.rut)}`, `Por ${d.company.name}`]];
     let maxHeight = 0;
     for (const col of columns) {
         const [x, ...rows] = col as [

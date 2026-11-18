@@ -8,6 +8,11 @@ export function validClientRut(value: string) {
   const dv = 11 - sum % 11;
   return rut.at(-1) === (dv === 11 ? "0" : dv === 10 ? "K" : String(dv));
 }
+export function parseCustomerEmail(value: unknown) {
+  const email = typeof value === "string" ? value.trim().normalize("NFC").toLowerCase() : "";
+  if (email.length > 254 || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)) throw new Error("Ingresa un correo electrónico válido.");
+  return email;
+}
 export function parseCustomerContact(raw: unknown) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("Revisa los datos del formulario.");
   const b = raw as Record<string, unknown>;
@@ -18,8 +23,7 @@ export function parseCustomerContact(raw: unknown) {
   if (/^9\d{8}$/.test(whatsapp)) whatsapp = "+56" + whatsapp;
   if (/^569\d{8}$/.test(whatsapp)) whatsapp = "+" + whatsapp;
   if (!/^\+[1-9]\d{7,14}$/.test(whatsapp)) throw new Error("Ingresa un WhatsApp con código de país, por ejemplo +56 9 1234 5678.");
-  const email = name("email").toLowerCase();
-  if (email.length > 254 || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)) throw new Error("Ingresa un correo electrónico válido.");
+  const email = parseCustomerEmail(b.email);
   return { firstName, lastName, whatsapp, email };
 }
 export function parseRegistration(raw: unknown): Registration {

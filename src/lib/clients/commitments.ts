@@ -1,5 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
+import { readCustomerDocument } from "./customer-document-store";
+import type { ForeignCustomerDocument } from "./customer-document";
 import { clientPool, clientTable } from "./db";
 import { protectClientValue, revealClientValue } from "./privacy";
 import { normalizeClientRut, validClientRut } from "./validation";
@@ -17,7 +19,7 @@ export type CreditAgreementDocument = {
  representative: { name: string; rut: string; signature: string; authority?: string };
  model?: { id: string; hash: string; definition: AgreementModel; sample?: boolean };
  references?: { appsFlySale: string; workOrder: string };
- customer: { name: string; rut: string; email: string; whatsapp: string };
+ customer: { name: string; rut: string; document?: ForeignCustomerDocument; email: string; whatsapp: string };
  sale: Pick<CustomerSale,"id"|"productName"|"quantity"|"total"|"net"|"vat"|"deposit"|"credit"|"createdAt">;
  installments: { number: number; dueDate: string; amount: number }[];
  paymentMethod: ContractSettings["paymentMethod"];
@@ -107,7 +109,7 @@ export async function prepareCommitment(saleId: unknown, actor: string, transact
   const version=model ? `${model.definition.identifier}-${model.definition.version}` : "2026-11-02-compromiso-v3";
   const document:CreditAgreementDocument={version,...(model?{model:{id:model.row.id,hash:model.row.content_hash,definition:model.definition},references}:{}),preparedAt:new Date().toISOString(),company:{...CLIENT_MAIL_COMPANY},
    representative:{name:settings.representativeName,rut:settings.representativeRut,signature:settings.signature,authority:settings.representativeAuthority},
-   customer:{name:`${owner.firstName} ${owner.lastName}`,rut:revealClientValue(owner.rutCipher,"rut"),email:owner.email,whatsapp:revealClientValue(owner.whatsappCipher,"whatsapp")},
+   customer:{name:`${owner.firstName} ${owner.lastName}`,...readCustomerDocument(owner.rutCipher),email:owner.email,whatsapp:revealClientValue(owner.whatsappCipher,"whatsapp")},
    sale:{id:sale.id,productName:sale.productName,quantity:sale.quantity,total:sale.total,net:sale.net,vat:sale.vat,deposit:sale.deposit,credit:sale.credit,createdAt:sale.createdAt},
    installments:sale.installments.map(({number,dueDate,amount})=>({number,dueDate,amount})),paymentMethod:settings.paymentMethod,ordinaryAnnualRate:0,lateAnnualRate:new Date(sale.createdAt)>=new Date(settings.latePolicyEffectiveAt)?Math.min(18,settings.legalAnnualMaximum):0,lateGraceDays:60,legalAnnualMaximum:settings.legalAnnualMaximum,webpayUrl:settings.webpayUrl};
   const clear=JSON.stringify(document);

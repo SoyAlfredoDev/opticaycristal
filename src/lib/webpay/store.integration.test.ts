@@ -22,7 +22,7 @@ beforeAll(async () => {
     vi.stubEnv('WEBPAY_ENVIRONMENT', 'integration');
     vi.stubEnv('VERCEL_ENV', 'preview');
     vi.stubEnv('CLIENT_APP_URL', 'http://localhost:3049');
-    for (const file of ['001-customers.sql', '002-sales.sql', '003-audit.sql', '010-payment-commitments.sql', '014-category-sale-pricing.sql', '023-webpay-plus.sql', '023-webpay-plus.sql'])
+    for (const file of ['001-customers.sql', '002-sales.sql', '003-audit.sql','030-sale-internal-controls.sql','031-automatic-sale-controls.sql', '010-payment-commitments.sql', '014-category-sale-pricing.sql', '023-webpay-plus.sql', '023-webpay-plus.sql'])
         await db.exec(await readFile('sql/clients/' + file, 'utf8'));
     await seedLegacyContractSettings(db);
     productId = await saveSaleProduct({ name: 'Prueba aislada', protectedCost: 1 }, 'test');

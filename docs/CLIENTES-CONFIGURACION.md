@@ -352,3 +352,30 @@ Configurar exclusivamente en servidor `WHATSAPP_OTP_ENABLED`, `KAPSO_API_KEY`,
 `KAPSO_PHONE_NUMBER_ID`, `KAPSO_OTP_TEMPLATE_NAME` y
 `KAPSO_OTP_TEMPLATE_LANGUAGE`. La guía completa, límites y estado de entrega
 están en `integraciones/VERIFICACION-WHATSAPP-KAPSO.md`.
+
+### Alta y verificación desde Registrar venta
+
+- Antes de habilitar el alta con correo obligatorio, aplicar `sql/clients/029-staff-contact-challenges.sql` en el esquema de clientes correspondiente. El comando es `node scripts/migrate-staff-contact-challenges.mjs <esquema>` y comprueba que el argumento coincida con `CLIENT_DATABASE_SCHEMA`. Requiere las migraciones 012 y 013.
+- El ejecutivo valida el correo antes de guardar un nuevo cliente desde Ventas. La ficha queda en Start, sin contraseña, y se envía el enlace de creación de contraseña mediante la recuperación de acceso. Si el envío falla, se puede repetir sin volver a crear la ficha.
+- Solo un administrador puede sustituir el correo de ingreso. El código se envía al nuevo correo, la confirmación revoca las sesiones y los enlaces de recuperación anteriores, y el cambio queda en el historial de la ficha.
+- WhatsApp sigue siendo opcional. La opción de envío requiere la configuración de Kapso y la migración `sql/integrations/004-whatsapp-otp.sql`. Cambiar el número invalida el código anterior y conserva la espera de un minuto.
+
+### Historial de ventas y control interno
+
+La vista `/admin/clientes/ventas` muestra el historial paginado. El alta está en `/admin/clientes/ventas/nueva`. Los administradores consultan todas las ventas y los vendedores únicamente las registradas con la identidad de su sesión.
+
+Aplicar `node scripts/migrate-sale-internal-controls.mjs <esquema>` antes de habilitar el listado. La migración 030 crea las tablas de controles y su historial, sin asignar números a ventas existentes.
+
+Desde la migración 031 el control se genera automáticamente al confirmar una venta: CR-0000001, CR-0000002 y siguientes. No se elige ni modifica desde la web o la API. El contador se bloquea dentro de la transacción: dos vendedores no reciben el mismo número y un fallo revierte tanto venta como asignación. Las anulaciones conservan su número. La migración conserva los controles históricos y toma como punto de partida el mayor CR existente; no rellena ni renumera ventas anteriores. El historial de asignación y las excepciones de cupo son inmutables en base de datos. Los compromisos ya emitidos conservan sus originales. Aplicar `node scripts/migrate-sale-credit-controls.mjs <esquema>` con el esquema explícito correspondiente antes de publicar este código.
+
+### Niveles desde el resumen de Registrar venta
+
+El resumen de los pasos Cliente y Producto incluye «Subir de nivel» para administradores autorizados por `canManageCustomerCategories`; los vendedores disponen de «Ver niveles» sin edición. El selector consulta todos los niveles vigentes de `oc_client_tiers` con porcentaje, cupo y cuotas; no mantiene una lista comercial separada.
+
+El guardado reutiliza `/api/admin/clientes/[id]/categoria`, su historial, permisos, clave de idempotencia y control de concurrencia. Requiere las migraciones existentes 006 y 018. Al confirmar, se actualizan el nivel y el cupo del resumen sin perder los datos que se estén editando y se descarta cualquier cálculo anterior para que el servidor vuelva a validar la próxima venta. El saldo y las condiciones de compras anteriores se conservan. No cambia la configuración de correos de ascenso ni activa envíos en desarrollo.
+
+### Aplicar cupo máximo en una venta
+
+El cálculo normal conserva el porcentaje del nivel. Administradores y vendedores autenticados pueden elegir «Aplicar cupo máximo» en el paso Cálculo y condiciones y deben registrar un motivo de 5 a 500 caracteres. La excepción ignora únicamente el porcentaje: conserva el tope del nivel, el saldo y los bloqueos vigentes, el pie positivo, las cuotas del nivel y el costo protegido cuando corresponda a la política seleccionada. No modifica el nivel ni sus reglas para otras compras.
+
+El servidor vuelve a calcular bajo bloqueo al registrar. Si cambió el cupo, rechaza la operación y exige recalcular; no acepta montos enviados por el navegador sin validarlos. El registro de la venta conserva motivo, responsable de sesión, fecha, máximo por porcentaje y crédito aplicado. Se puede consultar desde el listado de Ventas. Los reintentos reutilizan la operación y no duplican ni venta, ni control, ni registro de excepción. El simulador público mantiene sus porcentajes habituales.

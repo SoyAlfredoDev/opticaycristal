@@ -35,7 +35,7 @@ async function sale(owner='buyer'){
 beforeAll(()=>{vi.stubEnv('CLIENT_DATA_KEY',randomBytes(32).toString('base64'));vi.stubEnv('CLIENT_AUTH_SECRET',randomBytes(32).toString('base64'));vi.stubEnv('CLIENT_APP_URL','http://localhost:3097');vi.stubEnv('DATABASE_URL','postgresql://test.invalid/dev');vi.stubEnv('WEBSITE_DATABASE_SCHEMA','site_dev');});
 beforeEach(async()=>{
  await db.exec('DROP SCHEMA IF EXISTS app_dev CASCADE; DROP SCHEMA IF EXISTS site_dev CASCADE; CREATE SCHEMA app_dev; CREATE SCHEMA site_dev; SET search_path TO app_dev; CREATE TABLE site_dev.website_orders(id text PRIMARY KEY,payload jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now()); CREATE TABLE site_dev.website_requests(id text PRIMARY KEY,payload jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now());');
- for(const file of ['001-customers.sql','002-sales.sql','003-audit.sql','004-support.sql','005-support-mail.sql','007-installments.sql','008-admin-notifications.sql','010-payment-commitments.sql','014-category-sale-pricing.sql'])await db.exec(await readFile('sql/clients/'+file,'utf8'));
+ for(const file of ['001-customers.sql','002-sales.sql','003-audit.sql','030-sale-internal-controls.sql','031-automatic-sale-controls.sql','004-support.sql','005-support-mail.sql','007-installments.sql','008-admin-notifications.sql','010-payment-commitments.sql','014-category-sale-pricing.sql'])await db.exec(await readFile('sql/clients/'+file,'utf8'));
  await seedLegacyContractSettings(db);
  await customer('legacy');await db.query(`INSERT INTO site_dev.website_orders VALUES('legacy-order','{}',now())`);
  await db.exec(await readFile('sql/clients/016-business-notifications.sql','utf8'));
