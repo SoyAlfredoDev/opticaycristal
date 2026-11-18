@@ -8,7 +8,7 @@
 .primary:hover { background: var(--oc-green-hover); }
 .outline { color: var(--oc-link); border-color: var(--oc-link); background: transparent; }
 .outline:hover { background: var(--oc-green-hover); }
-.hero { overflow: hidden; padding-block: 44px 20px; background: radial-gradient(ellipse at 50% 40%, var(--oc-ivory) 10%, var(--oc-ivory) 78%); }
+.hero { overflow: hidden; padding-block: 44px 20px; background: var(--oc-warm-white); }
 .heroCopy { position: relative; text-align: center; }
 p.eyebrow { display: flex; justify-content: center; align-items: center; gap: 22px; color: var(--oc-wine); font-size: 11px; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; }
 .eyebrow::before, .eyebrow::after { content: ''; width: 35px; height: 1px; background: var(--oc-border-soft); }

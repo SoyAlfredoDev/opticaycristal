@@ -1,5 +1,6 @@
-/* Shared public tokens. Never applied to /mi-cuenta or /admin. */
-.scope {
+/* Shared palette for the commercial site and public account pages. */
+.palette, .scope {
+  --oc-warm-white: #f8f6f2;
   --oc-wine: #681c30;
   --oc-ivory: #f4e7d4;
   --oc-green: #9bcb5a;
@@ -14,6 +15,9 @@
   --oc-green-hover: color-mix(in srgb, var(--oc-green) 86%, var(--oc-white));
   --oc-error: #9c1438;
   --oc-success: #215c3e;
+}
+
+.scope {
   --wine: var(--oc-wine);
   --wine-deep: var(--oc-deep);
   --ivory: var(--oc-ivory);
@@ -26,7 +30,7 @@
   --oc-font-display: var(--oc-font-editorial);
   font-family: var(--oc-font-body), Arial, sans-serif;
   color: var(--oc-deep);
-  background: var(--oc-white);
+  background: var(--oc-warm-white);
   color-scheme: light;
 }
 .scope[data-public-site] { --oc-font-display: var(--oc-font-editorial); }
@@ -45,8 +49,8 @@
   --color-text-tertiary: var(--oc-muted);
   --color-text-on-dark: var(--oc-ivory);
   --color-text-on-dark-muted: var(--oc-on-wine-muted);
-  --color-background: var(--oc-ivory);
-  --color-bg-base: var(--oc-ivory);
+  --color-background: var(--oc-warm-white);
+  --color-bg-base: var(--oc-warm-white);
   --color-surface: var(--oc-white);
   --color-muted: var(--oc-ivory);
   --color-border: var(--oc-border);
@@ -61,7 +65,8 @@
 .scope.legacy button[class*="bg-primary"] { background: var(--oc-green); color: var(--oc-deep); }
 .scope.legacy button[class*="bg-primary"]:hover { background: var(--oc-green-hover); }
 .privacy header { background: var(--oc-white); border-color: var(--oc-border-soft); }
-.privacy main { background: var(--oc-ivory); }
+.privacy main { background: var(--oc-warm-white); }
+.privacy main :is(h1, h2, h3) { color: var(--oc-wine); }
 .privacy footer { background: var(--oc-deep); color: var(--oc-ivory); }
 .privacy footer h3, .privacy footer h4 { color: var(--oc-ivory); }
 .privacy footer > div > div:first-child { background: var(--oc-wine); }

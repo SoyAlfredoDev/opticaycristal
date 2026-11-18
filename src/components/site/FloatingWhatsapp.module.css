@@ -12,8 +12,8 @@
   padding: 14px 22px;
   border: 1px solid #ffffff70;
   border-radius: 999px;
-  background: linear-gradient(135deg, #087f57, #07543e);
-  color: #fff;
+  background: var(--oc-green);
+  color: var(--oc-deep);
   box-shadow: 0 10px 30px #063f3430, 0 2px 7px #063f3426;
   font-family: var(--oc-font-body), Arial, sans-serif;
   font-size: 15px;
@@ -35,7 +35,7 @@
 }
 .button svg { width: 27px; height: 27px; flex-shrink: 0; }
 .button:hover { transform: translateY(-3px); box-shadow: 0 14px 35px #063f3440; }
-.button:focus-visible { outline: 3px solid #9bcb5a; outline-offset: 4px; }
+.button:focus-visible { outline: 3px solid var(--oc-wine); outline-offset: 4px; }
 @media (max-width: 640px) {
   .button { right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); min-height: 54px; gap: 8px; padding: 12px 16px; font-size: 13px; }
   .button svg { width: 23px; height: 23px; }

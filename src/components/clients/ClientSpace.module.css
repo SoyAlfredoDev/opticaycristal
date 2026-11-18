@@ -203,3 +203,29 @@
 .panel:target{outline:3px solid #39b992;outline-offset:4px;scroll-margin-top:24px}
 
 .side .navLink,.bottom a{position:relative}
+
+.publicClient {
+  composes: palette from "../site/PublicTheme.module.css";
+  --ink: var(--oc-deep);
+  --muted: var(--oc-muted);
+  --border: var(--oc-border-soft);
+  --accent: var(--oc-wine);
+  background: var(--oc-warm-white);
+  min-height: inherit;
+}
+
+.publicClient :is(h1, h2, .textLink, .loginTitle em) { color: var(--oc-wine); }
+.publicClient .pill { background: var(--oc-ivory); color: var(--oc-wine); }
+.publicClient .input { border-color: var(--oc-border); }
+.publicClient .input:hover { border-color: var(--oc-wine); }
+.space .publicClient :where(a, button, input, select, summary):focus-visible { outline-color: var(--oc-wine); }
+.space .publicClient .primary {
+  background: var(--oc-green);
+  border-color: var(--oc-green);
+  color: var(--oc-deep);
+  box-shadow: 0 3px 14px color-mix(in srgb, var(--oc-green) 18%, transparent);
+}
+.space .publicClient .primary:hover:not(:disabled) {
+  background: var(--oc-green-hover);
+  border-color: var(--oc-green-hover);
+}

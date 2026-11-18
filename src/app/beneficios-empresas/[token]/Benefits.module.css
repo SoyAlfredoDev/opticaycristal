@@ -77,13 +77,13 @@
 .submit {
   min-height: 52px;
   padding: 14px 20px;
-  border: 1px solid var(--wine);
+  border: 1px solid var(--oc-green);
   border-radius: 5px;
-  background: var(--wine);
-  color: #fff;
+  background: var(--oc-green);
+  color: var(--oc-deep);
   font-size: 15px;
   font-weight: 600;
 }
-.submit:hover { background: var(--wine-deep); border-color: var(--wine-deep); }
+.submit:hover { background: var(--oc-green-hover); border-color: var(--oc-green-hover); }
 @media (min-width: 600px) { .form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { .form .control { transition: none; } }
