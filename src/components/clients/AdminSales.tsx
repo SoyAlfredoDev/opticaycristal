@@ -14,7 +14,7 @@ import { CustomerDetailsEditor } from "./CustomerDetailsEditor";
 import wizard from "./AdminSales.module.css";
 import type { SaleCustomer } from "@/lib/clients/types";
 import { availableCredit, clp } from "@/lib/clients/types";
-import { monthlyInstallments } from "@/lib/clients/financing";
+import { monthlyInstallments, suggestedFirstDueDate } from "@/lib/clients/financing";
 import type { SaleProduct,SaleQuote } from "@/lib/clients/sales-types";
 import { SalesRequestError,durableAction,salesAction } from "./sales-client";
 import { OperationRecovery } from "./OperationRecovery";
@@ -80,6 +80,7 @@ export function AdminSales({initialProducts,contractReady=true,tiers=[],canChang
    }
    invalidate();
    setCustomer(null);
+   setDate("");
    setBusy(true);
    try {
      const result = await salesAction({ action: "lookup", ...lookupDocument });
@@ -96,6 +97,7 @@ export function AdminSales({initialProducts,contractReady=true,tiers=[],canChang
      const result=await salesAction({action:"quote",customerId:customer?.id,productId,quantity,total,pricingPolicy:"category",...(normalized?{creditOverrideReason:normalized}:{})});
      if(sequence!==quoteSequence.current)return;
      setQuote(result.quote);setCredit(result.quote.maximumCredit);setCount(result.quote.maxInstallments);
+     if(result.quote.maximumCredit>0)setDate(current=>current||suggestedFirstDueDate());
      setCreditOverrideReason(normalized||"");setOverrideOpen(false);setStep(3);key.current=crypto.randomUUID();
    }catch(error){if(sequence===quoteSequence.current)setError((error as Error).message);}
    finally{setBusy(false);}
@@ -146,6 +148,7 @@ export function AdminSales({initialProducts,contractReady=true,tiers=[],canChang
              const result = await salesAction({ action: "lookup", ...document });
              setLookupDocument(document);
              setCustomer(result.customer);
+             setDate("");
              setError("");
              invalidate();
            }} />
@@ -225,24 +228,75 @@ export function AdminSales({initialProducts,contractReady=true,tiers=[],canChang
    </section>
    <SalesCustomerSummary customer={customer} tiers={tiers} canEdit={canChangeLevel} disabled={disabled} onUpdated={updateCustomerLevel} />
  </div>}
- {step===3&&quote&&<section className={wizard.stepPanel}><h2>3. Cálculo y condiciones</h2>{credit>0&&!contractReady&&<p role="status" className={styles.error}>Falta configurar la firma del representante. <Link href="/admin/clientes/compromisos">Configurar compromiso</Link>.</p>}<p className={styles.small}>{customer?.firstName} {customer?.lastName} · {products.find(p=>p.id===productId)?.name}</p><form className={styles.form} onSubmit={e=>{e.preventDefault();if(locked)void create();else{setError("");setConfirmation(true);}}}><div className={wizard.amounts}><div><span>Total con IVA</span><strong>{clp(quote.total)}</strong></div><div><span>{credit?"Pie":"Contado"}</span><strong>{clp(total-credit)}</strong></div><div><span>Crédito</span><strong>{clp(credit)}</strong></div></div><p className={styles.small}>Neto {clp(quote.net)} · IVA {clp(quote.vat)}</p>{quote.reason&&<p>{quote.reason}</p>}<label className={styles.field}>Monto a crédito (0 para contado)<input className={styles.input} type="number" min={0} max={quote.maximumCredit} value={credit} disabled={disabled} readOnly={Boolean(creditOverrideReason)} required onChange={e=>{setCredit(Number(e.target.value));}}/><span className={styles.small}>Máximo {clp(quote.maximumCredit)}</span></label>
- {creditOverrideReason?<div className={wizard.creditOverride} role="status">
-   <strong>Cupo máximo aplicado: {clp(quote.maximumCredit)}</strong>
-   <p>Por porcentaje: {clp(quote.standardMaximumCredit??0)}. Motivo: {creditOverrideReason}</p>
-   <button type="button" className={wizard.secondary} disabled={disabled} onClick={()=>void calculate()}>Volver al cálculo por nivel</button>
- </div>:(quote.maximumCreditAtCapacity??0)>quote.maximumCredit&&<div className={wizard.creditOverride}>
-   {!overrideOpen?<button type="button" className={wizard.secondary} disabled={disabled} onClick={()=>{setOverrideOpen(true);setError("");}}>Aplicar cupo máximo · {clp(quote.maximumCreditAtCapacity!)}</button>:<>
-     <label className={styles.field}>Motivo para aplicar el cupo máximo
-       <textarea className={styles.input} value={overrideDraft} minLength={5} maxLength={500} rows={3} disabled={disabled}
-         onChange={event=>setOverrideDraft(event.target.value)} placeholder="Ej.: condición comercial acordada con el cliente" />
-     </label>
-     <div className={wizard.actions}>
-       <button type="button" className={wizard.secondary} disabled={disabled} onClick={()=>{setOverrideOpen(false);setError("");}}>Cancelar aumento</button>
-       <button type="button" className={wizard.primary} disabled={disabled||overrideDraft.trim().length<5} onClick={()=>void calculate(overrideDraft)}>{busy?"Recalculando…":"Aplicar y recalcular"}</button>
+ {step===3&&quote&&<section className={`${wizard.stepPanel} ${wizard.calculationPanel}`}>
+   <h2>3. Cálculo y condiciones</h2>
+   <p className={styles.small}>{customer?.firstName} {customer?.lastName} · {products.find(p=>p.id===productId)?.name}</p>
+   {credit>0&&!contractReady&&<p role="status" className={styles.error}>Falta configurar la firma del representante. <Link href="/admin/clientes/compromisos">Configurar compromiso</Link>.</p>}
+   <form className={wizard.calculationForm} onSubmit={event=>{
+     event.preventDefault();
+     if(locked)void create();else{setError("");setConfirmation(true);}
+   }}>
+     <div className={wizard.amounts}>
+       <div><span>Total con IVA</span><strong>{clp(quote.total)}</strong></div>
+       <div><span>{credit?"Pie":"Contado"}</span><strong>{clp(total-credit)}</strong></div>
+       <div><span>Crédito</span><strong>{clp(credit)}</strong></div>
      </div>
-   </>}
- </div>}
- {credit>0&&<><label className={styles.field}>Cuotas mensuales<select className={styles.input} value={count} onChange={e=>{setCount(Number(e.target.value));}} disabled={disabled}>{Array.from({length:quote.maxInstallments},(_,i)=><option key={i} value={i+1}>{i+1}</option>)}</select></label><label className={styles.field}>Primer vencimiento<input className={styles.input} type="date" value={date} onChange={e=>{setDate(e.target.value);}} required disabled={disabled}/></label>{schedule.length>0&&<div className={styles.reviewBox} aria-label="Calendario de pago">{schedule.map(i=><div key={i.number} className={styles.line}><span>Cuota {i.number} · {i.dueDate.split("-").reverse().join("/")}</span><strong>{clp(i.amount)}</strong></div>)}</div>}</>}
- <div className={wizard.actions}><button className={styles.button} type="button" disabled={disabled} onClick={()=>{setStep(2);invalidate();}}>Volver</button><button className={wizard.primary} disabled={busy||overrideOpen||Boolean(credit&&!schedule.length)}>{busy?"Registrando…":locked?"Reintentar con los mismos datos":"Registrar venta"}</button></div></form></section>}
+     <p className={wizard.calculationMeta}>Neto {clp(quote.net)} · IVA {clp(quote.vat)}</p>
+     {quote.reason&&<p className={wizard.calculationReason}>{quote.reason}</p>}
+     <div className={wizard.paymentFields}>
+       <label className={styles.field}>Monto a crédito (0 para contado)
+         <input className={styles.input} type="number" min={0} max={quote.maximumCredit} value={credit}
+           disabled={disabled} readOnly={Boolean(creditOverrideReason)} required onChange={event=>setCredit(Number(event.target.value))}/>
+         <span className={styles.small}>Máximo {clp(quote.maximumCredit)}</span>
+       </label>
+       {credit>0&&<>
+         <label className={styles.field}>Cuotas mensuales
+           <select className={styles.input} value={count} onChange={event=>setCount(Number(event.target.value))} disabled={disabled}>
+             {Array.from({length:quote.maxInstallments},(_,index)=><option key={index} value={index+1}>{index+1}</option>)}
+           </select>
+         </label>
+         <label className={styles.field}>Primer vencimiento
+           <input className={styles.input} type="date" value={date} onChange={event=>setDate(event.target.value)} required disabled={disabled}/>
+         </label>
+       </>}
+     </div>
+     <div className={wizard.calculationDetails}>
+       {creditOverrideReason?<div className={wizard.creditOverride} role="status">
+         <strong>Cupo máximo aplicado: {clp(quote.maximumCredit)}</strong>
+         <p>Por porcentaje: {clp(quote.standardMaximumCredit??0)}. Motivo: {creditOverrideReason}</p>
+         <button type="button" className={wizard.secondary} disabled={disabled} onClick={()=>void calculate()}>Volver al cálculo por nivel</button>
+       </div>:(quote.maximumCreditAtCapacity??0)>quote.maximumCredit&&<div className={wizard.creditOverride}>
+         {!overrideOpen?<button type="button" className={wizard.secondary} disabled={disabled} onClick={()=>{setOverrideOpen(true);setError("");}}>
+           Aplicar cupo máximo / Multifocales · {clp(quote.maximumCreditAtCapacity!)}
+         </button>:<>
+           <label className={styles.field}>Motivo para aplicar el cupo máximo
+             <textarea className={styles.input} value={overrideDraft} minLength={5} maxLength={500} rows={2} disabled={disabled}
+               onChange={event=>setOverrideDraft(event.target.value)} placeholder="Ej.: condición comercial acordada con el cliente"/>
+           </label>
+           <div className={wizard.actions}>
+             <button type="button" className={wizard.secondary} disabled={disabled} onClick={()=>{setOverrideOpen(false);setError("");}}>Cancelar aumento</button>
+             <button type="button" className={wizard.primary} disabled={disabled||overrideDraft.trim().length<5} onClick={()=>void calculate(overrideDraft)}>
+               {busy?"Recalculando…":"Aplicar y recalcular"}
+             </button>
+           </div>
+         </>}
+       </div>}
+       {credit>0&&schedule.length>0&&<section className={wizard.paymentSchedule} aria-label="Calendario de pago">
+         <h3>Calendario de pago</h3>
+         <ul>{schedule.map(installment=><li key={installment.number}>
+           <span>Cuota {installment.number}</span>
+           <time dateTime={installment.dueDate}>{installment.dueDate.split("-").reverse().join("/")}</time>
+           <strong>{clp(installment.amount)}</strong>
+         </li>)}</ul>
+       </section>}
+     </div>
+     <div className={wizard.calculationActions}>
+       <button className={wizard.secondary} type="button" disabled={disabled} onClick={()=>{setStep(2);invalidate();}}>Volver</button>
+       <button className={wizard.primary} disabled={busy||overrideOpen||Boolean(credit&&!schedule.length)}>
+         {busy?"Registrando…":locked?"Reintentar con los mismos datos":"Registrar venta"}
+       </button>
+     </div>
+   </form>
+ </section>}
  </>}<SaleConfirmation contractReady={contractReady} open={confirmation} busy={busy} error={error} credit={credit} payment={total-credit} emailVerified={Boolean(customer?.emailVerified)} onCancel={()=>setConfirmation(false)} onConfirm={()=>void create()}/></>;
 }

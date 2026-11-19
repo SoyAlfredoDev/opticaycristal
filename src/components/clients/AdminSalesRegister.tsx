@@ -5,6 +5,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, Plus, RefreshCw, Search } from "lucide-react";
 import { clp } from "@/lib/clients/types";
 import { SALES_PAGE_SIZE, type AdminSalePage, type AdminSaleRow } from "@/lib/clients/sales-register-types";
+import { SaleCommitmentUpload } from "./SaleCommitmentUpload";
 import { OperationRecovery } from "./OperationRecovery";
 import styles from "./AdminSalesRegister.module.css";
 import wizard from "./AdminSales.module.css";
@@ -70,7 +71,7 @@ export function AdminSalesRegister({ seller = false }: { seller?: boolean }) {
             <div className={styles.tableWrap}>
               <table className={styles.table}>
                 <caption className={styles.srOnly}>Ventas registradas y su número de control interno</caption>
-                <thead><tr><th>Fecha</th><th>Cliente y producto</th><th>Control interno</th><th>Total</th><th>Saldo</th><th>Estado</th><th><span className={styles.srOnly}>Acciones</span></th></tr></thead>
+                <thead><tr><th>Fecha</th><th>Cliente y producto</th><th>Control interno</th><th>Total</th><th>Saldo</th><th>Estado</th><th>Compromiso</th><th><span className={styles.srOnly}>Acciones</span></th></tr></thead>
                 <tbody>{data.sales.map(sale => <tr key={sale.id}>
                     <td data-label="Fecha">{date.format(new Date(sale.createdAt))}</td>
                     <td data-label="Cliente y producto"><strong>{sale.customerName}</strong><span className={styles.product}>{sale.productName}</span></td>
@@ -78,6 +79,7 @@ export function AdminSalesRegister({ seller = false }: { seller?: boolean }) {
                     <td data-label="Total"><strong>{clp(sale.total)}</strong><span className={styles.product}>{sale.credit ? "Crédito" : "Contado"}</span>{sale.creditOverride&&<details className={styles.overrideAudit}><summary>Cupo máximo aplicado</summary><p>{sale.creditOverride.reason}</p><p>Por nivel: {clp(sale.creditOverride.standardCredit)} · Aplicado: {clp(sale.creditOverride.appliedCredit)}</p><p>{sale.creditOverride.actor} · {date.format(new Date(sale.creditOverride.createdAt))}</p></details>}</td>
                     <td data-label="Saldo">{sale.status === "cancelled" ? "—" : clp(sale.remaining)}</td>
                     <td data-label="Estado"><span className={styles.status} data-status={status(sale)}>{status(sale)}</span></td>
+                    <td data-label="Compromiso"><SaleCommitmentUpload sale={sale} onUploaded={file => setData(current => current ? {...current, sales: current.sales.map(row => row.id === sale.id ? {...row, commitmentFile: file} : row)} : current)} /></td>
                     <td><Link className={styles.saleLink} href={`/admin/clientes/${encodeURIComponent(sale.customerId)}?venta=${encodeURIComponent(sale.id)}#venta-${encodeURIComponent(sale.id)}`}>
                       Ver ficha <ArrowRight size={15} aria-hidden="true" /></Link></td>
                   </tr>

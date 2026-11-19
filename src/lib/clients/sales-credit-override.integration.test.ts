@@ -15,7 +15,7 @@ const base=()=>({customerId:"vip-client",productId:"product",quantity:1,total:75
 const input=(reason?:string)=>parseSale({...base(),credit:60000,installmentCount:2,firstDueDate:"2030-01-31",identityChecked:true,depositReceived:true,conditionsReviewed:true,requestKey:randomUUID(),...(reason!==undefined?{creditOverrideReason:reason}:{})});
 beforeAll(async()=>{
  vi.stubEnv("CLIENT_DATA_KEY",Buffer.alloc(32,6).toString("base64"));
- for(const f of ["001-customers","002-sales","003-audit","007-installments","010-payment-commitments","014-category-sale-pricing","030-sale-internal-controls","031-automatic-sale-controls"])await db.exec(await readFile(`sql/clients/${f}.sql`,"utf8"));
+ for(const f of ["001-customers","002-sales","003-audit","007-installments","010-payment-commitments","019-agreement-models","014-category-sale-pricing","030-sale-internal-controls","031-automatic-sale-controls","032-sale-commitment-uploads"])await db.exec(await readFile(`sql/clients/${f}.sql`,"utf8"));
  await seedLegacyContractSettings(db);
  await db.query("INSERT INTO oc_client_products(id,name,protected_cost,updated_by) VALUES('product','Lentes QA',40000,'qa')");
 },30000);

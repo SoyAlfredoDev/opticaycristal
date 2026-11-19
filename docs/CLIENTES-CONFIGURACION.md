@@ -379,3 +379,48 @@ El guardado reutiliza `/api/admin/clientes/[id]/categoria`, su historial, permis
 El cálculo normal conserva el porcentaje del nivel. Administradores y vendedores autenticados pueden elegir «Aplicar cupo máximo» en el paso Cálculo y condiciones y deben registrar un motivo de 5 a 500 caracteres. La excepción ignora únicamente el porcentaje: conserva el tope del nivel, el saldo y los bloqueos vigentes, el pie positivo, las cuotas del nivel y el costo protegido cuando corresponda a la política seleccionada. No modifica el nivel ni sus reglas para otras compras.
 
 El servidor vuelve a calcular bajo bloqueo al registrar. Si cambió el cupo, rechaza la operación y exige recalcular; no acepta montos enviados por el navegador sin validarlos. El registro de la venta conserva motivo, responsable de sesión, fecha, máximo por porcentaje y crédito aplicado. Se puede consultar desde el listado de Ventas. Los reintentos reutilizan la operación y no duplican ni venta, ni control, ni registro de excepción. El simulador público mantiene sus porcentajes habituales.
+
+
+## Carga de compromisos desde Ventas — desarrollo 18/11/2026
+
+Antes de publicar esta función aplicar `sql/clients/032-sale-commitment-uploads.sql`
+al esquema objetivo con `node scripts/migrate-sale-commitment-uploads.mjs NOMBRE_ESQUEMA`.
+El argumento debe coincidir con `CLIENT_DATABASE_SCHEMA`; nunca usar `public`.
+El historial requiere también las migraciones de documentos 010/019 y controles 030/031 ya existentes.
+No se activa ni se aprueba ningún modelo de contrato con esta migración.
+
+En `/admin/clientes/ventas`, los créditos vigentes sin copia muestran «Compromiso pendiente»
+y «Subir compromiso». Acepta un PDF o hasta cuatro fotos JPG/PNG y las combina en un PDF.
+Máximo 3 MiB recibidos; las fotos se reducen localmente antes de enviarlas. El servidor comprueba
+formato, tamaño, páginas y elementos activos del PDF. Se preservan los bytes originales de un PDF.
+Adjuntar todas las hojas: la integridad visual y la firma las debe revisar el personal.
+
+Los adjuntos se cifran con `CLIENT_DATA_KEY` y un contexto propio. Se conserva SHA-256,
+responsable y fecha en una tabla inmutable: un documento por venta, sin reemplazo ni borrado
+mediante esta interfaz. Los reintentos del mismo archivo y responsable son idempotentes.
+Las copias firmadas existentes se reutilizan y tienen preferencia al consultar.
+
+GET/POST `/api/admin/clientes/ventas/[id]/compromiso/archivo` requieren sesión interna.
+Administrador: ventas de la óptica. Vendedor: únicamente ventas creadas con su acceso.
+POST exige el origen configurado y limita a 30 intentos/hora por usuario y 6/hora por venta.
+No hay enlaces públicos; las respuestas son privadas y sin caché. La carga no confirma firmas,
+no registra pagos ni cambia saldos. Contado no lleva alerta y una venta anulada sin documento
+no exige carga; los documentos históricos de ventas anuladas siguen consultables.
+### Cambio de presentación a dos páginas (19/11/2026)
+
+La versión `OC-CD-DIGITAL v2` conserva exactamente las cláusulas y condiciones de
+la versión aprobada v1. El diseño usa letra de 10,5 pt, dos páginas A4 y un área
+reservada en la segunda para que la firma electrónica no añada otra hoja.
+Se verifica la integridad del PDF completo; nunca se recorta texto.
+
+La selección de nuevas emisiones se realiza con `CLIENT_DIGITAL_AGREEMENT_MODEL_HASH`.
+Para terminar la firma de documentos anteriores, configurar sus huellas explícitas
+en `CLIENT_DIGITAL_AGREEMENT_PREVIOUS_MODEL_HASHES` (separadas por coma). Esta lista
+no se usa para nuevas emisiones ni cambia los permisos del representante.
+Los PDF originales ya emitidos, sus firmas, importes y calendarios no se regeneran.
+
+`scripts/activate-two-page-agreement.mjs` compara íntegramente la definición nueva
+con el modelo anterior aprobado, permitiendo solo versión y diseño distintos.
+Funciona primero en modo de comprobación; `--apply` registra borrador, revisión y
+aprobación de la presentación autorizada con auditoría. Requiere esquema explícito,
+huella anterior, manifiesto y PDF de muestra revisado. No crea ventas ni envía correos.

@@ -12,11 +12,15 @@ export async function listAdminSales(search: string, offset: number, seller: str
   const result = await clientPool().query(`
     SELECT s.id,s.user_id,u.name,s.product_name,s.total,s.deposit,s.credit,s.remaining,s.status,s.created_at,
       c.control_number,COALESCE(c.version,0)::text AS control_version,
-      o.reason AS override_reason,o.percent_maximum,o.applied_credit,o.actor AS override_actor,o.created_at AS override_at
+      o.reason AS override_reason,o.percent_maximum,o.applied_credit,o.actor AS override_actor,o.created_at AS override_at,
+      a.confirmed_by AS signed_by,a.confirmed_at AS signed_at,
+      f.uploaded_by,f.uploaded_at,f.pages AS uploaded_pages
     FROM ${t("oc_client_sales")} s
     JOIN ${t("oc_client_user")} u ON u.id=s.user_id
     LEFT JOIN ${t("oc_client_sale_controls")} c ON c.sale_id=s.id
     LEFT JOIN ${t("oc_client_sale_credit_overrides")} o ON o.sale_id=s.id
+    LEFT JOIN ${t("oc_client_agreement_acceptances")} a ON a.sale_id=s.id
+    LEFT JOIN ${t("oc_client_sale_commitment_uploads")} f ON f.sale_id=s.id
     WHERE ($1::text IS NULL OR s.created_by=$1)
       AND ($2='' OR lower(u.name) LIKE '%'||$2||'%' OR lower(s.product_name) LIKE '%'||$2||'%'
         OR lower(COALESCE(c.control_number,'')) LIKE '%'||$2||'%' OR s.id=$3)
@@ -29,6 +33,8 @@ export async function listAdminSales(search: string, offset: number, seller: str
       remaining: Number(row.remaining), status: row.status,
       createdAt: new Date(row.created_at).toISOString(),
       controlNumber: row.control_number ?? null, controlVersion: row.control_version,
+      commitmentFile: row.signed_at ? {source:"signed",uploadedBy:row.signed_by,uploadedAt:new Date(row.signed_at).toISOString()} :
+        row.uploaded_at ? {source:"upload",uploadedBy:row.uploaded_by,uploadedAt:new Date(row.uploaded_at).toISOString(),pages:Number(row.uploaded_pages)} : null,
       creditOverride:row.override_reason?{reason:row.override_reason,standardCredit:Number(row.percent_maximum),appliedCredit:Number(row.applied_credit),actor:row.override_actor,createdAt:new Date(row.override_at).toISOString()}:null,
     })),
     hasMore: result.rows.length > SALES_PAGE_SIZE,

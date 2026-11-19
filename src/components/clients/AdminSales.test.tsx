@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 vi.mock("next/navigation",()=>({useRouter:()=>({push:vi.fn(),refresh:vi.fn()})}));
 import { AdminSales } from "./AdminSales";
+import { suggestedFirstDueDate } from "@/lib/clients/financing";
 beforeAll(()=>{Object.defineProperty(HTMLDialogElement.prototype,"showModal",{configurable:true,value:function(){this.setAttribute("open","");}});Object.defineProperty(HTMLDialogElement.prototype,"close",{configurable:true,value:function(){this.removeAttribute("open");}});});
 afterEach(()=>{vi.unstubAllGlobals();sessionStorage.clear();});
 describe("Registro administrativo de una venta",()=>{
@@ -16,18 +17,21 @@ describe("Registro administrativo de una venta",()=>{
   fireEvent.change(screen.getByLabelText("Producto o paquete",{exact:true}),{target:{value:"product"}});fireEvent.change(screen.getByLabelText("Precio total con IVA incluido"),{target:{value:"75000"}});
   expect(screen.getByLabelText("Número de control interno")).toHaveAttribute("readonly");
   fireEvent.click(screen.getByRole("button",{name:"Calcular y continuar"}));
-  fireEvent.click(await screen.findByRole("button",{name:/Aplicar cupo máximo/}));
+  const maximumButton=await screen.findByRole("button",{name:/Aplicar cupo máximo \/ Multifocales/});
+  expect(screen.getByLabelText("Primer vencimiento")).toHaveValue(suggestedFirstDueDate());
+  fireEvent.change(screen.getByLabelText("Primer vencimiento"),{target:{value:"2030-01-31"}});
+  fireEvent.click(maximumButton);
   expect(screen.getByRole("button",{name:"Aplicar y recalcular"})).toBeDisabled();
   fireEvent.change(screen.getByLabelText("Motivo para aplicar el cupo máximo"),{target:{value:"Condición comercial acordada"}});fireEvent.click(screen.getByRole("button",{name:"Aplicar y recalcular"}));
   await screen.findByText("Cupo máximo aplicado: $60.000");
   expect(screen.getByText("$15.000",{exact:true})).toBeInTheDocument();
   expect(screen.getByLabelText(/Monto a crédito/)).toHaveAttribute("readonly");
   expect(JSON.parse(fetcher.mock.calls[2][1].body)).toMatchObject({action:"quote",creditOverrideReason:"Condición comercial acordada"});
-  fireEvent.change(screen.getByLabelText("Primer vencimiento"),{target:{value:"2030-01-31"}});
+  expect(screen.getByLabelText("Primer vencimiento")).toHaveValue("2030-01-31");
   const schedule=within(screen.getByLabelText("Calendario de pago"));expect(schedule.getAllByText("$30.000")).toHaveLength(2);
   fireEvent.click(screen.getByRole("button",{name:"Registrar venta"}));fireEvent.click(screen.getByRole("button",{name:"Confirmar venta"}));
   await screen.findByText("CR-0000001");
-  expect(JSON.parse(fetcher.mock.calls[3][1].body).operation).toMatchObject({credit:60000,installmentCount:2,creditOverrideReason:"Condición comercial acordada"});
+  expect(JSON.parse(fetcher.mock.calls[3][1].body).operation).toMatchObject({credit:60000,installmentCount:2,firstDueDate:"2030-01-31",creditOverrideReason:"Condición comercial acordada"});
   expect(JSON.parse(fetcher.mock.calls[3][1].body).operation).not.toHaveProperty("internalControl");
  });
  it("conserva todos los datos y el identificador al reintentar una venta",async()=>{

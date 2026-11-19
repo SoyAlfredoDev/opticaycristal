@@ -17,7 +17,7 @@ const origin="http://localhost:3034";let original="",second="";
 const input=()=>parseSale({customerId:"client",productId:"product",total:45000,quantity:1,credit:0,installmentCount:0,firstDueDate:"",identityChecked:true,depositReceived:true,requestKey:randomUUID()});
 const request=(requestOrigin=origin)=>new Request(origin+"/api/admin/clientes/ventas/sale/control",{method:"POST",headers:{Origin:requestOrigin,"Content-Type":"application/json"},body:JSON.stringify({controlNumber:"OTHER-1"})});
 beforeAll(async()=>{
- vi.stubEnv("CLIENT_APP_URL",origin);for(const f of ["001-customers","002-sales","003-audit","030-sale-internal-controls","031-automatic-sale-controls","031-automatic-sale-controls"])await db.exec(await readFile(`sql/clients/${f}.sql`,"utf8"));
+ vi.stubEnv("CLIENT_APP_URL",origin);for(const f of ["001-customers","002-sales","003-audit","010-payment-commitments","019-agreement-models","032-sale-commitment-uploads","030-sale-internal-controls","031-automatic-sale-controls","031-automatic-sale-controls"])await db.exec(await readFile(`sql/clients/${f}.sql`,"utf8"));
  await db.query(`INSERT INTO oc_client_user(id,name,email,"firstName","lastName","rutCipher","rutHash","whatsappCipher") VALUES('client','Cliente Ejemplo','qa@example.invalid','Cliente','Ejemplo','encrypted','hash','encrypted')`);
  await db.query("INSERT INTO oc_client_products(id,name,protected_cost,updated_by) VALUES('product','Lente óptico',15000,'seller-a')");
  original=await createSale(input(),"seller-a");second=await createSale(input(),"seller-b");

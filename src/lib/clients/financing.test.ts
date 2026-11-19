@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateFinancing, monthlyInstallments } from "./financing";
+import { calculateFinancing, monthlyInstallments, suggestedFirstDueDate } from "./financing";
 
 const tier = { maxPercent: 70, maxAmount: 150000, maxInstallments: 2 };
 describe("Límites de financiamiento", () => {
@@ -40,6 +40,19 @@ describe("Cuotas mensuales", () => {
   it("rechaza fechas inexistentes y cuotas sin monto", () => {
     expect(() => monthlyInstallments(100, 2, "2026-02-30")).toThrow();
     expect(() => monthlyInstallments(1, 2, "2026-11-01")).toThrow();
+  });
+});
+
+describe("Primer vencimiento sugerido", () => {
+  it.each([
+    ["2026-11-18T18:00:00Z", "2026-12-18"],
+    ["2026-12-01T01:30:00Z", "2026-12-30"],
+    ["2027-01-31T18:00:00Z", "2027-02-28"],
+    ["2028-01-31T18:00:00Z", "2028-02-29"],
+    ["2026-12-31T18:00:00Z", "2027-01-31"],
+    ["2026-08-31T18:00:00Z", "2026-09-30"],
+  ])("sugiere un mes calendario desde %s según el día de Santiago", (purchase, expected) => {
+    expect(suggestedFirstDueDate(new Date(purchase))).toBe(expected);
   });
 });
 

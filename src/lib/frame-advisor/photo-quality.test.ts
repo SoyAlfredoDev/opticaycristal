@@ -20,10 +20,13 @@ describe("preparación conservadora de fotos",()=>{
     const original=new Uint8ClampedArray(photo.data),output=enhancePhotoPixels(photo);
     expect(photo.data).toEqual(original);expect(output.length).toBe(original.length);
     expect(output.some((value,i)=>value!==original[i])).toBe(true);
+    let largestChange=0,alphaPreserved=true;
     for(let i=0;i<output.length;i++){
-      expect(Math.abs(output[i]-original[i])).toBeLessThanOrEqual(5);
-      if(i%4===3)expect(output[i]).toBe(original[i]);
+      largestChange=Math.max(largestChange,Math.abs(output[i]-original[i]));
+      if(i%4===3&&output[i]!==original[i])alphaPreserved=false;
     }
+    expect(largestChange).toBeLessThanOrEqual(5);
+    expect(alphaPreserved).toBe(true);
   });
   it("no inventa textura en una zona uniforme ni amplifica diferencias mínimas",()=>{
     const photo=pixels(100);photo.data[(128*256+128)*4]=101;

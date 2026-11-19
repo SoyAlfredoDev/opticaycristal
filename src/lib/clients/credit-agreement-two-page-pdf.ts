@@ -9,8 +9,8 @@ import { DIGITAL_ACCEPTANCE_CLAUSE, DIGITAL_AGREEMENT_TERMS } from "./digital-ag
 import { clp } from "./types";
 
 export const TWO_PAGE_LAYOUT = "a4-two-page-v4";
-export const TWO_PAGE_BODY_PT = 13;
-const LEFT = 24, WIDTH = 547.28, LEADING = 13.1;
+export const TWO_PAGE_BODY_PT = 10.5;
+const LEFT = 24, WIDTH = 547.28, LEADING = 12;
 // This area belongs exclusively to paper signatures or digital acceptance evidence.
 const EVIDENCE = { x: LEFT, y: 57, width: WIDTH, height: 148 };
 const ink = rgb(.1, .1, .1), wine = rgb(104 / 255, 28 / 255, 48 / 255);
@@ -82,7 +82,9 @@ export async function twoPageAgreementPdf(d: CreditAgreementDocument) {
   const words = (value: string, face = font) => safe(value).split(" ").filter(Boolean).map(value => ({ value, face }));
   function paragraph(value: string, label = "", gap = 2) {
     const rows = lines([...words(label, bold), ...words(value)], WIDTH);
-    room(Math.min(rows.length, 2) * LEADING);
+    // Keep complete clauses together whenever they fit on the last page.
+    const lastPageSpace = 803 - LEADING - 9 - (EVIDENCE.y + EVIDENCE.height + 9);
+    room(rows.length * LEADING <= lastPageSpace ? rows.length * LEADING : Math.min(rows.length, 2) * LEADING);
     for (const row of rows) {
       room(LEADING); let x = LEFT;
       row.forEach((word, i) => {

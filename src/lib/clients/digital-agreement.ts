@@ -24,6 +24,12 @@ export function canAuthorizeDigitalAgreement(staffId?: string) {
   return Boolean(staffId && staffId === process.env.CLIENT_DIGITAL_AGREEMENT_REPRESENTATIVE_ID && process.env.CLIENT_DIGITAL_AGREEMENT_MODEL_HASH);
 }
 
+/** Issuance uses the current model; explicitly retained models can finish signing. */
+function enabledDigitalModel(hash: string) {
+  const hashes = [process.env.CLIENT_DIGITAL_AGREEMENT_MODEL_HASH, ...(process.env.CLIENT_DIGITAL_AGREEMENT_PREVIOUS_MODEL_HASHES || "").split(",")];
+  return hashes.some(value => value?.trim() === hash && /^[a-f0-9]{64}$/.test(value.trim()));
+}
+
 async function transaction<T>(run: (db: PoolClient) => Promise<T>) {
   const db = await clientPool().connect();
   try {
@@ -56,7 +62,7 @@ export async function authorizeDigitalAgreement(saleId: string, staffId: string,
   await transaction(async db => {
     const { user, sale } = await lockSale(db, saleId);
     const doc = await getStoredCommitment(saleId, user.id, db);
-    if (sale.signed_at || !doc?.model || doc.model.hash !== process.env.CLIENT_DIGITAL_AGREEMENT_MODEL_HASH ||
+    if (sale.signed_at || !doc?.model || !enabledDigitalModel(doc.model.hash) ||
       doc.model.definition.clauses.acceptance !== DIGITAL_ACCEPTANCE_CLAUSE ||
       doc.representative.rut.replace(/[^0-9k]/gi, "").toUpperCase() !== process.env.CLIENT_DIGITAL_AGREEMENT_REPRESENTATIVE_RUT?.replace(/[^0-9k]/gi, "").toUpperCase())
       throw new DigitalAgreementError("La venta necesita un modelo habilitado para firma digital y un representante autorizado.");
@@ -81,7 +87,7 @@ async function ready(db: PoolClient, saleId: string, userId: string) {
   const row = (await db.query(`SELECT *,resend_at>now() AS waiting, expires_at<=now() AS expired FROM ${t("oc_client_agreement_digital")} WHERE sale_id=$1 FOR UPDATE`, [saleId])).rows[0];
   if (row?.signed_at) return { user, row, document: null };
   const doc = await getStoredCommitment(saleId, userId, db);
-  if (sale.signed_at || !row || !doc?.model || doc.model.hash !== process.env.CLIENT_DIGITAL_AGREEMENT_MODEL_HASH ||
+  if (sale.signed_at || !row || !doc?.model || !enabledDigitalModel(doc.model.hash) ||
       doc.model.definition.clauses.acceptance !== DIGITAL_ACCEPTANCE_CLAUSE ||
       row.terms_hash !== termsHash || row.representative_id !== process.env.CLIENT_DIGITAL_AGREEMENT_REPRESENTATIVE_ID ||
       date(row.approved_at) !== date(new Date()))

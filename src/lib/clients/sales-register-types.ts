@@ -1,3 +1,4 @@
+import type { SaleCommitmentFile } from "./commitment-upload-types";
 export type AdminSaleRow = {
   id: string;
   customerId: string;
@@ -11,6 +12,7 @@ export type AdminSaleRow = {
   createdAt: string;
   controlNumber: string | null;
   controlVersion: string;
+  commitmentFile?: SaleCommitmentFile | null;
   creditOverride?: {reason:string;standardCredit:number;appliedCredit:number;actor:string;createdAt:string}|null;
 };
 export type AdminSalePage = { sales: AdminSaleRow[]; hasMore: boolean };

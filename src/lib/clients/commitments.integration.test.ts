@@ -50,6 +50,13 @@ it.each([DIGITAL_AGREEMENT_PROPOSAL,TWO_PAGE_DIGITAL_AGREEMENT_PROPOSAL])("verif
   const approval={limit:40,reference:"Fuente QA local",accepted:true};
   await expect(authorizeDigitalAgreement("qa-sale","qa-other",approval)).rejects.toMatchObject({status:403});
   await expect(requestAgreementCode("qa-sale","qa-customer")).rejects.toThrow(/habilite/);
+  if (model.version === 1) {
+    // Publishing a new layout must not invalidate already issued, unsigned PDFs.
+    vi.stubEnv("CLIENT_DIGITAL_AGREEMENT_MODEL_HASH",modelHash(TWO_PAGE_DIGITAL_AGREEMENT_PROPOSAL));
+    vi.stubEnv("CLIENT_DIGITAL_AGREEMENT_PREVIOUS_MODEL_HASHES","");
+    await expect(authorizeDigitalAgreement("qa-sale","qa-representative",approval)).rejects.toThrow(/modelo habilitado/);
+    vi.stubEnv("CLIENT_DIGITAL_AGREEMENT_PREVIOUS_MODEL_HASHES",original!.model!.hash);
+  }
   await authorizeDigitalAgreement("qa-sale","qa-representative",approval);
   expect(await digitalAgreementStatus("qa-sale","qa-other")).toBeNull();
   await expect(requestAgreementCode("qa-sale","qa-other")).rejects.toMatchObject({status:404});

@@ -25,7 +25,7 @@ it("conserva las cláusulas y las versiones anteriores al crear el modelo de dos
   expect(DIGITAL_AGREEMENT_PROPOSAL).toMatchObject({ version: 1, layout: "a4-formal-v3" });
   expect(validateAgreementModel(TWO_PAGE_DIGITAL_AGREEMENT_PROPOSAL)).toMatchObject({ version: 2, layout: "a4-two-page-v4" });
   expect(modelHash(TWO_PAGE_DIGITAL_AGREEMENT_PROPOSAL)).not.toBe(modelHash(DIGITAL_AGREEMENT_PROPOSAL));
-  expect(TWO_PAGE_BODY_PT).toBe(13);
+  expect(TWO_PAGE_BODY_PT).toBe(10.5);
 });
 
 it.each([1, 2, 3, 4])("emite exactamente dos páginas A4 con %i cuotas sin alterar la ficha", async count => {
@@ -38,6 +38,7 @@ it.each([1, 2, 3, 4])("emite exactamente dos páginas A4 con %i cuotas sin alter
     await mkdir(process.env.TWO_PAGE_PDF_QA_OUTPUT, { recursive: true });
     await writeFile(`${process.env.TWO_PAGE_PDF_QA_OUTPUT}/compromiso-dos-paginas-ejemplo.pdf`, bytes);
     await writeFile(`${process.env.TWO_PAGE_PDF_QA_OUTPUT}/compromiso-dos-paginas-clausulas-qa.json`, JSON.stringify(document.model!.definition.clauses));
+    await writeFile(`${process.env.TWO_PAGE_PDF_QA_OUTPUT}/compromiso-dos-paginas-modelo-qa.json`, JSON.stringify({ definition: document.model!.definition, hash: document.model!.hash }));
   }
 });
 

@@ -28,21 +28,38 @@ export function calculateFinancing(input: {
   return { total, maximumCredit, minimumDeposit: total - maximumCredit, capacity, maxInstallments };
 }
 
+function calendarDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error("Fecha de pago no válida.");
+  const date = new Date(`${value}T12:00:00Z`);
+  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+    throw new Error("Fecha de pago no válida.");
+  }
+  return date;
+}
+
+function monthFrom(anchor: Date, months: number) {
+  const last = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + months + 1, 0, 12));
+  const due = new Date(Date.UTC(last.getUTCFullYear(), last.getUTCMonth(), Math.min(anchor.getUTCDate(), last.getUTCDate()), 12));
+  return due.toISOString().slice(0, 10);
+}
+
+/** One calendar month after the purchase day in Chile; the executive can edit it. */
+export function suggestedFirstDueDate(purchasedAt = new Date()) {
+  const day = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Santiago", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(purchasedAt);
+  return monthFrom(calendarDate(day), 1);
+}
+
 /** Anchor every due date to the original day, including after a short February. */
 export function monthlyInstallments(credit: number, count: number, firstDueDate: string) {
   pesos(credit, "Crédito", 1);
   if (!Number.isInteger(count) || count < 1 || count > 4 || count > credit) {
     throw new Error("Cantidad de cuotas no válida.");
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(firstDueDate)) throw new Error("Fecha de pago no válida.");
-  const first = new Date(`${firstDueDate}T12:00:00Z`);
-  if (!Number.isFinite(first.getTime()) || first.toISOString().slice(0, 10) !== firstDueDate) {
-    throw new Error("Fecha de pago no válida.");
-  }
+  const first = calendarDate(firstDueDate);
   const base = Math.floor(credit / count);
   return Array.from({ length: count }, (_, index) => {
-    const last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + index + 1, 0, 12));
-    const due = new Date(Date.UTC(last.getUTCFullYear(), last.getUTCMonth(), Math.min(first.getUTCDate(), last.getUTCDate()), 12));
-    return { number: index + 1, dueDate: due.toISOString().slice(0, 10), amount: index === count - 1 ? credit - base * index : base };
+    return { number: index + 1, dueDate: monthFrom(first, index), amount: index === count - 1 ? credit - base * index : base };
   });
 }

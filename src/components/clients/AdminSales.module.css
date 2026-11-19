@@ -176,6 +176,44 @@
 .creditOverride > p { margin: 8px 0 12px; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
 .creditOverride .actions { margin-top: 10px; }
 
+.calculationForm { display: grid; gap: 14px; margin-top: 16px; }
+.calculationMeta, .calculationReason { margin: 0; color: var(--muted, #4e605a); font-size: 13px; line-height: 1.45; }
+.calculationMeta { margin-top: -6px; font-size: 12px; }
+.paymentFields { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, .75fr) minmax(0, 1.1fr); gap: 14px; align-items: start; }
+.paymentFields > label { min-width: 0; gap: 6px; font-size: 13px; line-height: 1.4; }
+.paymentFields > label:only-child { grid-column: 1 / -1; width: min(100%, 360px); }
+.paymentFields input, .paymentFields select { box-sizing: border-box; width: 100%; min-width: 0; height: 44px; min-height: 44px; padding: 9px 11px; border-radius: 7px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.paymentFields > label > span { font-size: 12px; line-height: 1.4; }
+.calculationDetails { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.calculationDetails:empty { display: none; }
+.calculationDetails > :only-child { grid-column: 1 / -1; }
+.calculationPanel .creditOverride { padding: 12px; font-size: 13px; }
+.calculationPanel .creditOverride > .secondary { width: 100%; }
+.calculationPanel .creditOverride > p { margin-block: 6px 10px; }
+.calculationPanel .creditOverride label { gap: 6px; font-size: 13px; }
+.calculationPanel .creditOverride textarea { min-height: 70px; padding: 9px 11px; font-size: 14px; }
+.calculationPanel .creditOverride .actions { justify-content: flex-start; gap: 8px; }
+.paymentSchedule { min-width: 0; padding: 12px 14px; border: 1px solid var(--line, #dde4db); border-radius: 9px; background: #fafbf8; }
+.paymentSchedule h3 { margin: 0 0 6px; color: var(--ink, #192926); font-size: 13px; font-weight: 750; }
+.paymentSchedule ul { margin: 0; padding: 0; list-style: none; }
+.paymentSchedule li { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1fr) auto; align-items: baseline; gap: 10px; padding-block: 9px; font-size: 13px; line-height: 1.4; font-variant-numeric: tabular-nums; }
+.paymentSchedule li + li { border-top: 1px solid var(--line, #dde4db); }
+.paymentSchedule time { color: var(--muted, #4e605a); }
+.paymentSchedule strong { text-align: right; }
+.calculationActions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line, #dde4db); }
+@media (max-width: 700px) {
+  .calculationDetails { grid-template-columns: 1fr; gap: 12px; }
+}
+@media (max-width: 560px) {
+  .calculationForm { gap: 12px; margin-top: 14px; }
+  .paymentFields { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 12px; }
+  .paymentFields > label:first-child { grid-column: 1 / -1; }
+  .paymentFields input, .paymentFields select { font-size: 16px; }
+  .paymentSchedule { padding: 10px 12px; }
+  .paymentSchedule li { gap: 8px; }
+  .calculationActions { padding-top: 12px; }
+}
+
 .summary dd > .levelButton { margin-top: 5px; }
 .levelButton { display: flex; align-items: center; justify-content: flex-end; gap: 5px; padding: 4px 0; border: 0; min-height: 32px; background: transparent; color: #681c30; text-decoration: underline; text-underline-offset: 3px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
 .levelButton:disabled { opacity: .6; cursor: default; }
