@@ -8,10 +8,10 @@
   --oc-white: #fff;
   --oc-gold: #c7a36b;
   --oc-muted: #655256;
-  --oc-border: #987c71;
-  --oc-border-soft: color-mix(in srgb, var(--oc-wine) 22%, var(--oc-ivory));
+  --oc-border: color-mix(in srgb, var(--oc-wine) 55%, var(--oc-warm-white));
+  --oc-border-soft: color-mix(in srgb, var(--oc-wine) 14%, var(--oc-warm-white));
   --oc-link: var(--oc-wine);
-  --oc-on-wine-muted: color-mix(in srgb, var(--oc-ivory) 90%, var(--oc-wine));
+  --oc-on-wine-muted: color-mix(in srgb, var(--oc-warm-white) 90%, var(--oc-wine));
   --oc-green-hover: color-mix(in srgb, var(--oc-green) 86%, var(--oc-white));
   --oc-error: #9c1438;
   --oc-success: #215c3e;
@@ -20,8 +20,9 @@
 .scope {
   --wine: var(--oc-wine);
   --wine-deep: var(--oc-deep);
-  --ivory: var(--oc-ivory);
-  --beige: var(--oc-ivory);
+  /* Older surface aliases also use the approved main background. */
+  --ivory: var(--oc-warm-white);
+  --beige: var(--oc-warm-white);
   --cta: var(--oc-link);
   --cta-hover: var(--oc-deep);
   --ink: var(--oc-deep);
@@ -40,8 +41,8 @@
   --color-brand-primary: var(--oc-wine);
   --color-primary: var(--oc-wine);
   --color-primary-hover: var(--oc-deep);
-  --color-primary-soft: var(--oc-ivory);
-  --color-primary-mist: var(--oc-ivory);
+  --color-primary-soft: var(--oc-warm-white);
+  --color-primary-mist: var(--oc-warm-white);
   --color-brand-dark: var(--oc-deep);
   --color-brand-dark-elevated: var(--oc-wine);
   --color-text-primary: var(--oc-deep);
@@ -52,7 +53,7 @@
   --color-background: var(--oc-warm-white);
   --color-bg-base: var(--oc-warm-white);
   --color-surface: var(--oc-white);
-  --color-muted: var(--oc-ivory);
+  --color-muted: var(--oc-warm-white);
   --color-border: var(--oc-border);
   --color-border-dark: var(--oc-border-soft);
   --font-serif: var(--oc-font-editorial);

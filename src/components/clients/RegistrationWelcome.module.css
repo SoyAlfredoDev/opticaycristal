@@ -2,7 +2,7 @@
 .icon{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 22px;border-radius:22px;background:var(--oc-green);color:var(--oc-deep);box-shadow:0 10px 34px rgb(75 128 45 / 13%)}
 .welcome h1{font-size:clamp(28px,5vw,38px);letter-spacing:-1px;line-height:1.15;margin:0 0 14px;outline:none;overflow-wrap:anywhere}
 .welcome .intro{font-size:15px;line-height:1.65;color:var(--oc-muted);margin:0 auto 26px;max-width:330px}
-.credit{padding:25px 18px;border:1px solid var(--oc-border-soft);border-radius:22px;background:var(--oc-ivory);box-shadow:0 12px 38px rgb(34 84 52 / 6%)}
+.credit{padding:25px 18px;border:1px solid var(--oc-border-soft);border-radius:22px;background:var(--oc-warm-white);box-shadow:0 12px 38px rgb(34 84 52 / 6%)}
 .credit>span{display:block;font-size:12px;font-weight:650;color:var(--oc-wine);text-transform:uppercase;letter-spacing:1px}
 .credit strong{display:block;font-size:clamp(34px,7vw,46px);line-height:1.2;letter-spacing:-1.5px;margin-top:10px;color:var(--oc-wine)}
 .welcome .credit p{font-size:12px;line-height:1.7;color:var(--oc-deep);margin:12px 0 0}

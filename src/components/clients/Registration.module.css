@@ -36,7 +36,7 @@ header:has(+ main .layout) > a:first-child img { width: 111px; max-height: 54px;
   grid-area: gallery;
   min-width: 0;
   align-self: start;
-  background: var(--oc-ivory);
+  background: var(--oc-warm-white);
   border: 1px solid var(--oc-border-soft);
   border-radius: 22px;
   overflow: hidden;

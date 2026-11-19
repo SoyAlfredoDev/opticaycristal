@@ -1,5 +1,5 @@
-/* Opt-in catalogue direction. No shared selectors or global tokens are changed. */
-.scope { --wine: var(--oc-wine); --wine-deep: var(--oc-deep); --ivory: var(--oc-ivory); --ink: var(--oc-deep); --muted: var(--oc-muted); --line: var(--oc-border); --cta: var(--oc-link); --cta-hover: var(--oc-green-hover); --oc-font-display: var(--oc-font-editorial); background: var(--oc-ivory); color: var(--oc-deep); }
+/* Catalogue surfaces follow the shared warm-white, wine and green palette. */
+.scope { --wine: var(--oc-wine); --wine-deep: var(--oc-deep); --ivory: var(--oc-warm-white); --ink: var(--oc-deep); --muted: var(--oc-muted); --line: var(--oc-border-soft); --cta: var(--oc-link); --cta-hover: var(--oc-green-hover); --oc-font-display: var(--oc-font-editorial); background: var(--oc-warm-white); color: var(--oc-deep); }
 .page .scope :is(h1,h2,h3) { font-family: var(--oc-font-editorial), Georgia, serif; color: var(--oc-wine); font-weight: 500; }
 .scope :is(a,button,input,select,summary):focus-visible { outline: 2px solid var(--oc-wine); outline-offset: 5px; }
 .scope button, .scope a { touch-action: manipulation; }
@@ -39,15 +39,15 @@ p.imageNote { text-align: center; font-size: 11px; color: var(--oc-muted); margi
 .page .categories { gap: 22px; }
 .page .categories button { font-size: 13px; }
 .page .categories button[aria-pressed=true] { font-weight: 600; }
-.page .searchInput, .page .sortSelect { border-radius: 4px; background: var(--oc-ivory); min-height: 44px; border-color: var(--oc-border); }
+.page .searchInput, .page .sortSelect { border-radius: 4px; background: var(--oc-white); min-height: 44px; border-color: var(--oc-border); }
 .page .catalogLayout { gap: 28px; }
-.page .filters { border-color: var(--oc-border); }
+.page .filters { border-color: var(--oc-border-soft); }
 .filters summary { font-weight: 600; }
 .page .filters label { min-height: 38px; font-size: 13px; }
 .page .clearButton { color: var(--oc-link); min-height: 44px; }
 .page .filters input { accent-color: var(--oc-wine); }
 .page .productGrid { gap: 24px 20px; }
-.page .product { background: var(--oc-ivory); }
+.page .product { background: var(--oc-white); }
 .product > div:first-child > button { aspect-ratio: 1.45; border-radius: 3px 3px 0 0; }
 .page .productInfo { padding: 16px 14px 14px; background: transparent; }
 .page .productInfo h2 { font-size: clamp(23px, 2.25vw, 30px); line-height: 1.1; }
@@ -58,7 +58,7 @@ p.imageNote { text-align: center; font-size: 11px; color: var(--oc-muted); margi
 .scope dialog { --cta: var(--oc-link); color: var(--oc-deep); }
 .scope dialog button[type=submit], .scope dialog button[class*="primary"], .scope dialog a[class*="primary"] { color: var(--oc-deep); }
 .scope dialog input, .scope dialog textarea { background: var(--oc-white); }
-.dispatch { padding-block: 28px; background: var(--oc-ivory); }
+.dispatch { padding-block: 28px; background: var(--oc-white); }
 .dispatch > div { display: flex; align-items: center; gap: 28px; }
 .dispatch > div > svg { color: var(--oc-wine); flex-shrink: 0; }
 .dispatch > div > div { flex: 1; }
@@ -68,10 +68,10 @@ p.smallPrint { font-size: 12px; margin-top: 5px; }
 .advisor { position: relative; overflow: hidden; isolation: isolate; background: var(--oc-wine); padding-block: 42px; }
 .advisor > img { z-index: -2; object-fit: cover; object-position: center 55%; left: 48% !important; width: 52% !important; }
 .advisor::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--oc-wine) 40%, rgb(104 28 48 / .85) 50%, transparent 70%); }
-.page .advisor h2 { color: var(--oc-ivory); font-size: clamp(32px, 3.5vw, 48px); line-height: 1.15; max-width: 60%; }
-.advisor p { color: var(--oc-ivory); font-size: 15px; margin-block: 12px 20px; max-width: 50%; }
-.advisor a:focus-visible { outline-color: var(--oc-ivory); }
-.visit { padding-block: 36px; background: var(--oc-ivory); scroll-margin-top: 110px !important; }
+.page .advisor h2 { color: var(--oc-warm-white); font-size: clamp(32px, 3.5vw, 48px); line-height: 1.15; max-width: 60%; }
+.advisor p { color: var(--oc-warm-white); font-size: 15px; margin-block: 12px 20px; max-width: 50%; }
+.advisor a:focus-visible { outline-color: var(--oc-warm-white); }
+.visit { padding-block: 36px; background: var(--oc-warm-white); scroll-margin-top: 110px !important; }
 .visitGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 45px; align-items: center; }
 .page .visit h2 { font-size: clamp(31px, 3vw, 44px); line-height: 1.15; }
 .visit address { display: flex; align-items: flex-start; gap: 10px; font-style: normal; margin-top: 16px; font-size: 14px; }
@@ -79,10 +79,10 @@ p.smallPrint { font-size: 12px; margin-top: 5px; }
 .visit p { font-size: 14px; margin-top: 8px; color: var(--oc-muted); }
 .visitActions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 24px; }
 .map { margin: 0; min-width: 0; }
-.map iframe { width: 100%; height: 260px; border: 1px solid var(--oc-border); border-radius: 4px; display: block; background: var(--oc-ivory); }
+.map iframe { width: 100%; height: 260px; border: 1px solid var(--oc-border-soft); border-radius: 4px; display: block; background: var(--oc-white); }
 .map figcaption { text-align: right; font-size: 12px; padding-top: 6px; }
 .map a { color: var(--oc-wine); text-decoration: underline !important; text-underline-offset: 3px; }
-.footer footer { background: var(--oc-ivory); padding-top: 35px; border-top: 1px solid var(--oc-border); }
+.footer footer { background: var(--oc-warm-white); padding-top: 35px; border-top: 1px solid var(--oc-border-soft); }
 .footer footer p { color: var(--oc-wine); }
 .footer footer nav a { min-height: 32px; display: inline-flex; align-items: center; }
 @media (min-width: 900px) { .page .catalogLayout { grid-template-columns: 180px minmax(0,1fr); } .page .toolbar { grid-template-columns: 1fr 45%; gap: 20px; } }
