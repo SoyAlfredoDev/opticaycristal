@@ -16,10 +16,13 @@ const readMotion = () => window.matchMedia(motionQuery).matches;
 const serverMotion = () => true;
 
 export function HeroPortraits({ controls = true }: { controls?: boolean }) {
-  const [active, setActive] = useState(0);
+  const [{ active, previous }, setPortrait] = useState<{ active: number; previous: number | null }>({
+    active: 0,
+    previous: null,
+  });
   const [paused, setPaused] = useState(false);
   const [visible, setVisible] = useState(true);
-  const [ready, setReady] = useState<boolean[]>(heroPortraits.map(() => false));
+  const [ready, setReady] = useState<boolean[]>(() => heroPortraits.map(() => false));
   const reducedMotion = useSyncExternalStore(subscribeMotion, readMotion, serverMotion);
   const stageRef = useRef<HTMLDivElement>(null);
   const stopped = paused || reducedMotion;
@@ -33,11 +36,18 @@ export function HeroPortraits({ controls = true }: { controls?: boolean }) {
   }, []);
 
   useEffect(() => {
-    if (stopped || !visible) return;
+    if (stopped || !visible || heroPortraits.length < 2) return;
     let timer: ReturnType<typeof setInterval> | undefined;
     const sync = () => {
       clearInterval(timer);
-      if (!document.hidden) timer = setInterval(() => setActive(current => nextReadyPortrait(current, ready)), HERO_INTERVAL_MS);
+      if (!document.hidden) {
+        timer = setInterval(() => {
+          setPortrait(current => {
+            const next = nextReadyPortrait(current.active, ready);
+            return next === current.active ? current : { active: next, previous: current.active };
+          });
+        }, HERO_INTERVAL_MS);
+      }
     };
     sync();
     document.addEventListener("visibilitychange", sync);
@@ -55,7 +65,9 @@ export function HeroPortraits({ controls = true }: { controls?: boolean }) {
     <div ref={stageRef} className={styles.portrait} role="group" aria-label="Personas usando lentes ópticos" aria-roledescription="carrusel" data-active-portrait={heroPortraits[active].id}>
       <div className={styles.portraitStage}>
         {heroPortraits.map((portrait, index) => (
-          <div key={portrait.id} className={styles.person} data-active={index === active} data-person={portrait.id} aria-hidden={index !== active}>
+          <div key={portrait.id} className={styles.person} data-active={index === active}
+            data-motion={index === previous ? "exit" : index === active && previous !== null ? "enter" : undefined}
+            data-person={portrait.id} aria-hidden={index !== active}>
             <Image src={portrait.src} alt={portrait.alt} unoptimized
               width={portrait.width} height={portrait.height} className={styles.personImage}
               sizes="(min-width: 1600px) 900px, (min-width: 900px) 60vw, 100vw"
@@ -64,11 +76,14 @@ export function HeroPortraits({ controls = true }: { controls?: boolean }) {
           </div>
         ))}
       </div>
-      {controls && <div className={styles.portraitControls}>
+      {controls && heroPortraits.length > 1 && <div className={styles.portraitControls}>
         {heroPortraits.map((portrait, index) => (
           <button key={portrait.id} type="button" aria-label={`Mostrar ${portrait.label.toLowerCase()}`}
             aria-pressed={active === index} disabled={!ready[index]}
-            onClick={() => { setActive(index); setPaused(true); }}><span /></button>
+            onClick={() => {
+              setPortrait(current => index === current.active ? current : { active: index, previous: current.active });
+              setPaused(true);
+            }}><span /></button>
         ))}
         <button type="button" aria-label={stopped ? "Reanudar retratos" : "Pausar retratos"}
           disabled={reducedMotion} onClick={() => setPaused(value => !value)}>

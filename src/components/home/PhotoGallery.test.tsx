@@ -7,7 +7,7 @@ describe("PhotoGallery", () => {
   it("muestra fotos de la óptica y de clientes en lugares distintos", () => {
     render(<PhotoGallery />);
     expect(screen.getByRole("heading", { name: "Vistas de la óptica" })).toBeVisible();
-    expect(screen.getByText(/Huérfanos 713, local 18, Santiago Centro/)).toBeVisible();
+    expect(screen.queryByText(/Nuestra óptica y las miradas/)).not.toBeInTheDocument();
     expect(screen.getAllByRole("img").map((image) => image.getAttribute("alt"))).toEqual(
       galleryPhotos.map((photo) => photo.alt),
     );
@@ -17,10 +17,14 @@ describe("PhotoGallery", () => {
     const sizes = new Set(galleryPhotos.map((photo) => `${photo.w}x${photo.h}`));
     expect(tops.size).toBeGreaterThan(3);
     expect(sizes.size).toBe(galleryPhotos.length);
+    const widths = galleryPhotos.map(photo => photo.w);
+    const heights = galleryPhotos.map(photo => photo.h);
+    expect(Math.max(...widths) / Math.min(...widths)).toBeGreaterThanOrEqual(1.5);
+    expect(Math.max(...heights) / Math.min(...heights)).toBeGreaterThanOrEqual(1.5);
     expect(galleryPhotos.every((photo) => (
       photo.x >= 0
       && photo.y >= 24
-      && photo.x + photo.w <= GALLERY_SET_WIDTH - 80
+      && photo.x + photo.w <= GALLERY_SET_WIDTH - 20
       && photo.y + photo.h <= GALLERY_SET_HEIGHT - 24
     ))).toBe(true);
   });

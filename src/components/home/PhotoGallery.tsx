@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, type CSSProperties } from "react";
 import { SectionReveal } from "./SectionReveal";
-import { galleryPhotos, GALLERY_SET_WIDTH, type GalleryPhoto } from "./photo-gallery";
+import { galleryPhotos, GALLERY_DURATION_SECONDS, GALLERY_SET_HEIGHT, GALLERY_SET_WIDTH, type GalleryPhoto } from "./photo-gallery";
 import site from "@/components/site/Site.module.css";
 import styles from "./PhotoGallery.module.css";
 
@@ -27,7 +27,7 @@ function PhotoSet({ photos, hidden = false }: { photos: readonly GalleryPhoto[];
               src={photo.src}
               alt={hidden ? "" : photo.alt}
               fill
-              sizes="(max-width: 700px) 150px, 260px"
+              sizes="(max-width: 699px) 240px, (max-width: 1099px) 290px, 360px"
               loading="eager"
               className={`${photo.fit === "contain" ? styles.contain : styles.cover} ${photo.tone ? styles.clientPhoto : ""}`}
               style={{ objectPosition: photo.position, filter: photo.tone }}
@@ -60,10 +60,9 @@ export function PhotoGallery() {
               </button>
             </div>
           </div>
-          <p className={styles.lead}>Nuestra óptica y las miradas de quienes nos visitan en Huérfanos 713, local 18, Santiago Centro.</p>
         </div>
-        <div className={styles.stage} role="region" aria-label="Vistas de la óptica y de clientes">
-          <div className={styles.track} data-paused={paused ? "true" : "false"}>
+        <div className={styles.stage} style={{ "--gallery-set-height": `${GALLERY_SET_HEIGHT}px` } as CSSProperties} role="region" aria-label="Vistas de la óptica y de clientes">
+          <div className={styles.track} style={{ "--gallery-duration": `${GALLERY_DURATION_SECONDS}s` } as CSSProperties} data-paused={paused ? "true" : "false"}>
             <PhotoSet photos={galleryPhotos} />
             <PhotoSet photos={galleryPhotos} hidden />
           </div>

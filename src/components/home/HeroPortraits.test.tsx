@@ -3,6 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HeroPortraits } from "./HeroPortraits";
 import { HERO_INTERVAL_MS, nextReadyPortrait } from "./portrait-data";
 
+// Keep carousel tests independent from the production portrait files.
+vi.mock("./portrait-data", async importOriginal => {
+  const actual = await importOriginal<typeof import("./portrait-data")>();
+  return {
+    ...actual,
+    heroPortraits: [
+      { id: "young", label: "Joven", src: "/test-portrait-1.png", alt: "Primer retrato de prueba", width: 100, height: 100 },
+      { id: "professional", label: "Pareja", src: "/test-portrait-2.png", alt: "Segundo retrato de prueba", width: 100, height: 100 },
+    ],
+  };
+});
+
 describe("HeroPortraits", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -30,14 +42,21 @@ describe("HeroPortraits", () => {
   it("rotates loaded portraits and can pause and resume", () => {
     render(<HeroPortraits />);
     loadPhotos();
+    const first = document.querySelector('[data-person="young"]');
+    const second = document.querySelector('[data-person="professional"]');
+    expect(first).not.toHaveAttribute("data-motion");
     act(() => vi.advanceTimersByTime(HERO_INTERVAL_MS));
     expect(active()).toBe("professional");
+    expect(first).toHaveAttribute("data-motion", "exit");
+    expect(second).toHaveAttribute("data-motion", "enter");
     fireEvent.click(screen.getByRole("button", { name: "Pausar retratos" }));
     act(() => vi.advanceTimersByTime(HERO_INTERVAL_MS * 2));
     expect(active()).toBe("professional");
     fireEvent.click(screen.getByRole("button", { name: "Reanudar retratos" }));
     act(() => vi.advanceTimersByTime(HERO_INTERVAL_MS));
     expect(active()).toBe("young");
+    expect(second).toHaveAttribute("data-motion", "exit");
+    expect(first).toHaveAttribute("data-motion", "enter");
   });
 
   it("pauses after a manual selection", () => {
@@ -61,6 +80,7 @@ describe("HeroPortraits", () => {
     expect(nextReadyPortrait(0, [true, false, true, false])).toBe(2);
     expect(nextReadyPortrait(3, [true, false, false, true])).toBe(0);
     expect(nextReadyPortrait(0, [true, false, false, false])).toBe(0);
+    expect(nextReadyPortrait(0, [true])).toBe(0);
   });
 
   it("does not autoplay when reduced motion is requested", () => {

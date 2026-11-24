@@ -1,7 +1,21 @@
 export const HERO_INTERVAL_MS = 5200;
 export const heroPortraits = [
-  { id: "young", label: "Joven", src: "/images/home/hero-young-clean-v6.png", alt: "Joven riendo con lentes de sol y suéter blanco", width: 1254, height: 1254 },
-  { id: "professional", label: "Pareja", src: "/images/home/hero-couple-clean-v6.png", alt: "Pareja sonriendo y disfrutando sus lentes de sol", width: 1399, height: 1124 },
+  {
+    id: "customer-0778",
+    label: "Cliente con montura ámbar",
+    src: "/images/home/hero-cliente-0778-cintura-v2.png",
+    alt: "Cliente de Óptica & Cristal con montura óptica ámbar y camisa verde",
+    width: 1086,
+    height: 1448,
+  },
+  {
+    id: "retrato-microfono",
+    label: "Modelo con micrófono",
+    src: "/images/home/hero-retrato-microfono-v2.png",
+    alt: "Mujer con montura metálica, vestido amarillo y micrófono rojo, orientada hacia la izquierda",
+    width: 1086,
+    height: 1448,
+  },
 ] as const;
 
 /** Hold the visible portrait until another photograph has actually loaded. */
