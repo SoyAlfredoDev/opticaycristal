@@ -44,22 +44,22 @@
   grid-area: 1 / 1;
   min-width: 0;
   padding: 22px 24px 14px;
-  background: var(--oc-warm-white);
+  background: var(--wine);
 }
 .eyebrow {
   display: flex;
   align-items: center;
   gap: 16px;
-  color: var(--wine);
+  color: var(--oc-ivory);
   font-size: 10px;
   line-height: 1.7;
   letter-spacing: .2em;
   text-transform: uppercase;
 }
-.eyebrow::after { content: ""; width: 42px; height: 1px; background: var(--wine); }
+.eyebrow::after { content: ""; width: 42px; height: 1px; background: currentColor; }
 .hero .copy h1 {
   margin: 12px 0 0;
-  color: var(--wine);
+  color: var(--ivory);
   font-family: var(--oc-font-editorial), Georgia, serif;
   font-size: clamp(44px, 12vw, 70px);
   font-weight: 500;
@@ -67,14 +67,14 @@
   letter-spacing: -.045em;
   text-wrap: initial;
 }
-.hero .copy h1 em { display: inline-block; color: var(--wine); font-weight: 500; white-space: nowrap; }
-.copy > p { margin: 12px 0 16px; color: var(--oc-muted); font-size: 14px; line-height: 1.6; }
+.hero .copy h1 em { display: inline-block; color: var(--ivory); font-weight: 500; white-space: nowrap; }
+.copy > p { margin: 12px 0 16px; color: var(--oc-on-wine-muted); font-size: 14px; line-height: 1.6; }
 .actions { display: flex; flex-direction: column; gap: 10px; }
 .actions > a { min-height: 46px; justify-content: center; border-radius: 6px; font-size: 14px; }
 .actions > a:first-child { background: var(--cta); border-color: var(--cta); color: var(--oc-deep); font-weight: 600; }
-.actions > a:last-child { background: transparent; border-color: var(--wine); color: var(--wine); }
+.actions > a:last-child { background: transparent; border-color: var(--oc-ivory); color: var(--ivory); }
 .actions > a:last-child > span { display: inline-flex; align-items: center; gap: 9px; }
-.hero :is(a, button):focus-visible { outline: 2px solid var(--wine); outline-offset: 4px; }
+.hero .actions > a:focus-visible { outline: 2px solid var(--ivory); outline-offset: 4px; }
 .portrait {
   position: relative;
   z-index: 1;
@@ -175,7 +175,7 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .actions > a:first-child:hover { background: var(--cta-hover); border-color: var(--cta-hover); color: var(--oc-deep); }
-  .actions > a:last-child:hover { background: rgb(104 28 48 / .05); border-color: var(--wine); color: var(--wine); }
+  .actions > a:last-child:hover { background: rgb(248 246 242 / .1); border-color: var(--ivory); color: var(--ivory); }
 }
 @media (max-width: 899px) and (max-height: 760px) {
   .hero { --portrait-height: 250px; }
