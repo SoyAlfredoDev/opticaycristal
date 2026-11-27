@@ -27,27 +27,62 @@
   font-weight: 700;
 }
 
-.gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(.55rem, 2vw, 1.25rem); }
+.exampleStage { display: grid; grid-template-columns: minmax(0, 1fr); }
+.gallery {
+  display: grid;
+  grid-area: 1 / 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(.55rem, 2vw, 1.25rem);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 240ms ease, visibility 0s linear 240ms;
+}
+.gallery[data-active="true"] { z-index: 1; opacity: 1; visibility: visible; transition-delay: 0s; }
 .gallery figure { margin: 0; }
 .gallery img { display: block; width: 100%; height: auto; }
 .gallery figcaption { margin-top: .6rem; font-size: clamp(.8rem, 2vw, 1.125rem); }
 
-.section .note { margin: 1rem 0 .8rem; font-size: .8rem; }
-.button {
+.exampleActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: 1.2rem;
+}
+.button,
+.switchExample {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 48px;
-  padding: .6rem 1.35rem;
+  padding: .65rem clamp(.65rem, 2.5vw, 1.25rem);
   border-radius: .45rem;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.button {
   background: var(--oc-green);
   color: var(--oc-deep);
-  font-weight: 700;
   text-decoration: none;
 }
 .button:hover { background: var(--oc-green-hover); }
-.button:focus-visible { outline: 2px solid var(--oc-wine); outline-offset: 4px; }
+.switchExample {
+  gap: .4rem;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: var(--oc-wine);
+  cursor: pointer;
+}
+.switchExample:hover { background: var(--oc-wine); color: var(--oc-warm-white); }
+.button:focus-visible,
+.switchExample:focus-visible { outline: 2px solid var(--oc-wine); outline-offset: 3px; }
 
 @media (max-width: 480px) {
   .gallery figcaption { overflow-wrap: anywhere; }
+  .exampleActions { font-size: .8rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gallery { transition: none; }
 }
