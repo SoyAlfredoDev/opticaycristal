@@ -1,4 +1,4 @@
-export const HERO_INTERVAL_MS = 5200;
+export const HERO_INTERVAL_MS = 3600;
 export const heroPortraits = [
   {
     id: "retrato-microfono",
@@ -13,6 +13,14 @@ export const heroPortraits = [
     label: "Cliente con montura ámbar",
     src: "/images/home/hero-cliente-0778-cintura-v2.png",
     alt: "Cliente de Óptica & Cristal con montura óptica ámbar y camisa verde",
+    width: 1086,
+    height: 1448,
+  },
+  {
+    id: "retrato-chaqueta-negra",
+    label: "Modelo con chaqueta negra",
+    src: "/images/home/hero-modelo-chaqueta-negra-cadera-v2.png",
+    alt: "Mujer con lentes rectangulares de montura metálica y chaqueta negra",
     width: 1086,
     height: 1448,
   },

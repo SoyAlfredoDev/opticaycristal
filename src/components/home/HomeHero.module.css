@@ -102,8 +102,8 @@
   pointer-events: none;
 }
 .person[data-active="true"] { opacity: 1; z-index: 1; }
-.person[data-motion="enter"] { animation: portrait-enter 640ms cubic-bezier(.2, .72, .24, 1) both; }
-.person[data-motion="exit"] { animation: portrait-exit 460ms cubic-bezier(.4, 0, .65, 1) both; }
+.person[data-motion="enter"] { animation: portrait-enter 440ms cubic-bezier(.2, .72, .24, 1) both; }
+.person[data-motion="exit"] { animation: portrait-exit 320ms cubic-bezier(.4, 0, .65, 1) both; }
 @keyframes portrait-enter {
   0% { opacity: 0; transform: translateX(var(--travel)); }
   100% { opacity: 1; transform: translateX(0); }

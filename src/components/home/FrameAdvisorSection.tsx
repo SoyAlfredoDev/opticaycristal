@@ -12,11 +12,12 @@ export function FrameAdvisorSection() {
   return (
     <section id="asesor-de-monturas" className={styles.section} aria-labelledby="frame-advisor-title">
       <div className={styles.content}>
-        <h2 id="frame-advisor-title">Tres formas de verte con lentes</h2>
+        <h2 id="frame-advisor-title">¿Qué lentes te quedan mejor?</h2>
         <p className={styles.intro}>
-          Tenemos un asesor con IA que hemos preparado para asesorar a nuestros clientes en estilo y moda.
-          Con una foto, puedes comparar tres monturas sugeridas según tu rostro y el estilo que más te guste.
+          Tómate una foto o sube una que ya tengas. Nuestro nuevo Asesor Inteligente te sugerirá
+          tres monturas según tu rostro y tu estilo para que veas cómo te quedan.
         </p>
+        <p className={styles.photoLabel}>Fotos reales</p>
         <div className={styles.gallery}>
           {frames.map(({ file, name, color }) => (
             <figure key={file}>
@@ -31,7 +32,7 @@ export function FrameAdvisorSection() {
             </figure>
           ))}
         </div>
-        <p className={styles.note}>Monturas simuladas con IA sobre una foto real. Disponible con tu cuenta.</p>
+        <p className={styles.note}>Las monturas de ejemplo se simularon con IA.</p>
         <Link className={styles.button} href="/asesor-de-monturas/probar" prefetch={false}>
           Probar con mi foto
         </Link>
