@@ -21,17 +21,17 @@ export function FrameAdvisorSection() {
           {frames.map(({ file, name, color }) => (
             <figure key={file}>
               <Image
-                src={`/asesor-monturas/portada/${file}.webp`}
+                src={`/asesor-monturas/portada/foto-real/${file}.webp`}
                 alt={`Modelo con montura ${name.toLowerCase()} en ${color}`}
-                width={272}
-                height={255}
+                width={1000}
+                height={1000}
                 unoptimized
               />
               <figcaption>{name} · {color}</figcaption>
             </figure>
           ))}
         </div>
-        <p className={styles.note}>Simulaciones de ejemplo. Disponible con tu cuenta.</p>
+        <p className={styles.note}>Monturas simuladas con IA sobre una foto real. Disponible con tu cuenta.</p>
         <Link className={styles.button} href="/asesor-de-monturas/probar" prefetch={false}>
           Probar con mi foto
         </Link>
